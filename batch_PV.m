@@ -1,5 +1,6 @@
 % test
 
+
 % Specify the folder where the files live.
 myFolder = 'C:\Users\SSG Lab\Desktop\motion corrected\batch11';
 savefiles=1;
