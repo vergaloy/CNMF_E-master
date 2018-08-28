@@ -1,0 +1,9 @@
+To convert adicht file into .txt file follow this steps:
+
+1) load this folder and its subfolders to matlab path.
+2) Open aditchtotxt.m
+3) in line 5 choose the directory containing the .adicht file e.g "a=('C:\Users\Pablo\Desktop\data\') % files directory"
+4) in line 6 choose separator e.g. "separator='.'
+5) run the code and thats all
+
+by Vergara Pablo. 
