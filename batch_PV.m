@@ -1,4 +1,4 @@
-% V3 test
+% V4 test
 
 % Specify the folder where the files live.
 myFolder = 'C:\Users\SSG Lab\Desktop\motion corrected\batch11';
