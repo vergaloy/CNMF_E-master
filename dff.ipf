@@ -1,6 +1,6 @@
 ﻿#pragma TextEncoding = "UTF-8"
 #pragma rtGlobals=3		// Use modern global access method and strict wave access.
-
+// this is pablo
 
 // This is the code to run the complete analysis/ Tshift is the time shift between the Ca+2 recording
 //and the EEG recording. Usually is 10 seconds.  sf is the sampling frequency
