@@ -4197,6 +4197,7 @@ function find_peaks2()
 		Variable endP= DimSize(w,0)-1
 		variable not_event,control1=0,control2=0,control3=0,control4=0
 		duplicate/o w noise
+		smooth 5, noise
 		wave c1=$"root:data:C_raw:"+stringfromlist(i,list,","),c2=$"root:data:C:"+stringfromlist(i,list,",")
 		noise=c1-c2
 		wavestats/Q noise
@@ -4216,7 +4217,7 @@ function find_peaks2()
 				not_event=1
 			endif
 			// control 2
-			wavestats/q/r=[V_PeakLoc-75,V_PeakLoc-25] noise
+			wavestats/q/r=[V_PeakLoc-50,V_PeakLoc-25] noise
 			if (w[V_PeakLoc]<3*V_sdev)
 			control2=control2+1
 			not_event=1	
