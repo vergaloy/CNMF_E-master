@@ -28,10 +28,10 @@ Fs = 5.02;             % frame rate
 tsub = 1;           % temporal downsampling factor
 deconv_options = struct('type', 'ar1', ... % model of the calcium traces. {'ar1', 'ar2'}   
     'method', 'foopsi', ... % method for running deconvolution {'foopsi', 'constrained', 'thresholded'}
-    'smin', -5, ...         % minimum spike size. When the value is negative, the actual threshold is abs(smin)*noise level
+    'smin', -3, ...         % minimum spike size. When the value is negative, the actual threshold is abs(smin)*noise level
     'optimize_pars', true, ...  % optimize AR coefficients
     'optimize_b', true, ...% optimize the baseline);
-    'max_tau', 30);    % maximum decay time (unit: frame);
+    'max_tau', 10);    % maximum decay time (unit: frame);
 
 nk = 100;             % detrending the slow fluctuation. usually 1 is fine (no detrending)  PV 30 was working fine
 % when changed, try some integers smaller than total_frame/(Fs*30)
@@ -114,5 +114,5 @@ neuron.C = deconvTemporal(neuron, use_parallel,1);
 
 
 
-    neuron.orderROIs('snr');   % order neurons in different ways {'snr', 'decay_time', 'mean', 'circularity'}
+   % neuron.orderROIs('snr');   % order neurons in different ways {'snr', 'decay_time', 'mean', 'circularity'}
     neuron.viewNeurons([], neuron.C_raw);
