@@ -4175,7 +4175,8 @@ r3=1/(t2/active_iei)
 return [r1,r2,r3]
 end
 
-
+// ============================================================
+// Same as find_peaks but with 3 different restrictions. 
 
 function find_peaks2()
 	setdatafolder root:data:C:
@@ -4197,11 +4198,13 @@ function find_peaks2()
 		Variable endP= DimSize(w,0)-1
 		variable not_event,control1=0,control2=0,control3=0,control4=0
 		duplicate/o w noise
-		smooth 5, noise
 		wave c1=$"root:data:C_raw:"+stringfromlist(i,list,","),c2=$"root:data:C:"+stringfromlist(i,list,",")
 		noise=c1-c2
+		smooth 5, noise
 		wavestats/Q noise
 		SDev[i]=V_sdev
+		
+				variable switch1=0
 		do
 			not_event=0
 			FindPeak/P/M=(threshold)/Q/R=[startP,endP] test
@@ -4211,31 +4214,17 @@ function find_peaks2()
 				break
 			endif
 			
-			// control 1
+			// control 1  minimal amplitude must be 0.1
 			if (V_PeakVal<0.1)
 			control1=control1+1
 				not_event=1
 			endif
-			// control 2
-			wavestats/q/r=[V_PeakLoc-50,V_PeakLoc-25] noise
+			// control 2 amplitude must be 3 times the Sdev of the local noise.
+			wavestats/q/r=[V_PeakLoc-150,V_PeakLoc+150] noise 
 			if (w[V_PeakLoc]<3*V_sdev)
 			control2=control2+1
 			not_event=1	
-			endif
-			
-			// control 2.5
-			//duplicate/o/r=[V_PeakLoc+30,V_PeakLoc+90] $"root:Data:C_raw:"+temp_w seg
-			//sort seg seg
-			//try
-				//if (w[V_PeakLoc]<2*-(seg[6]))
-					//control2=control2+1
-					//not_event=1	
-				//endif
-			//catch
-			//endtry
-			
-			
-			
+			endif		
 			
     		if (not_event==0)
 			peakPositionsX[peaksFound]=round(V_PeakLoc)//pnt2x(w,V_PeakLoc)
@@ -4260,14 +4249,19 @@ function find_peaks2()
 			endif
 		endfor
 		
-		//control 4
-		if (SDev[i]>0.2)
+		//control 3 If the average Sdev of the noise is more than 0.2 the whole signal is discarded to avoid underestimation of frequency.
+		// this threshold was determined using de data of 200 cells (4 mices) and finding the 0.1 % outlier. 
+		if (SDev[i]>0.1)
 		control4=control4+1
 		temp=0
+		switch1=1
+		print "cell "+num2str(i)+" was discarded (too noisy)!"
 		endif
 		
-		duplicate/o temp $"root:data:S:"+stringfromlist(i,list,",")	
+		duplicate/o temp $"root:data:S:"+stringfromlist(i,list,",")
+		if	(switch1==0)
 		print "cell "+num2str(i)+" done!"
+		endif
 	endfor
 end
 
