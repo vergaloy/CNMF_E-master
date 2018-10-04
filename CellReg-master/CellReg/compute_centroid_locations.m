@@ -18,7 +18,11 @@ centroid_locations=cell(1,number_of_sessions);
 disp('Calculating centroid locations:');
 display_progress_bar('Terminating previous progress bars',true)    
 for n=1:number_of_sessions
-    display_progress_bar(['Calculating centroid locations for session #' num2str(n) ' - '],false)
+    if number_of_sessions>1
+        display_progress_bar(['Calculating centroid locations for session #' num2str(n) ' - '],false)
+    else
+        display_progress_bar('Calculating centroid locations for this session - ',false)
+    end
     this_session_spatial_footprints=spatial_footprints{n};
     num_spatial_footprints=size(this_session_spatial_footprints,1);
     centroid_locations{n}=zeros(num_spatial_footprints,2);
@@ -26,7 +30,7 @@ for n=1:number_of_sessions
         display_progress_bar(100*(k)/(num_spatial_footprints),false)
         temp_spatial_footprint=squeeze(this_session_spatial_footprints(k,:,:));
 
-        % calculating x and y projections of the spatial footprint for the
+        % calculating x and y projections of the spatial footprints for the
         % calculation of the center of mass:
         x_projection=sum(temp_spatial_footprint);
         y_projection=sum(temp_spatial_footprint,2)';
@@ -54,7 +58,7 @@ for n=1:number_of_sessions
             localized_y_projection=[y_projection(max_y_ind-gaussian_radius:end) , zeros(1,zero_padding_size)];
         end
         
-        % Calculating the center of mass with a gaussian fit:
+        % Calculating the center of mass with a gaussian fit (only for weighted ROIs):
         [~,centroid_x_temp]=gaussfit(-gaussian_radius:gaussian_radius,localized_x_projection./sum(localized_x_projection),0.5*normalized_typical_cell_size,0);
         [~,centroid_y_temp]=gaussfit(-gaussian_radius:gaussian_radius,localized_y_projection./sum(localized_y_projection),0.5*normalized_typical_cell_size,0);    
         centroid_x=max_x_ind+centroid_x_temp;

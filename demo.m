@@ -63,8 +63,8 @@ merge_thr_spatial = [0.8, 0.1, -inf];  % merge components with highly correlated
 
 % -------------------------  INITIALIZATION   -------------------------  %
 K = [];             % maximum number of neurons per patch. when K=[], take as many as possible.
-min_corr = 0.5;     % minimum local correlation for a seeding pixel
-min_pnr = 4;       % minimum peak-to-noise ratio for a seeding pixel
+min_corr = 0.6;     % minimum local correlation for a seeding pixel
+min_pnr = 6;       % minimum peak-to-noise ratio for a seeding pixel
 min_pixel = (gSiz/2)^2;      % minimum number of nonzero pixels for each neuron
 bd = 0;             % number of rows/columns to be ignored in the boundary (mainly for motion corrected data)
 frame_range = [];   % when [], uses all frames
@@ -244,9 +244,9 @@ neuron.save_neurons();
 %% 
 % Create Video
 
-amp_ac = 3;
+amp_ac = 20;
 range_ac = [0, amp_ac];
-multi_factor = 20;
+multi_factor = 60;
 range_Y = [0, amp_ac*multi_factor];
 save_demixed=1;
 %avi_filename = neuron.show_demixed_video(save_demixed, 1, [], amp_ac, range_ac, range_Y, multi_factor);

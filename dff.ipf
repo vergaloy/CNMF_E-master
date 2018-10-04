@@ -2,44 +2,91 @@
 #pragma rtGlobals=3		// Use modern global access method and strict wave access.
 // this is pablo
 
+
+function getall_batch()
+make/o/n=(1,16) Results=nan
+make/o/n=(1,16) Results1=nan
+make/o/n=(1,16) Results2=nan
+make/o/n=(1,16) Results3=nan
+
+
+Variable numDataFolders = CountObjects(":", 4), i
+string cdf2
+cdf2=GetDataFolder(1)
+for(i=0; i<(numDataFolders); i+=1)
+	String nextPath =GetIndexedObjNameDFR($cdf2, 4, i )
+	nextPath="'"+nextpath+"'"
+	setdatafolder $cdf2+nextPath+":"
+	NVAR ts = tshift
+	NVAR saf = sf
+	getall(ts,saf,cdf2+"Results",1,1)
+	
+	endfor
+setdatafolder $cdf2
+DeletePoints 0,1, Results
+DeletePoints 0,1, Results1
+DeletePoints 0,1, Results2
+DeletePoints 0,1, Results3
+delete_zeros()
+
+
+
+end
+
+
+
+
 // This is the code to run the complete analysis/ Tshift is the time shift between the Ca+2 recording
 //and the EEG recording. Usually is 10 seconds.  sf is the sampling frequency
-function getall(tshift,sf)
-	variable tshift,sf
-	setdatafolder root:data:C_raw:
-	find_peaks2()
+function getall(tshift,sf,results,ignoreM,ignoreRW)
+	variable tshift,sf,ignoreM,ignoreRW
+	string results
+	string folder=GetDataFolder(1)
+	variable plot=1
+	setdatafolder folder+"data:C:"
+	find_peaks2(folder)
 	string list=wavelist("wave"+"*",",","")
 	variable k=itemsinlist(list, ",")
-	sleep_plot((k*2)+2,tshift,sf)//  here is very important to look in the shift between EEG and Ca recording!!! 
+	sleep_plot((k*2)+2,tshift,sf,folder)//  here is very important to look in the shift between EEG and Ca recording!!! 
+	wave WAKE,REMWAKE,M
+	if (ignoreM==1)
+		WAKE=WAKE+M
+		M=0
+	endif
+	if (ignoreRW==1)
+		WAKE=WAKE+REMWAKE
+		REMWAKE=0
+	endif
+	if (plot==1)
 	Display /W=(405.75,291.5,1121.25,587)/K=1  ::Sleep:REM,::Sleep:WAKE,::Sleep:NREM,::Sleep:REMWAKE
-	setdatafolder root:data:C_raw:
+	setdatafolder folder+"data:C_raw:"
 	creategraphs("wave",0)
-	setdatafolder root:data:S:
+	setdatafolder folder+"data:S:"
 	creategraphs2("wave",0)	
-	setdatafolder $"root:data:sleep:"
+	setdatafolder folder+"data:sleep:"
 	Legend/C/N=text0/J/F=0/A=MC/X=30.47/Y=-62.46 "\\s(REM) REM \\s(WAKE) WAKE \\s(NREM) NREM"
 	ModifyGraph mode(REM)=7,mode(WAKE)=7,mode(NREM)=7,mode(REMWAKE)=7
 	ModifyGraph hbFill(REM)=2,hbFill(WAKE)=2,hbFill(NREM)=2,hbFill(REMWAKE)=2
 	ModifyGraph rgb(REM)=(65535,49151,49151),rgb(WAKE)=(49151,65535,49151),rgb(NREM)=(49151,60031,65535),rgb(REMWAKE)=(26205,52428,1)
 	ModifyGraph prescaleExp(bottom)=0
 	ModifyGraph highTrip(bottom)=100000
-
-	
-	
 	Label bottom "Time (s)"
 	ModifyGraph noLabel(left)=2
-	print "hour 1"
-	get_stats2(sf,0,3600)
-	print "hour 2"
-	get_stats2(sf,3600,3600*2)
-	print "hour 3"
-	get_stats2(sf,3600*2,3600*3)
+
+	endif
+	//print "hour 1"
+	get_stats2(sf,0,3600,folder,results+"1")
+	//print "hour 2"
+	get_stats2(sf,3600,3600*2,folder,results+"2")
+	//print "hour 3"
+	get_stats2(sf,3600*2,3600*3,folder,results+"3")
+	get_stats2(sf,0,3600*3,folder,results)
 	
 	
-	concatenated_sleep(sf)
-	getiei(sf)
+	//concatenated_sleep(sf)
+	//getiei(sf)
 	//raster_within_episodes()
-	raster_within_episodes_not_scaled()
+	//raster_within_episodes_not_scaled()
 	
 end
 
@@ -109,15 +156,16 @@ end
 // square signal for the sleep stages of amplitude "a". You want "a" to be larger enough to cover the whole are
 //of the plot. t is the time shift correctio (def 10 s). sf is the sampling frequency
 
-function sleep_plot(a,t,sf) 
+function sleep_plot(a,t,sf,folder) 
 	variable a,t,sf
+	string folder
 	// get numpnts
 	Print "Time shift was "+num2str(t)+"s"
-	setdatafolder root:data:C_raw:
+	setdatafolder $folder+"data:C_raw:"
 	wave wave0
 	variable puntos=numpnts(wave0)+floor(sf*t)
 
-	setdatafolder $"root:data:sleep:"
+	setdatafolder $folder+"data:sleep:"
 
 	variable p=0,tiempo=0,i=0
 	wave wave0
@@ -250,14 +298,15 @@ end
 //=======================================
 // This function find region where I manually removed artifacts and exclude them from the analysis.
 
-function find_artifacts()
-	setdatafolder root:data:C_raw:
+function find_artifacts(folder)
+	string folder
+	setdatafolder folder+"data:C_raw:"
 	execute "duplicate/o wave0 artifact"
 	wave artifact
 	artifact = (artifact[p] ==0) ? 500 : artifact[p]
 	artifact = (artifact[p] <499) ? 0 : artifact[p]
 	artifact=artifact/500
-	execute "duplicate/o artifact  root:data:S:artifact"
+	execute "duplicate/o artifact  "+folder+"data:S:artifact"
 	killwaves :artifact
 
 end
@@ -265,30 +314,31 @@ end
 //========================================
 // Get avg amp and frequency for each sleep episode and for each cell. The code is used here is very stupid
 //and hardwear consuming... but it's working as it should so..../ sf is the sampling frequency
-function get_stats(sf)
+function get_stats(sf,folder)
 variable sf
-	find_artifacts()
-	setdatafolder "root:data:S:"
-	duplicate/o $"root:data:Sleep:NREM", root:data:S:NREM
-	duplicate/o $"root:data:Sleep:REM", root:data:S:REM
-	duplicate/o $"root:data:Sleep:WAKE", root:data:S:WAKE
-	duplicate/o $"root:data:Sleep:M", root:data:S:M
-	duplicate/o $"root:data:Sleep:REMWAKE", root:data:S:REMWAKE
+string folder
+	find_artifacts(folder)
+	setdatafolder $folder+"data:S:"
+	duplicate/o $folder+"data:Sleep:NREM", $folder+"data:S:NREM"
+	duplicate/o $folder+"data:Sleep:REM", $folder+"data:REM"
+	duplicate/o $folder+"data:Sleep:WAKE", $folder+"data:WAKE"
+	duplicate/o $folder+"data:Sleep:M", $folder+"data:M"
+	duplicate/o $folder+"data:Sleep:REMWAKE", $folder+"data:REMWAKE"
 	
 
 	string list=wavelist("wave*",",",""),trace
 	variable k=itemsinlist(list, ","),i,l
 	
-	duplicate/o root:data:S:WAKE temp
+	duplicate/o $folder+"data:S:WAKE" temp
 	integrate temp
 	Print "Total wake time: "+num2str(wavemax(temp)/(2*K+2))
-	duplicate/o root:data:S:REMWAKE temp
+	duplicate/o $folder+"data:S:REMWAKE" temp
 	integrate temp	
 	Print "Total REMWAKE time: "+num2str(wavemax(temp)/(2*K+2))	
-	duplicate/o root:data:S:NREM temp
+	duplicate/o $folder+"data:S:NREM" temp
 	integrate temp	
 	Print "Total NREM time: "+num2str(wavemax(temp)/(2*K+2))	
-	duplicate/o root:data:S:REM temp
+	duplicate/o $folder+"data:S:REM" temp
 	integrate temp	
 	Print "Total REM time: "+num2str(wavemax(temp)/(2*K+2))
 	Print "================================="	
@@ -315,10 +365,10 @@ variable sf
 	make/o/n=(k) NREMAUC
 	make/o/n=(k) REMAUC
 	make/o/n=(k) REMWAKEAUC
-	print "                                            "
-	print "    FORMAT   "
+	//print "                                            "
+	//print "    FORMAT   "
 
-	print "W#events|WTime|Wamplitude|Warea...NREM....REM"
+	//print "W#events|WTime|Wamplitude|Warea...NREM....REM"
 	print "======================================================="
 	wave REM,NREM,WAKE,artifact,M,REMWAKE
 	variable RT,NT,WT,RWT,ER,EN,EW,ERW,t,AW,ARW,AR,AN,tt=wavemax(NREM)
@@ -401,8 +451,8 @@ variable sf
 			REMA[i]=AR/ER
 			
 			
-			duplicate/o $"root:Data:C:wave"+num2str(i) temporal	
-			duplicate/o root:Data:Sleep:REM rems
+			duplicate/o $folder+"Data:C:wave"+num2str(i) temporal	
+			duplicate/o $folder+"Data:Sleep:REM" rems
 			temporal=temporal*REM
 			temporal=temporal/tt
 			SetScale/P x 0,0.199203,"", temporal
@@ -420,7 +470,7 @@ variable sf
 			NREMF[i]=EN*60/NT
 			NREMA[i]=AN/EN
 			
-			duplicate/o $"root:Data:C:wave"+num2str(i) temporal	
+			duplicate/o $folder+"Data:C:wave"+num2str(i) temporal	
 			temporal=temporal*NREM
 			temporal=temporal/tt
 			SetScale/P x 0,0.199203,"", temporal
@@ -437,7 +487,7 @@ variable sf
 			WAKEF[i]=EW*60/WT
 			WAKEA[i]=AW/EW
 			
-			duplicate/o $"root:Data:C:wave"+num2str(i) temporal	
+			duplicate/o $folder+"Data:C:wave"+num2str(i) temporal	
 			temporal=temporal*wake
 			temporal=temporal/tt
 			SetScale/P x 0,0.199203,"", temporal
@@ -455,7 +505,7 @@ variable sf
 			REMWAKEA[i]=ARW/ERW
 			
 			
-			duplicate/o $"root:Data:C:wave"+num2str(i) temporal	
+			duplicate/o $folder+"Data:C:wave"+num2str(i) temporal	
 			temporal=temporal*REMWAKE
 			temporal=temporal/tt
 			SetScale/P x 0,0.199203,"", temporal
@@ -485,15 +535,18 @@ end
 
 // This funciton calculate stats per hour. 
 
-function get_stats2(sf,st,ft) // starting time and finishing time in seconds
+function get_stats2(sf,st,ft,folder,outwave) // starting time and finishing time in seconds
 variable sf,st,ft
-	find_artifacts()
-	setdatafolder "root:data:S:"
-	duplicate/o $"root:data:Sleep:NREM", root:data:S:NREM
-	duplicate/o $"root:data:Sleep:REM", root:data:S:REM
-	duplicate/o $"root:data:Sleep:WAKE", root:data:S:WAKE
-	duplicate/o $"root:data:Sleep:M", root:data:S:M
-	duplicate/o $"root:data:Sleep:REMWAKE", root:data:S:REMWAKE
+string folder,outwave
+wave notewave=$outwave
+	find_artifacts(folder)
+	
+	setdatafolder folder+"data:S:"
+	duplicate/o $folder+"data:Sleep:NREM", $folder+"data:S:NREM"
+	duplicate/o $folder+"data:Sleep:REM", $folder+"data:S:REM"
+	duplicate/o $folder+"data:Sleep:WAKE", $folder+"data:S:WAKE"
+	duplicate/o $folder+"data:Sleep:M", $folder+"data:S:M"
+	duplicate/o $folder+"data:Sleep:REMWAKE", $folder+"data:S:REMWAKE"
 	
 
 	string list=wavelist("wave*",",",""),trace
@@ -522,11 +575,11 @@ variable sf,st,ft
 	make/o/n=(k) NREMAUC
 	make/o/n=(k) REMAUC
 	make/o/n=(k) REMWAKEAUC
-	print "                                            "
-	print "    FORMAT   "
+	//print "                                            "
+	//print "    FORMAT   "
 
-	print "W#events|WTime|Wamplitude|Warea...NREM....REM"
-	print "======================================================="
+	//print "W#events|WTime|Wamplitude|Warea...NREM....REM"
+	//print "======================================================="
 	wave REM,NREM,WAKE,artifact,M,REMWAKE
 	variable RT,NT,WT,RWT,ER,EN,EW,ERW,t,AW,ARW,AR,AN,tt=wavemax(NREM)
 	for (i=0;i<k;i+=1)
@@ -550,7 +603,10 @@ variable sf,st,ft
 	
 		for (l=st*sf;l<(ft*sf);l+=1)
 		
-
+		if (numpnts(artifact)<=l)
+		
+			break
+		endif
 			if (artifact[l]==0 && M[l]==0)	
 		
 				if (WAKE[l]>0)
@@ -608,8 +664,8 @@ variable sf,st,ft
 			REMA[i]=AR/ER
 			
 			
-			duplicate/o $"root:Data:C:wave"+num2str(i) temporal	
-			duplicate/o root:Data:Sleep:REM rems
+			duplicate/o $folder+"Data:C:wave"+num2str(i) temporal	
+			duplicate/o $folder+"Data:Sleep:REM" rems
 			temporal=temporal*REM
 			temporal=temporal/tt
 			SetScale/P x 0,0.199203,"", temporal
@@ -627,7 +683,7 @@ variable sf,st,ft
 			NREMF[i]=EN*60/NT
 			NREMA[i]=AN/EN
 			
-			duplicate/o $"root:Data:C:wave"+num2str(i) temporal	
+			duplicate/o $folder+"Data:C:wave"+num2str(i) temporal	
 			temporal=temporal*NREM
 			temporal=temporal/tt
 			SetScale/P x 0,0.199203,"", temporal
@@ -644,7 +700,7 @@ variable sf,st,ft
 			WAKEF[i]=EW*60/WT
 			WAKEA[i]=AW/EW
 			
-			duplicate/o $"root:Data:C:wave"+num2str(i) temporal	
+			duplicate/o $folder+"Data:C:wave"+num2str(i) temporal	
 			temporal=temporal*wake
 			temporal=temporal/tt
 			SetScale/P x 0,0.199203,"", temporal
@@ -662,7 +718,7 @@ variable sf,st,ft
 			REMWAKEA[i]=ARW/ERW
 			
 			
-			duplicate/o $"root:Data:C:wave"+num2str(i) temporal	
+			duplicate/o $folder+"Data:C:wave"+num2str(i) temporal	
 			temporal=temporal*REMWAKE
 			temporal=temporal/tt
 			SetScale/P x 0,0.199203,"", temporal
@@ -680,8 +736,30 @@ variable sf,st,ft
 		NREMARATE[i]=(2*NREMA[i]-REMA[i]-WAKE[i])/(WAKE[i]+REMA[i]+NREMA[i])
 	
 
-		print EW,WT,WAKEA[i],WAKEAUC[i],ERW,RWT,REMWAKEA[i],REMWAKEAUC[i],EN,NT,NREMA[i],NREMAUC[i],ER,RT,REMA[i],REMAUC[i]
+		//print EW,WT,WAKEA[i],WAKEAUC[i],ERW,RWT,REMWAKEA[i],REMWAKEAUC[i],EN,NT,NREMA[i],NREMAUC[i],ER,RT,REMA[i],REMAUC[i]
+	InsertPoints/v=(nan) DimSize(notewave,0),1,$outwave
+	notewave[dimsize(notewave,0)-1][0]=EW
+	notewave[dimsize(notewave,0)-1][1]=WT
+	notewave[dimsize(notewave,0)-1][2]=WAKEA[i]
+	notewave[dimsize(notewave,0)-1][3]=WAKEAUC[i]
+	notewave[dimsize(notewave,0)-1][4]=EN
+	notewave[dimsize(notewave,0)-1][5]=NT
+	notewave[dimsize(notewave,0)-1][6]=NREMA[i]
+	notewave[dimsize(notewave,0)-1][7]=NREMAUC[i]
+	notewave[dimsize(notewave,0)-1][8]=ER
+	notewave[dimsize(notewave,0)-1][9]=RT
+	notewave[dimsize(notewave,0)-1][10]=REMA[i]
+	notewave[dimsize(notewave,0)-1][11]=REMAUC[i]
+	notewave[dimsize(notewave,0)-1][12]=ERW
+	notewave[dimsize(notewave,0)-1][13]=RWT
+	notewave[dimsize(notewave,0)-1][14]=REMWAKEA[i]
+	notewave[dimsize(notewave,0)-1][15]=REMWAKEAUC[i]
 	
+	
+	
+	
+	
+
 	endfor
 
 end
@@ -787,7 +865,7 @@ end
 
 Function concatenated_sleep(sf)
 	variable sf
-	setdatafolder "root:data:S:"
+	setdatafolder ":data:S:"
 
 	string list=wavelist("wave*",",",""),trace
 	wave wave0,REM,NREM,WAKE,artifact,M
@@ -856,12 +934,12 @@ Function concatenated_sleep(sf)
 	//REM_concatenated_scale=REM_concatenated_scale/REM_tT
 	SetScale/I x 0,1,"", REM_concatenated_scale
 	// plot stuff
-	Display/K=1 root:data:S:WAKE_concatenated_scale
+	Display/K=1 WAKE_concatenated_scale
 	ModifyGraph swapXY=1
 	ModifyGraph mode=3,marker=19,rgb(WAKE_concatenated_scale)=(0,0,0)
-	AppendToGraph root:data:S:NREM_concatenated_scale
+	AppendToGraph NREM_concatenated_scale
 	ModifyGraph mode=3,marker=19,rgb(NREM_concatenated_scale)=(1,4,52428)
-	AppendToGraph root:data:S:REM_concatenated_scale
+	AppendToGraph REM_concatenated_scale
 	ModifyGraph mode=3,marker=19,rgb(REM_concatenated_scale)=(65535,0,0)
 	Label bottom "Time (s) ";DelayUpdate
 	Label left "Event #"
@@ -1241,7 +1319,7 @@ Function Cell_index()
 		endfor	
 		Avg_Index[r]=suma/(row-1)
 	endfor
-	NewImage/K=0 root:Data:S:Index
+	NewImage/K=0 Index
 	ModifyGraph width={Plan,1,top,left}, margin(right)=100
 	ColorScale/N=text0/X=107.50/Y=0.00
 	SetScale d, 0, 0, "Chi square", Index
@@ -1250,7 +1328,7 @@ Function Cell_index()
 	ModifyImage Index ctab= {*,*,YellowHot,0}
 	Duplicate/o Avg_Index Sort_index
 	sort/R Sort_index Sort_index
-	Display/K=0 root:Data:S:Sort_index
+	Display/K=0 Sort_index
 	ModifyGraph mode=3,marker=19
 	Label left "Chi-square";DelayUpdate
 	Label bottom "Sorted cell index"
@@ -3992,10 +4070,12 @@ function plot_raster_all()
 	string CDF,cdf2
 	Variable numDataFolders = CountObjects(":", 4), i
 	cdf2=GetDataFolder(1)
+	String dfList = SortedDataFolderList(cdf2, 16)
 	for(i=0; i<(numDataFolders); i+=1)
-		String nextPath =GetIndexedObjNameDFR($cdf2, 4, i )
+		String nextPath =stringfromlist(i,dflist,";")
 		nextPath="'"+nextpath+"'"
-		setdatafolder $cdf2+nextPath+":'new method':Data:S:"
+		print nextPath
+		setdatafolder $cdf2+nextPath+":Data:S:"
 		wave wake,nrem,rem,artifact
 		SetScale/P x 0,0.199203,"", artifact
 		variable t=wavemax(artifact)
@@ -4008,7 +4088,7 @@ function plot_raster_all()
 		variable off_set=itemsinlist(list2)
 		string ws=stringfromlist(off_set-4, list2, ";"),ns=stringfromlist(off_set-3, list2, ";"),rs=stringfromlist(off_set-2, list2, ";"),as=stringfromlist(off_set-1, list2, ";")
 		
-		ModifyGraph mode=7,rgb($ws)=(49151,65535,49151),rgb($ns)=(49151,60031,65535),rgb($rs)=(65535,49151,49151)
+		ModifyGraph mode($ws)=7,mode($ns)=7,mode($rs)=7,rgb($ws)=(49151,65535,49151),rgb($ns)=(49151,60031,65535),rgb($rs)=(65535,49151,49151)
 		ModifyGraph hbFill($ws)=2
 		ModifyGraph hbFill($ns)=2
 		ModifyGraph hbFill($rs)=2
@@ -4017,7 +4097,7 @@ function plot_raster_all()
 		ModifyGraph offset($ns)={0,((off_set-3*(i+1))*2)-0.5}
 		ModifyGraph offset($rs)={0,((off_set-3*(i+1))*2)-0.5}
 		ModifyGraph offset($as)={0,((off_set-3*(i+1))*2)-0.5}
-		setdatafolder $cdf2+nextPath+":'new method':Data:S:"
+		setdatafolder $cdf2+nextPath+":Data:S:"
 		add_raster(i+1)
 		
 	endfor
@@ -4050,7 +4130,7 @@ function add_raster(num)
 		string last=stringfromlist(off_set, list2, ";")
 		SetScale/P x 0,0.199203,"", twave
 		ModifyGraph offset($last)={0,(off_set-num*3)*2}	
-		ModifyGraph mode($last)=3,marker($last)=10,rgb($last)=(0,0,0)
+		ModifyGraph mode($last)=3,marker($last)=10,rgb($last)=(0,0,0),msize($last)=1
 	endfor
 end
 
@@ -4178,8 +4258,8 @@ end
 // ============================================================
 // Same as find_peaks but with 3 different restrictions. 
 
-function find_peaks2()
-	setdatafolder root:data:C:
+function find_peaks2(folder)
+	string folder
 	string list=wavelist("wave*",",",""),trace
 	list=SortList(list,",", 16)
 	variable k=itemsinlist(list, ","),i,l
@@ -4198,7 +4278,7 @@ function find_peaks2()
 		Variable endP= DimSize(w,0)-1
 		variable not_event,control1=0,control2=0,control3=0,control4=0
 		duplicate/o w noise
-		wave c1=$"root:data:C_raw:"+stringfromlist(i,list,","),c2=$"root:data:C:"+stringfromlist(i,list,",")
+		wave c1=$folder+"data:C_raw:"+stringfromlist(i,list,","),c2=$folder+"data:C:"+stringfromlist(i,list,",")
 		noise=c1-c2
 		smooth 5, noise
 		wavestats/Q noise
@@ -4220,8 +4300,8 @@ function find_peaks2()
 				not_event=1
 			endif
 			// control 2 amplitude must be 3 times the Sdev of the local noise.
-			wavestats/q/r=[V_PeakLoc-150,V_PeakLoc+150] noise 
-			if (w[V_PeakLoc]<3*V_sdev)
+			wavestats/q/r=[V_PeakLoc-100,V_PeakLoc+100] noise //150
+			if (w[V_PeakLoc]<5*V_sdev)
 			control2=control2+1
 			not_event=1	
 			endif		
@@ -4258,10 +4338,379 @@ function find_peaks2()
 		print "cell "+num2str(i)+" was discarded (too noisy)!"
 		endif
 		
-		duplicate/o temp $"root:data:S:"+stringfromlist(i,list,",")
+		duplicate/o temp $folder+"data:S:"+stringfromlist(i,list,",")
 		if	(switch1==0)
 		print "cell "+num2str(i)+" done!"
 		endif
 	endfor
 end
+end
 
+
+
+
+
+function createCI_auto(str_temp)
+	string str_temp
+	wave temp=$str_temp
+	variable wt,nt,rt,we,ne,re
+	wave WakeT
+
+	wave WakeT,NREMT,REMT,WakeE,NREME,REME
+	
+	duplicate/o/RMD=[][1] temp test
+	integrate test
+	wt=test(inf)
+	duplicate/o/RMD=[][5] temp test
+	integrate test
+	nt=test(inf)
+	duplicate/o/RMD=[][9] temp test
+	integrate test
+	rt=test(inf)
+	duplicate/o/RMD=[][0] temp test
+	integrate test
+	we=test(inf)
+	duplicate/o/RMD=[][4] temp test
+	integrate test
+	ne=test(inf)
+	duplicate/o/RMD=[][8] temp test
+	integrate test
+	re=test(inf)
+	
+	
+	variable sim=10000
+
+	variable i,n=dimsize(temp,0),randnum,s
+	make/o/n=(sim) wakeP,NREMP,REMP
+
+	for (s=0;s<sim;s+=1)
+		variable WakeTR=0,NREMTR=0,REMTR=0,WakeER=0,NREMER=0,REMER=0
+		for (i=0;i<n;i+=1)
+			randnum=ceil((enoise(0.5)+0.5)*(n-1))
+			WakeTR=WakeTR+temp[randnum][1]
+			NREMTR=NREMTR+temp[randnum][5]
+			REMTR=REMTR+temp[randnum][9]
+			WakeER=WakeER+temp[randnum][0]
+			NREMER=NREMER+temp[randnum][4]
+			REMER=REMER+temp[randnum][8]
+		endfor
+		wakeP[s]=WakeER/WakeTR
+		NREMP[s]=NREMER/NREMTR
+		REMP[s]=REMER/REMTR
+	endfor
+	sort wakeP wakeP
+	sort NREMP NREMP
+	sort REMP REMP
+
+	variable CI95=(0.223606798/2)*sim,CI_MC95=(0.223606798/6)*sim
+	print "wake CI is: "
+	print "NREM CI is: "
+	print "NREM CI is: "
+	print num2str(we/wt)+" "+num2str(wakep(sim-CI95))+" "+num2str(wakep(CI95))
+	print num2str(ne/nt)+" "+num2str(NREMp(sim-CI95))+" "+num2str(NREMp(CI95))
+	print num2str(re/rt)+" "+num2str(REMp(sim-CI95))+" "+num2str(REMp(CI95))
+	Print "For multiples comparision[MC]"
+	print "wake CI MC corrected (3) is: "
+	print "NREM CI MC corrected (3) is: "
+	print "NREM CI MC corrected (3) is: "
+	print num2str(we/wt)+" "+num2str(wakep(sim-CI_MC95))+" "+num2str(wakep(CI_MC95))
+	print num2str(ne/nt)+" "+num2str(NREMp(sim-CI_MC95))+" "+num2str(NREMp(CI_MC95))
+	print num2str(re/rt)+" "+num2str(REMp(sim-CI_MC95))+" "+num2str(REMp(CI_MC95))
+	print " ''WARNING! use createCI2() instad to create a CI of the difference'' "
+	
+	killwaves wakeP,NREMP,REMP,test
+
+end
+
+
+function createCI2_auto(list1,list2)  // this create CI of the difference for the wake-nrem-rem data (used for frequency analisis, 12 wave must be input).
+	string list1,list2
+	wave temp1=$list1,temp2=$list2
+	// the structure of the list is the following:
+	// WT1|NT1|RT1|WE1|NE1|RE1|WT2|NT2|RT2|WE2|NE2|RE2
+	variable wt,nt,rt,we,ne,re,wt2,nt2,rt2,we2,ne2,re2
+
+	
+	duplicate/o/RMD=[][1] temp1 test
+	integrate test
+	wt=test(inf)
+	duplicate/o/RMD=[][5] temp1 test
+	integrate test
+	nt=test(inf)
+	duplicate/o/RMD=[][9] temp1 test
+	integrate test
+	rt=test(inf)
+	duplicate/o/RMD=[][0] temp1 test
+	integrate test
+	we=test(inf)
+	duplicate/o/RMD=[][4] temp1 test
+	integrate test
+	ne=test(inf)
+	duplicate/o/RMD=[][8] temp1 test
+	integrate test
+	re=test(inf)
+	
+	duplicate/o/RMD=[][1] temp2 test
+	integrate test
+	wt2=test(inf)
+	duplicate/o/RMD=[][5] temp2 test
+	integrate test
+	nt2=test(inf)
+	duplicate/o/RMD=[][9] temp2 test
+	integrate test
+	rt2=test(inf)
+	duplicate/o/RMD=[][0] temp2 test
+	integrate test
+	we2=test(inf)
+	duplicate/o/RMD=[][4] temp2 test
+	integrate test
+	ne2=test(inf)
+	duplicate/o/RMD=[][8] temp2 test
+	integrate test
+	re2=test(inf)
+	
+	
+	variable sim=10000,w1,nr1,r1,w2,nr2,r2
+
+	variable i,n=dimsize(temp1,0),randnum,s,i2,n2=dimsize(temp2,0)
+	make/o/n=(sim) wakeP,NREMP,REMP
+
+	for (s=0;s<sim;s+=1)
+		variable WakeTR=0,NREMTR=0,REMTR=0,WakeER=0,NREMER=0,REMER=0,WakeTR2=0,NREMTR2=0,REMTR2=0,WakeER2=0,NREMER2=0,REMER2=0
+		
+		for (i=0;i<n;i+=1)
+			randnum=ceil((enoise(0.5)+0.5)*(n-1))
+			WakeTR=WakeTR+temp1[randnum][1]
+			NREMTR=NREMTR+temp1[randnum][5]
+			REMTR=REMTR+temp1[randnum][9]
+			WakeER=WakeER+temp1[randnum][0]
+			NREMER=NREMER+temp1[randnum][4]
+			REMER=REMER+temp1[randnum][8]
+		endfor
+		
+		for (i2=0;i2<n2;i2+=1)
+			randnum=ceil((enoise(0.5)+0.5)*(n2-1))
+			WakeTR2=WakeTR2+temp2[randnum][1]
+			NREMTR2=NREMTR2+temp2[randnum][5]
+			REMTR2=REMTR2+temp2[randnum][9]
+			WakeER2=WakeER2+temp2[randnum][0]
+			NREMER2=NREMER2+temp2[randnum][4]
+			REMER2=REMER2+temp2[randnum][8]
+		endfor
+		w1=WakeER/WakeTR
+		nr1=NREMER/NREMTR
+		r1=REMER/REMTR
+		w2=WakeER2/WakeTR2
+		nr2=NREMER2/NREMTR2
+		r2=REMER2/REMTR2
+		
+		
+		
+		wakeP[s]=w2-w1
+		NREMP[s]=nr2-nr1
+		REMP[s]=r2-r1
+	endfor
+	sort wakeP wakeP
+	sort NREMP NREMP
+	sort REMP REMP
+
+	variable CI95=(0.05/2)*sim,CI_MC95=(0.05/6)*sim
+	print "wake CI is: "
+	print "NREM CI is: "
+	print "NREM CI is: "
+	print num2str(-((we/wt)-(we2/wt2)))+" "+num2str(wakep(sim-CI95))+" "+num2str(wakep(CI95))
+	print num2str(-((ne/nt)-(ne2/nt2)))+" "+num2str(NREMp(sim-CI95))+" "+num2str(NREMp(CI95))
+	print num2str(-((re/rt)-(re2/rt2)))+" "+num2str(REMp(sim-CI95))+" "+num2str(REMp(CI95))
+	Print "For multiples comparision[MC]"
+	print "wake CI MC corrected (3) is: "
+	print "NREM CI MC corrected (3) is: "
+	print "NREM CI MC corrected (3) is: "
+	print num2str(-((we/wt)-(we2/wt2)))+" "+num2str(wakep(sim-CI_MC95))+" "+num2str(wakep(CI_MC95))
+	print num2str(-((ne/nt)-(ne2/nt2)))+" "+num2str(NREMp(sim-CI_MC95))+" "+num2str(NREMp(CI_MC95))
+	print num2str(-((re/rt)-(re2/rt2)))+" "+num2str(REMp(sim-CI_MC95))+" "+num2str(REMp(CI_MC95))
+
+	killwaves wakeP,NREMP,REMP,test
+end
+
+
+function delete_zeros()
+	wave results,results1,results2,results3
+	variable n=DimSize(results,0),i
+	for (i=0;i<n;i+=1)
+		variable t=results[i][0]+results[i][4]+results[i][8]+results[i][12]
+		if (t==0)
+			DeletePoints i,1, Results
+			DeletePoints i,1, Results1
+			DeletePoints i,1, Results2
+			DeletePoints i,1, Results3
+			i=i-1
+			n=n-1
+		endif
+	endfor
+end
+
+function get_amplitude(name)
+	string name
+	wave temp=$name
+	variable n=DimSize(temp,0),i=0,s=1
+	variable amp=temp[i][2]*temp[i][0]+temp[i][6]*temp[i][4]+temp[i][10]*temp[i][8]+temp[i][14]*temp[i][12]
+	variable en=temp[i][0]+temp[i][4]+temp[i][8]+temp[i][12]
+	variable cell=1
+	make/o/n=0 amp_avg
+	insertpoints/V=(amp/en) 0,1,amp_Avg
+
+	for (i=1;i<n;i+=1)
+		if (temp[i][1]==temp[i-1][1])  // then is same mouse
+			amp=temp[i][2]*temp[i][0]+temp[i][6]*temp[i][4]+temp[i][10]*temp[i][8]+temp[i][14]*temp[i][12]
+			en=temp[i][0]+temp[i][4]+temp[i][8]+temp[i][12]
+			insertpoints/V=(amp/en) 0,1,amp_Avg
+		else
+			wavestats/q amp_avg
+			print V_avg,V_sdev
+			make/o/n=0 amp_avg
+			amp=temp[i][2]*temp[i][0]+temp[i][6]*temp[i][4]+temp[i][10]*temp[i][8]+temp[i][14]*temp[i][12]
+			en=temp[i][0]+temp[i][4]+temp[i][8]+temp[i][12]
+			insertpoints/V=(amp/en) 0,1,amp_Avg
+		endif
+endfor
+wavestats/q amp_avg
+print V_avg,V_sdev
+end
+
+
+Function/S SortedDataFolderList(sourceFolderStr, sortOptions)
+    String sourceFolderStr  // e.g., "root:'A Data Folder'"
+    Variable sortOptions    // e.g., 16 - See SortList for details
+   
+    String dfList = ""
+   
+    Variable numDataFolders = CountObjects(sourceFolderStr, 4)
+    Variable i
+    for (i=0; i< numDataFolders; i+=1)
+        String dfName = GetIndexedObjName(sourceFolderStr, 4, i)
+        dfList += dfName + ";"
+    endfor
+   
+    dfList = SortList(dfList, ";", sortOptions)
+    return dfList
+End
+
+function del_non_overlaping(sesion)
+	variable sesion
+	wave s1,s2
+	variable ch=2
+	
+	if (sesion==2)
+		ch=1
+	endif
+	
+	variable n=numpnts(s1),i
+
+	for (i=0;i<n;i+=1)
+	wave ref=$"s"+num2str(sesion)
+	wave check=$"s"+num2str(ch)
+	variable t
+	t=check[i]
+
+		if (t==0) //then is non-overlaping
+			killwaves $":Data:C_raw:wave"+num2str(ref[i]-1)
+			killwaves $":Data:C:wave"+num2str(ref[i]-1)
+
+		endif
+		endfor
+end
+
+
+function reorder_waves()
+	string	list=wavelist("wave*",",","")
+	list=SortList(list,",", 16)
+	variable 	k=itemsinlist(list, ","),i
+	for (i=0;i<k;i+=1)
+	string trace=stringfromlist(i,list,",")
+	duplicate/o $trace temp
+	killwaves $trace
+	duplicate/o temp $"wave"+num2str(i)
+	
+	endfor
+
+
+end
+
+//====================== Funciton to calculate the proportion of rme active cells by bootstrap
+
+function rem_active(avg,sd,sim) //good window is 713.036. rem_active(713.036,466.107,10000)
+	variable avg,sd,sim
+	active_prob()
+	wave rem_conc, results
+	variable cell_num=DimSize(results,0),s,i
+	make/o/n=(sim) rem_active_boot
+	for (s=0;s<sim;s+=1)
+		variable active=0
+		for (i=0;i<cell_num;i+=1)
+			variable wind=avg+gnoise(sd)
+		
+			variable n=numpnts(rem_conc)-wind*2
+			variable r=(enoise(0.5)+0.5)*n
+			if(wavemax(rem_conc,r,r+wind*2)>0.05)
+				active=active+1
+			endif
+		endfor
+	rem_active_boot[s]=active/cell_num
+
+	endfor
+duplicate rem_active_boot temp
+sort temp temp
+
+print mean(temp),temp[0.975*sim], temp[0.025*sim]
+killwaves temp
+end
+
+
+function rem_active_diff(folder1,folder2,sim) //good window is 713.036. rem_active(713.036,466.107,10000)
+	string folder1,folder2
+	variable sim
+	wave rem_conc, results
+duplicate/o $folder2+"rem_active_boot" rem_active_boot_dif
+wave w1=$folder1+"rem_active_boot", w2=$folder2+"rem_active_boot"
+rem_active_boot_dif=w1-w2
+sort rem_active_boot_dif rem_active_boot_dif
+print mean(rem_active_boot_dif),rem_active_boot_dif[0.975*sim], rem_active_boot_dif[0.025*sim]
+end
+
+function active_prob()
+	variable sf
+
+
+	Variable numDataFolders = CountObjects(":", 4), l
+	string cdf2
+	cdf2=GetDataFolder(1)
+	make/o/n=0 rem_conc
+	for(l=0; l<(numDataFolders); l+=1)
+		String nextPath =GetIndexedObjNameDFR($cdf2, 4, l )
+		nextPath="'"+nextpath+"'"
+		setdatafolder $cdf2+nextPath+":data:S"
+
+		string list,trace
+		variable k,i
+		wave REM,nrem,wake
+		variable mw=wavemax(wake),mr=wavemax(rem), mn=wavemax(nrem)
+		list=wavelist("wave*",",","")
+		list=SortList(list,",", 16)
+		k=itemsinlist(list, ",")
+
+		for (i=0;i<k;i+=1)	
+			trace=stringfromlist(i,list,",")
+			string input=cdf2+nextPath+":data:S:"+trace 
+			if (wavemax($input)>0)
+				string temp=cdf2+nextPath+":data:S:remiei_"+trace
+				//for rem
+				duplicate/o $input $temp
+				wave output=$cdf2+nextPath+":data:S:remiei_"+trace
+				output = (rem[p]==0) ? nan : output[p]
+				WaveTransform zapNaNs output
+				concatenate/NP {output}, $cdf2+"rem_conc"
+			endif
+		endfor
+	endfor
+	setdatafolder cdf2
+end

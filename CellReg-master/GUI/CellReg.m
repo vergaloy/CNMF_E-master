@@ -56,7 +56,7 @@ function varargout = CellReg(varargin)
 
 % Edit the above text to modify the response to help CellReg
 
-% Last Modified by GUIDE v2.5 25-Jul-2017 15:25:41
+% Last Modified by GUIDE v2.5 19-Mar-2018 16:44:19
 
 % reset figure properties to default:
 if verLessThan('matlab','8.4')
@@ -173,6 +173,8 @@ set(handles.microns_per_pixel,'backgroundColor',[1 1 1]);
 set(handles.reference_session_index,'string','1')
 set(handles.maximal_rotation','string','30')
 set(handles.maximal_rotation','enable','on')
+set(handles.transformation_smoothness,'string','2')
+set(handles.transformation_smoothness,'enable','off')
 set(handles.distance_threshold,'enable','off')
 set(handles.correlation_threshold,'enable','on')
 set(handles.decision_thresh,'enable','on')
@@ -479,6 +481,7 @@ else
     data_struct=aligned_data_struct.aligned_data_struct;
     data_struct.results_directory=results_directory;
     figures_directory=fullfile(results_directory,'Figures');
+    data_struct.figures_directory=figures_directory;
     if exist(figures_directory,'dir')~=7
         mkdir(figures_directory);
     end
@@ -514,8 +517,10 @@ else
     end
     if strcmp(data_struct.alignment_type,'Translations')
         set(handles.translations,'Value',1);
-    else
+    elseif strcmp(data_struct.alignment_type,'Translations and Rotations')
         set(handles.translations_rotations,'Value',1);
+    else
+        set(handles.non_rigid,'Value',1);
     end
 end
 
@@ -553,6 +558,7 @@ else
     data_struct=modeled_data_struct.modeled_data_struct;
     data_struct.results_directory=results_directory;
     figures_directory=fullfile(results_directory,'Figures');
+    data_struct.figures_directory=figures_directory;
     if exist(figures_directory,'dir')~=7
         mkdir(figures_directory);
     end
@@ -589,8 +595,10 @@ else
     end
     if strcmp(data_struct.alignment_type,'Translations')
         set(handles.translations,'Value',1);
-    else
+    elseif strcmp(data_struct.alignment_type,'Translations and Rotations')
         set(handles.translations_rotations,'Value',1);
+    else
+        set(handles.non_rigid,'Value',1);
     end
 end
 
@@ -647,15 +655,26 @@ end
 
 % Defining the parameters for image alignment:
 translations_value=get(handles.translations,'Value');
+rotations_value=get(handles.translations_rotations,'Value');
 if translations_value==1
     alignment_type='Translations';
-else
+elseif rotations_value==1
     alignment_type='Translations and Rotations';
+else
+    alignment_type='Non-rigid';
 end
 
 if strcmp(alignment_type,'Translations and Rotations')
     maximal_rotation=str2num(get(handles.maximal_rotation,'string'));
 end
+if strcmp(alignment_type,'Non-rigid')
+    transformation_smoothness=str2num(get(handles.transformation_smoothness,'string'));
+    if transformation_smoothness>3 || transformation_smoothness<0.5
+        errordlg('FOV smoothing parameter should be between 0.5-3')
+        error('FOV smoothing parameter should be between 0.5-3')
+    end
+end
+
 reference_session_index=str2num(get(handles.reference_session_index,'string'));
 reference_valid=1;
 if isempty(reference_session_index) || reference_session_index<1 || reference_session_index>number_of_sessions
@@ -681,20 +700,29 @@ disp('Stage 2 - Aligning sessions')
 [centroid_projections]=compute_centroids_projections(centroid_locations,adjusted_spatial_footprints);
 
 % Aligning the cells according to the tranlations/rotations that maximize their similarity:
+sufficient_correlation_centroids=0.2; % smaller correlation imply no similarity between sessions
+sufficient_correlation_footprints=0.3; % smaller correlation imply no similarity between sessions
 if strcmp(alignment_type,'Translations and Rotations')
     [spatial_footprints_corrected,centroid_locations_corrected,footprints_projections_corrected,centroid_projections_corrected,maximal_cross_correlation,alignment_translations,overlapping_FOV]=...
-        align_images(adjusted_spatial_footprints,centroid_locations,adjusted_footprints_projections,centroid_projections,adjusted_FOV,microns_per_pixel,reference_session_index,alignment_type,use_parallel_processing,maximal_rotation);
-elseif strcmp(alignment_type,'Translations')
+        align_images(adjusted_spatial_footprints,centroid_locations,adjusted_footprints_projections,centroid_projections,adjusted_FOV,microns_per_pixel,reference_session_index,alignment_type,sufficient_correlation_centroids,sufficient_correlation_footprints,use_parallel_processing,maximal_rotation);
+elseif strcmp(alignment_type,'Non-rigid')
+    [spatial_footprints_corrected,centroid_locations_corrected,footprints_projections_corrected,centroid_projections_corrected,maximal_cross_correlation,alignment_translations,overlapping_FOV,displacement_fields]=...
+        align_images(adjusted_spatial_footprints,centroid_locations,adjusted_footprints_projections,centroid_projections,adjusted_FOV,microns_per_pixel,reference_session_index,alignment_type,sufficient_correlation_centroids,sufficient_correlation_footprints,use_parallel_processing,transformation_smoothness);
+else
     [spatial_footprints_corrected,centroid_locations_corrected,footprints_projections_corrected,centroid_projections_corrected,maximal_cross_correlation,alignment_translations,overlapping_FOV]=...
-        align_images(adjusted_spatial_footprints,centroid_locations,adjusted_footprints_projections,centroid_projections,adjusted_FOV,microns_per_pixel,reference_session_index,alignment_type,use_parallel_processing);
+        align_images(adjusted_spatial_footprints,centroid_locations,adjusted_footprints_projections,centroid_projections,adjusted_FOV,microns_per_pixel,reference_session_index,alignment_type,sufficient_correlation_centroids,sufficient_correlation_footprints,use_parallel_processing);
 end
 
 % Evaluating data quality:
-[all_centroid_projections_correlations,number_of_cells_per_session]=...
-    evaluate_data_quality(spatial_footprints_corrected,centroid_projections_corrected,maximal_cross_correlation,alignment_translations,reference_session_index,alignment_type);
+[all_projections_correlations,number_of_cells_per_session]=...
+    evaluate_data_quality(spatial_footprints_corrected,centroid_projections_corrected,footprints_projections_corrected,maximal_cross_correlation,alignment_translations,reference_session_index,sufficient_correlation_footprints,alignment_type);
 
 % plotting alignment results:
-plot_alignment_results(adjusted_spatial_footprints,centroid_locations,spatial_footprints_corrected,centroid_locations_corrected,adjusted_footprints_projections,footprints_projections_corrected,reference_session_index,all_centroid_projections_correlations,maximal_cross_correlation,alignment_translations,overlapping_FOV,alignment_type,number_of_cells_per_session,figures_directory,figures_visibility)
+if strcmp(alignment_type,'Non-rigid')
+    plot_alignment_results(adjusted_spatial_footprints,centroid_locations,spatial_footprints_corrected,centroid_locations_corrected,adjusted_footprints_projections,footprints_projections_corrected,reference_session_index,all_projections_correlations,maximal_cross_correlation,alignment_translations,overlapping_FOV,alignment_type,number_of_cells_per_session,figures_directory,figures_visibility,displacement_fields)
+else
+    plot_alignment_results(adjusted_spatial_footprints,centroid_locations,spatial_footprints_corrected,centroid_locations_corrected,adjusted_footprints_projections,footprints_projections_corrected,reference_session_index,all_projections_correlations,maximal_cross_correlation,alignment_translations,overlapping_FOV,alignment_type,number_of_cells_per_session,figures_directory,figures_visibility)
+end
 if number_of_sessions>2
     RGB_indexes=[1 2 3];
 else
@@ -836,76 +864,38 @@ normalized_maximal_distance=maximal_distance/microns_per_pixel;
 p_same_certainty_threshold=0.95; % certain cells are those with p_same>threshld or <1-threshold
 [number_of_bins,centers_of_bins]=estimate_number_of_bins(spatial_footprints_corrected,normalized_maximal_distance);
 
-% Computing correlations and distances across days:
-compute_model_again=0;
-if ~isfield(data_struct,'all_to_all_indexes')
-    compute_model_again=1;
-else % check if the previous maximal distance was as large as the new one - no new measurments required
-    maximal_measured_distance=max(data_struct.neighbors_centroid_distances);
-    if maximal_measured_distance<0.99*normalized_maximal_distance
-        compute_model_again=1;
-    end
-end
+disp('Stage 3 - Calculating a probabilistic model of the data')
+[all_to_all_indexes,all_to_all_spatial_correlations,all_to_all_centroid_distances,neighbors_spatial_correlations,neighbors_centroid_distances,neighbors_x_displacements,neighbors_y_displacements,NN_spatial_correlations,NNN_spatial_correlations,NN_centroid_distances,NNN_centroid_distances]=...
+    compute_data_distribution(spatial_footprints_corrected,centroid_locations_corrected,normalized_maximal_distance,imaging_technique);
 
-if compute_model_again % If the distributions were not estiamted yet
-    disp('Stage 3 - Calculating a probabilistic model of the data')
-    [all_to_all_indexes,all_to_all_spatial_correlations,all_to_all_centroid_distances,neighbors_spatial_correlations,neighbors_centroid_distances,neighbors_x_displacements,neighbors_y_displacements,NN_spatial_correlations,NNN_spatial_correlations,NN_centroid_distances,NNN_centroid_distances]=...
-        compute_data_distribution(spatial_footprints_corrected,centroid_locations_corrected,normalized_maximal_distance);
-    
-    % saving the results into the data struct for the GUI
-    data_struct.all_to_all_indexes=all_to_all_indexes;
-    data_struct.all_to_all_spatial_correlations=all_to_all_spatial_correlations;
-    data_struct.all_to_all_centroid_distances=all_to_all_centroid_distances;
-    data_struct.neighbors_spatial_correlations=neighbors_spatial_correlations;
-    data_struct.neighbors_centroid_distances=neighbors_centroid_distances;
-    data_struct.neighbors_x_displacements=neighbors_x_displacements;
-    data_struct.neighbors_y_displacements=neighbors_y_displacements;
-    data_struct.NN_spatial_correlations=NN_spatial_correlations;
-    data_struct.NNN_spatial_correlations=NNN_spatial_correlations;
-    data_struct.NN_centroid_distances=NN_centroid_distances;
-    data_struct.NNN_centroid_distances=NNN_centroid_distances;
-    
-    % saving the results into the modeled data structure:
-    modeled_data_struct.all_to_all_indexes=all_to_all_indexes;
-    modeled_data_struct.all_to_all_spatial_correlations=all_to_all_spatial_correlations;
-    modeled_data_struct.all_to_all_centroid_distances=all_to_all_centroid_distances;
-    modeled_data_struct.neighbors_spatial_correlations=neighbors_spatial_correlations;
-    modeled_data_struct.neighbors_centroid_distances=neighbors_centroid_distances;
-    modeled_data_struct.neighbors_x_displacements=neighbors_x_displacements;
-    modeled_data_struct.neighbors_y_displacements=neighbors_y_displacements;
-    modeled_data_struct.NN_spatial_correlations=NN_spatial_correlations;
-    modeled_data_struct.NNN_spatial_correlations=NNN_spatial_correlations;
-    modeled_data_struct.NN_centroid_distances=NN_centroid_distances;
-    modeled_data_struct.NNN_centroid_distances=NNN_centroid_distances;
-    
-    handles.data_struct=data_struct;
-    guidata(hObject, handles)
-else % if the distributions were already estimated
-    all_to_all_indexes=data_struct.all_to_all_indexes;
-    all_to_all_spatial_correlations=data_struct.all_to_all_spatial_correlations;
-    all_to_all_centroid_distances=data_struct.all_to_all_centroid_distances;
-    neighbors_spatial_correlations=data_struct.neighbors_spatial_correlations;
-    neighbors_centroid_distances=data_struct.neighbors_centroid_distances;
-    neighbors_x_displacements=data_struct.neighbors_x_displacements;
-    neighbors_y_displacements=data_struct.neighbors_y_displacements;
-    NN_spatial_correlations=data_struct.NN_spatial_correlations;
-    NNN_spatial_correlations=data_struct.NNN_spatial_correlations;
-    NN_centroid_distances=data_struct.NN_centroid_distances;
-    NNN_centroid_distances=data_struct.NNN_centroid_distances;
-    
-    % saving the results into the modeled data structure:
-    modeled_data_struct.all_to_all_indexes=all_to_all_indexes;
-    modeled_data_struct.all_to_all_spatial_correlations=all_to_all_spatial_correlations;
-    modeled_data_struct.all_to_all_centroid_distances=all_to_all_centroid_distances;
-    modeled_data_struct.neighbors_spatial_correlations=neighbors_spatial_correlations;
-    modeled_data_struct.neighbors_centroid_distances=neighbors_centroid_distances;
-    modeled_data_struct.neighbors_x_displacements=neighbors_x_displacements;
-    modeled_data_struct.neighbors_y_displacements=neighbors_y_displacements;
-    modeled_data_struct.NN_spatial_correlations=NN_spatial_correlations;
-    modeled_data_struct.NNN_spatial_correlations=NNN_spatial_correlations;
-    modeled_data_struct.NN_centroid_distances=NN_centroid_distances;
-    modeled_data_struct.NNN_centroid_distances=NNN_centroid_distances;
-end
+% saving the results into the data struct for the GUI
+data_struct.all_to_all_indexes=all_to_all_indexes;
+data_struct.all_to_all_spatial_correlations=all_to_all_spatial_correlations;
+data_struct.all_to_all_centroid_distances=all_to_all_centroid_distances;
+data_struct.neighbors_spatial_correlations=neighbors_spatial_correlations;
+data_struct.neighbors_centroid_distances=neighbors_centroid_distances;
+data_struct.neighbors_x_displacements=neighbors_x_displacements;
+data_struct.neighbors_y_displacements=neighbors_y_displacements;
+data_struct.NN_spatial_correlations=NN_spatial_correlations;
+data_struct.NNN_spatial_correlations=NNN_spatial_correlations;
+data_struct.NN_centroid_distances=NN_centroid_distances;
+data_struct.NNN_centroid_distances=NNN_centroid_distances;
+
+% saving the results into the modeled data structure:
+modeled_data_struct.all_to_all_indexes=all_to_all_indexes;
+modeled_data_struct.all_to_all_spatial_correlations=all_to_all_spatial_correlations;
+modeled_data_struct.all_to_all_centroid_distances=all_to_all_centroid_distances;
+modeled_data_struct.neighbors_spatial_correlations=neighbors_spatial_correlations;
+modeled_data_struct.neighbors_centroid_distances=neighbors_centroid_distances;
+modeled_data_struct.neighbors_x_displacements=neighbors_x_displacements;
+modeled_data_struct.neighbors_y_displacements=neighbors_y_displacements;
+modeled_data_struct.NN_spatial_correlations=NN_spatial_correlations;
+modeled_data_struct.NNN_spatial_correlations=NNN_spatial_correlations;
+modeled_data_struct.NN_centroid_distances=NN_centroid_distances;
+modeled_data_struct.NNN_centroid_distances=NNN_centroid_distances;
+
+handles.data_struct=data_struct;
+guidata(hObject, handles)
 
 % Plotting the (x,y) displacements:
 x_y_displacements=plot_x_y_displacements(neighbors_x_displacements,neighbors_y_displacements,microns_per_pixel,normalized_maximal_distance,number_of_bins,centers_of_bins,figures_directory,figures_visibility);
@@ -918,25 +908,25 @@ disp('Calculating a probabilistic model of the data')
     compute_centroid_distances_model(neighbors_centroid_distances,microns_per_pixel,centers_of_bins);
 
 % Modeling the distribution of spatial correlations:
-if strcmp(imaging_technique,'one_photon')
+if strcmp(imaging_technique,'one_photon');
     [spatial_correlations_model_parameters,p_same_given_spatial_correlation,spatial_correlations_distribution,spatial_correlations_model_same_cells,spatial_correlations_model_different_cells,spatial_correlations_model_weighted_sum,MSE_spatial_correlations_model,spatial_correlation_intersection]=...
         compute_spatial_correlations_model(neighbors_spatial_correlations,centers_of_bins);
 end
 
 % estimating registration accuracy:
-if strcmp(imaging_technique,'one_photon')
+if strcmp(imaging_technique,'one_photon');
     [p_same_centers_of_bins,uncertain_fraction_centroid_distances,cdf_p_same_centroid_distances,false_positive_per_distance_threshold,true_positive_per_distance_threshold,uncertain_fraction_spatial_correlations,cdf_p_same_spatial_correlations,false_positive_per_correlation_threshold,true_positive_per_correlation_threshold]=...
-        estimate_registration_accuracy(centroid_distances_model_parameters,p_same_certainty_threshold,neighbors_centroid_distances,centroid_distances_model_same_cells,centroid_distances_model_different_cells,p_same_given_centroid_distance,centers_of_bins,spatial_correlations_model_parameters,neighbors_spatial_correlations,spatial_correlations_model_same_cells,spatial_correlations_model_different_cells,p_same_given_spatial_correlation);
+        estimate_registration_accuracy(p_same_certainty_threshold,neighbors_centroid_distances,centroid_distances_model_same_cells,centroid_distances_model_different_cells,p_same_given_centroid_distance,centers_of_bins,neighbors_spatial_correlations,spatial_correlations_model_same_cells,spatial_correlations_model_different_cells,p_same_given_spatial_correlation);
     % Checking which model is better according to a defined cost function:
-    [best_model_string]=choose_best_model(uncertain_fraction_centroid_distances,MSE_centroid_distances_model,imaging_technique,uncertain_fraction_spatial_correlations,MSE_spatial_correlations_model);
+    [best_model_string]=choose_best_model(MSE_centroid_distances_model,centroid_distances_model_same_cells,centroid_distances_model_different_cells,p_same_given_centroid_distance,imaging_technique,MSE_spatial_correlations_model,spatial_correlations_model_same_cells,spatial_correlations_model_different_cells,p_same_given_spatial_correlation);
 else
     [p_same_centers_of_bins,uncertain_fraction_centroid_distances,cdf_p_same_centroid_distances,false_positive_per_distance_threshold,true_positive_per_distance_threshold]=...
-        estimate_registration_accuracy(centroid_distances_model_parameters,p_same_certainty_threshold,neighbors_centroid_distances,centroid_distances_model_same_cells,centroid_distances_model_different_cells,p_same_given_centroid_distance,centers_of_bins);
-    [best_model_string]=choose_best_model(uncertain_fraction_centroid_distances,MSE_centroid_distances_model,imaging_technique);
+        estimate_registration_accuracy(p_same_certainty_threshold,neighbors_centroid_distances,centroid_distances_model_same_cells,centroid_distances_model_different_cells,p_same_given_centroid_distance,centers_of_bins);
+    [best_model_string]=choose_best_model(MSE_centroid_distances_model,centroid_distances_model_same_cells,centroid_distances_model_different_cells,p_same_given_centroid_distance,imaging_technique);
 end
 
 % change the initial and final registration according to the best model:
-if strcmp(best_model_string,'Spatial correlation')
+if strcmp(best_model_string,'Spatial correlation');
     set(handles.spatial_correlations,'Value',1);
     set(handles.spatial_correlations_2,'Value',1);
     set(handles.distance_threshold,'enable','off')
@@ -1350,6 +1340,8 @@ set(handles.microns_per_pixel,'backgroundColor',[1 1 1]);
 set(handles.reference_session_index,'string','1')
 set(handles.maximal_rotation','string','30')
 set(handles.maximal_rotation','enable','on')
+set(handles.transformation_smoothness,'string','2')
+set(handles.transformation_smoothness,'enable','off')
 set(handles.distance_threshold,'enable','off')
 set(handles.correlation_threshold,'enable','on')
 set(handles.simple_distance_threshold,'enable','off')
@@ -2189,3 +2181,108 @@ function correlation_threshold_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of correlation_threshold as text
 %        str2double(get(hObject,'String')) returns contents of correlation_threshold as a double
+
+
+% --- Executes on button press in non_rigid.
+function non_rigid_Callback(hObject, eventdata, handles)
+% hObject    handle to non_rigid (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of non_rigid
+
+if get(handles.non_rigid,'Value')==1
+    set(handles.maximal_rotation,'enable','off')
+    set(handles.transformation_smoothness,'enable','on')
+end
+
+
+% --- Executes on button press in two_photon.
+function two_photon_Callback(hObject, eventdata, handles)
+% hObject    handle to two_photon (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of two_photon
+
+if get(handles.two_photon,'Value')==1
+    set(handles.non_rigid,'value',1)
+    set(handles.centroid_distances,'value',1)
+    set(handles.centroid_distances_2,'value',1)
+    set(handles.maximal_rotation,'enable','off')
+    set(handles.model_maximal_distance,'string',num2str(15))    
+    set(handles.transformation_smoothness,'enable','on')
+end
+
+% --- Executes on button press in one_photon.
+function one_photon_Callback(hObject, eventdata, handles)
+% hObject    handle to one_photon (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of one_photon
+
+if get(handles.one_photon,'Value')==1
+    set(handles.translations_rotations,'value',1)
+    set(handles.spatial_correlations,'value',1)
+    set(handles.spatial_correlations_2,'value',1)
+    set(handles.maximal_rotation,'enable','on')
+    set(handles.transformation_smoothness,'enable','off')
+    set(handles.model_maximal_distance,'string',num2str(12))        
+end
+
+
+function transformation_smoothness_Callback(hObject, eventdata, handles)
+% hObject    handle to transformation_smoothness (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of transformation_smoothness as text
+%        str2double(get(hObject,'String')) returns contents of transformation_smoothness as a double
+
+transformation_smoothness=str2num(get(handles.transformation_smoothness,'string'));
+if transformation_smoothness>3 || transformation_smoothness<0.5
+    errordlg('FOV smoothing parameter should be between 0.5-3')
+    error('FOV smoothing parameter should be between 0.5-3')
+end
+
+
+% --- Executes during object creation, after setting all properties.
+function transformation_smoothness_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to transformation_smoothness (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in translations.
+function translations_Callback(hObject, eventdata, handles)
+% hObject    handle to translations (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of translations
+
+if get(handles.translations,'Value')==1
+    set(handles.maximal_rotation,'enable','off')
+    set(handles.transformation_smoothness,'enable','off')
+end
+
+
+% --- Executes on button press in translations_rotations.
+function translations_rotations_Callback(hObject, eventdata, handles)
+% hObject    handle to translations_rotations (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of translations_rotations
+
+if get(handles.translations_rotations,'Value')==1
+    set(handles.maximal_rotation,'enable','on')
+    set(handles.transformation_smoothness,'enable','off')
+end

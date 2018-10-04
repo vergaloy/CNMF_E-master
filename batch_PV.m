@@ -2,7 +2,7 @@
 
 
 % Specify the folder where the files live.
-myFolder = 'C:\Users\SSG Lab\Desktop\motion corrected\batch11';
+myFolder = 'C:\Users\SSG Lab\Desktop\motion corrected\batch13\180308_090329-Objects\trimmed-Objects';
 savefiles=1;
 % Check to make sure that folder actually exists.  Warn user if it doesn't.
 if ~isdir(myFolder)
@@ -64,7 +64,7 @@ deconv_options = struct('type', 'ar1', ... % model of the calcium traces. {'ar1'
     'smin', -3, ...         % minimum spike size. When the value is negative, the actual threshold is abs(smin)*noise level
     'optimize_pars', true, ...  % optimize AR coefficients
     'optimize_b', true, ...% optimize the baseline);
-    'max_tau', 80);    % maximum decay time (unit: frame);
+    'max_tau', 250);    % maximum decay time (unit: frame);
 
 nk = 30;             % detrending the slow fluctuation. usually 1 is fine (no detrending)  
 % when changed, try some integers smaller than total_frame/(Fs*30)
@@ -87,8 +87,8 @@ merge_thr_spatial = [0.8, 0.1, -inf];  % merge components with highly correlated
 
 % -------------------------  INITIALIZATION   -------------------------  %
 K = [];             % maximum number of neurons per patch. when K=[], take as many as possible.
-min_corr = 0.77;     % minimum local correlation for a seeding pixel  pv=0.7
-min_pnr = 12;       % minimum peak-to-noise ratio for a seeding pixel   PV=6
+min_corr = 0.55;     % minimum local correlation for a seeding pixel  pv=0.7
+min_pnr = 5.5;       % minimum peak-to-noise ratio for a seeding pixel   PV=6
 min_pixel = (gSig-2)^2;      % minimum number of nonzero pixels for each neuron
 bd = 0;             % number of rows/columns to be ignored in the boundary (mainly for motion corrected data)
 frame_range = [];   % when [], uses all frames

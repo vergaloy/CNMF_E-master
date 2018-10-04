@@ -1,4 +1,4 @@
-function plot_alignment_results(spatial_footprints,centroid_locations,spatial_footprints_corrected,centroid_locations_corrected,footprints_projections,footprints_projections_corrected,reference_session_index,all_centroid_projections_correlations,maximal_cross_correlation,best_translations,overlapping_FOV,alignment_type,number_of_cells_per_session,figures_directory,figures_visibility)
+function plot_alignment_results(spatial_footprints,centroid_locations,spatial_footprints_corrected,centroid_locations_corrected,footprints_projections,footprints_projections_corrected,reference_session_index,all_centroid_projections_correlations,maximal_cross_correlation,best_translations,overlapping_FOV,alignment_type,number_of_cells_per_session,figures_directory,figures_visibility,varargin)
 % This function plots all the results for the image alignment step
 
 number_of_sessions=size(footprints_projections,2);
@@ -36,16 +36,16 @@ set(gcf,'CreateFcn','set(gcf,''Visible'',''on'')')
 subplot(2,2,1)
 imshow(footprints_projections_rgb)
 if number_of_sessions>2
-    title('RGB overlay (sessions 1-3): Pre-alignment','FontWeight','Bold','fontsize',18)
+    title('RGB overlay (sessions 1-3): Pre-alignment','FontWeight','Bold','fontsize',14)
 else
-    title('RGB overlay: Pre-alignment','FontWeight','Bold','fontsize',18)
+    title('RGB overlay: Pre-alignment','FontWeight','Bold','fontsize',14)
 end
 subplot(2,2,2)
 imshow(footprints_projections_corrected_rgb)
 if number_of_sessions>3
-    title('RGB overlay (sessions 1-3): Post-alignment','FontWeight','Bold','fontsize',18)
+    title('RGB overlay (sessions 1-3): Post-alignment','FontWeight','Bold','fontsize',14)
 else
-    title('RGB overlay: Post-alignment','FontWeight','Bold','fontsize',18)
+    title('RGB overlay: Post-alignment','FontWeight','Bold','fontsize',14)
 end
 legend_strings=cell(1,number_of_sessions);
 if number_of_sessions>16
@@ -64,7 +64,7 @@ for n=1:number_of_sessions
     hold on
     legend_strings{n}=['S. ' num2str(n)];
 end
-title('Centroid locations: Pre-alignment','FontWeight','Bold','FontSize',22)
+title('Centroid locations: Pre-alignment','FontWeight','Bold','FontSize',14)
 xlim([0 size(spatial_footprints{1},3)])
 ylim([0 size(spatial_footprints{1},2)])
 set(gca,'xtick',[])
@@ -79,7 +79,7 @@ for n=1:number_of_sessions
     set(h,'MarkerFaceColor',color(n,:));
     hold on
 end
-title('Centroid locations: Post-alignment','FontWeight','Bold','FontSize',22)
+title('Centroid locations: Post-alignment','FontWeight','Bold','FontSize',14)
 xlim([0 size(spatial_footprints_corrected{1},3)])
 ylim([0 size(spatial_footprints_corrected{1},2)])
 set(gca,'xtick',[])
@@ -87,7 +87,7 @@ set(gca,'ytick',[])
 legend(legend_strings)
 legend('boxoff')
 set(gcf,'PaperPositionMode','auto')
-savefig(fullfile(figures_directory,'Stage 2 - pre vs post alignment'))
+savefig(fullfile(figures_directory,'Stage 2 - pre vs post alignment.fig'))
 saveas(gcf,fullfile(figures_directory,'Stage 2 - pre vs post alignment'),'png')
 
 % Plotting measurments of preparation stability:
@@ -124,12 +124,14 @@ if number_of_sessions>2
     y=1:number_of_sessions;
     hold on
     plot([0.5 0.5 number_of_sessions+0.5 number_of_sessions+0.5 0.5],[reference_session_index-0.5 reference_session_index+0.5 reference_session_index+0.5 reference_session_index-0.5 reference_session_index-0.5],'linewidth',3,'color','k')
-    set(gca,'fontsize',16)
+    set(gca,'fontsize',14)
     set(gca,'XTick',x)
-    set(gca,'XTickLabel',x_label,'fontsize',12,'fontweight','bold')
+    set(gca,'XTickLabel',x_label,'fontsize',14,'fontweight','bold')
     set(gca,'YTick',y)
-    set(gca,'YTickLabel',y_label,'fontsize',12,'fontweight','bold')
-    title('Maximal Correlation across sessions','fontweight','bold')
+    set(gca,'YTickLabel',y_label,'fontsize',14,'fontweight','bold')
+    title('Maximal correlation','fontsize',14,'fontweight','bold')
+    xlabel('Session number','FontWeight','Bold','fontsize',14)
+    ylabel('Session number','FontWeight','Bold','fontsize',14)
     set(gca,'fontsize',14)
     subplot(1,2,2)
     for n=1:number_of_sessions
@@ -156,12 +158,12 @@ if number_of_sessions>2
     end
     x=1:number_of_sessions-1;
     set(gca,'XTick',x)
-    set(gca,'XTickLabel',x_label,'fontsize',12,'fontweight','bold')
+    set(gca,'XTickLabel',x_label,'fontsize',14,'fontweight','bold')
     set(gca,'fontsize',14)
-    xlabel('Session number','FontWeight','Bold','fontsize',16)
-    ylabel('Maximal Correlation','FontWeight','Bold','fontsize',16)
+    xlabel('Session number','FontWeight','Bold','fontsize',14)
+    ylabel('Maximal correlation','FontWeight','Bold','fontsize',14)
     set(gcf,'PaperPositionMode','auto')
-    savefig(fullfile(figures_directory,'Stage 2 - abnormalities test - Correlations'))
+    savefig(fullfile(figures_directory,'Stage 2 - abnormalities test - Correlations.fig'))
     saveas(gcf,fullfile(figures_directory,'Stage 2 - abnormalities test - Correlations'),'png')
 end
 
@@ -193,9 +195,9 @@ y_label=-100:50:100;
 set(gca,'YTick',y)
 set(gca,'YTickLabel',y_label,'fontsize',14,'fontweight','bold')
 set(gca,'XTick',x)
-set(gca,'XTickLabel',x_label,'fontsize',12,'fontweight','bold')
-xlabel('Y translation (\mum)','FontWeight','Bold','fontsize',16)
-ylabel('X translation (\mum)','FontWeight','Bold','fontsize',16)
+set(gca,'XTickLabel',x_label,'fontsize',14,'fontweight','bold')
+xlabel('Y translation (\mum)','FontWeight','Bold','fontsize',14)
+ylabel('X translation (\mum)','FontWeight','Bold','fontsize',14)
 
 mean_number_of_cells=mean(number_of_cells_per_session);
 is_high_number_of_cells=zeros(1,number_of_sessions);
@@ -237,14 +239,14 @@ if strcmp(alignment_type,'Translations and Rotations')
     x_label{reference_session_index}='Ref.';
     x=1:number_of_sessions;
     set(gca,'XTick',x)
-    set(gca,'XTickLabel',x_label,'fontsize',12,'fontweight','bold')
+    set(gca,'XTickLabel',x_label,'fontsize',14,'fontweight','bold')
     y_label=-30:10:30;
     y=-30:10:30;
     set(gca,'YTick',y)
-    set(gca,'YTickLabel',y_label,'fontsize',12,'fontweight','bold')
-    xlabel('Session number','FontWeight','Bold','fontsize',16)
-    ylabel('Rotation (degrees)','FontWeight','Bold','fontsize',16)
-    set(gca,'fontsize',16)
+    set(gca,'YTickLabel',y_label,'fontsize',14,'fontweight','bold')
+    xlabel('Session number','FontWeight','Bold','fontsize',14)
+    ylabel('Rotation (degrees)','FontWeight','Bold','fontsize',14)
+    set(gca,'fontsize',14)
 end
 
 % plotting the FOV correlation between each session and the reference
@@ -266,12 +268,12 @@ else
 end
 x_label{reference_session_index}='Ref.';
 x=1:number_of_sessions;
-set(gca,'fontsize',16)
+set(gca,'fontsize',14)
 set(gca,'XTick',x)
-set(gca,'XTickLabel',x_label,'fontsize',12,'fontweight','bold')
-xlabel('Session number','FontWeight','Bold','fontsize',16)
-ylabel('Max. projection correlation','FontWeight','Bold','fontsize',16)
-set(gca,'fontsize',16)
+set(gca,'XTickLabel',x_label,'fontsize',14,'fontweight','bold')
+xlabel('Session number','FontWeight','Bold','fontsize',14)
+ylabel('Max. projection correlation','FontWeight','Bold','fontsize',14)
+set(gca,'fontsize',14)
 
 % plotting the number of identified neurons for each session
 subplot(2,2,4)
@@ -280,8 +282,8 @@ hold on
 plot([1 number_of_sessions],[mean_number_of_cells mean_number_of_cells],'--','linewidth',2,'color','r')
 xlim([0 number_of_sessions+1])
 ylim([0 max([2*mean_number_of_cells,max(number_of_cells_per_session)])])
-xlabel('Session number','fontsize',16,'fontweight','bold')
-ylabel('Number of cells','fontsize',16,'fontweight','bold')
+xlabel('Session number','fontsize',14,'fontweight','bold')
+ylabel('Number of cells','fontsize',14,'fontweight','bold')
 if number_of_sessions<8
     x_label=1:number_of_sessions;
 else
@@ -292,11 +294,54 @@ else
 end
 x=1:number_of_sessions;
 set(gca,'XTick',x)
-set(gca,'XTickLabel',x_label,'fontsize',12,'fontweight','bold')
-set(gca,'fontsize',16)
+set(gca,'XTickLabel',x_label,'fontsize',14,'fontweight','bold')
+set(gca,'fontsize',14)
 set(gcf,'PaperPositionMode','auto')
-savefig(fullfile(figures_directory,'Stage 2 - abnormalities test - general'))
+savefig(fullfile(figures_directory,'Stage 2 - abnormalities test - general.fig'))
 saveas(gcf,fullfile(figures_directory,'Stage 2 - abnormalities test - general'),'png')
 
+% if non-rigid transformation was used:
+if strcmp(alignment_type,'Non-rigid')
+    displacement_fields=varargin{1};
+    adjusted_x_size=size(displacement_fields,3);
+    adjusted_y_size=size(displacement_fields,2);
+    number_of_arrows=25;
+    x_vector=round(adjusted_x_size/number_of_arrows/2):round(adjusted_x_size/number_of_arrows):adjusted_x_size;
+    y_vector=round(adjusted_y_size/number_of_arrows/2):round(adjusted_y_size/number_of_arrows):adjusted_y_size;
+    [x,y]=meshgrid(x_vector,y_vector);
+    subx=4;
+    suby=ceil(number_of_sessions/subx);
+    if number_of_sessions>4
+        figure('units','normalized','outerposition',[0.1 0.1 0.8 0.8],'Visible',figures_visibility)
+        set(gcf,'CreateFcn','set(gcf,''Visible'',''on'')')
+        for n=1:number_of_sessions
+            subplot(suby,subx,n)
+            quiver(x,y,squeeze(displacement_fields(n,(y_vector),(x_vector),1)),squeeze(flipud(displacement_fields(n,(y_vector),(x_vector),2))))
+            set(gca,'xtick',[])
+            set(gca,'ytick',[])
+            xlim([0 adjusted_x_size])
+            ylim([0 adjusted_y_size])
+            colormap('gray')
+            title(['Session ' num2str(n)],'fontsize',14,'fontweight','bold')
+        end
+    else
+        figure('units','normalized','outerposition',[0.1 0.2 0.8 0.5],'Visible',figures_visibility)
+        set(gcf,'CreateFcn','set(gcf,''Visible'',''on'')')
+        for n=1:number_of_sessions
+            subplot(1,number_of_sessions,n)
+            quiver(x,y,squeeze(displacement_fields(n,(y_vector),(x_vector),1)),squeeze(flipud(displacement_fields(n,(y_vector),(x_vector),2))))
+            set(gca,'xtick',[])
+            set(gca,'ytick',[])
+            xlim([0 adjusted_x_size])
+            ylim([0 adjusted_y_size])
+            colormap('gray')
+            title(['Session ' num2str(n)],'fontsize',14,'fontweight','bold')
+        end
+    end
+    set(gcf,'PaperPositionMode','auto')
+    savefig(fullfile(figures_directory,'Stage 1 - Non-rigid transformations.fig'))
+    saveas(gcf,fullfile(figures_directory,'Stage 1 - Non-rigid transformations'),'png')    
+end
+    
 end
 

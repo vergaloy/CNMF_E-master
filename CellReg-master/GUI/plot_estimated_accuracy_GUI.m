@@ -110,13 +110,13 @@ set(gca,'XTick',x)
 set(gca,'XTickLabel',x_label,'fontsize',14)
 
 axes(handles.axes6)
-if strcmp(imaging_technique,'one_photon');
-    plot(cumsum(false_merge_corr),cumsum(true_merge_corr),'linewidth',2,'color','b')
-    hold on
-end
 plot([0,cumsum(false_merge_dist)],[0,cumsum(true_merge_dist)],'linewidth',2,'color','r')
-ylabel('True positive rate','fontsize',16,'fontweight','bold')
-xlabel('False positive rate','fontsize',16,'fontweight','bold')
+if strcmp(imaging_technique,'one_photon');
+    hold on
+    plot(cumsum(false_merge_corr),cumsum(true_merge_corr),'linewidth',2,'color','b')
+end
+ylabel('True positive rate','fontsize',14,'fontweight','bold')
+xlabel('False positive rate','fontsize',14,'fontweight','bold')
 ylim([0 1])
 xlim([0 1])
 set(gca,'fontsize',14)

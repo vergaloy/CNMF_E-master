@@ -1,4 +1,4 @@
-function [all_centroid_projections_correlations,number_of_cells_per_session]=evaluate_data_quality(spatial_footprints,centroid_projections_corrected,maximal_cross_correlation,best_translations,reference_session_index,alignment_type)
+function [all_projections_correlations,number_of_cells_per_session]=evaluate_data_quality(spatial_footprints,centroid_projections_corrected,footprints_projections_corrected,maximal_cross_correlation,best_translations,reference_session_index,sufficient_correlation,alignment_type)
 % This function assesses the quality of the data and its suitabilty for
 % longitudinal analysis.
 
@@ -9,13 +9,13 @@ function [all_centroid_projections_correlations,number_of_cells_per_session]=eva
 % 4. maximal_cross_correlation - between each session and the reference
 % 5. best_translations
 % 6. reference_session_index
-% 7. alignment_type
+% 7. sufficient_correlation % smaller correlation imply different optical section or high noise levels
+% 8. alignment_type
 
 % Outputs:
-% 1. all_centroid_projections_correlations - correlations for all pairs of sessions
+% 1. all_projections_correlations - correlations for all pairs of sessions
 % 2. number_of_cells_per_session
 
-sufficient_correlation=0.15; % smaller correlation imply no similarity between sessions
 large_rotation=10; % in degrees
 large_translation=50; % in microns
 abnormal_number_of_cells_ratio=1.5;
@@ -24,16 +24,16 @@ registration_order=setdiff(1:number_of_sessions,reference_session_index);
 
 % calculating correlations between the centroid projections for all pairs of sessions:
 if number_of_sessions>2
-    all_centroid_projections_correlations=zeros(number_of_sessions,number_of_sessions);
+    all_projections_correlations=zeros(number_of_sessions,number_of_sessions);
     for n=1:number_of_sessions
-        all_centroid_projections_correlations(n,n)=1;
+        all_projections_correlations(n,n)=1;
         for k=n+1:number_of_sessions
-            all_centroid_projections_correlations(n,k)=corr2(centroid_projections_corrected{n},centroid_projections_corrected{k});
-            all_centroid_projections_correlations(k,n)=all_centroid_projections_correlations(n,k);
+            all_projections_correlations(n,k)=corr2(footprints_projections_corrected{n},footprints_projections_corrected{k});            
+            all_projections_correlations(k,n)=all_projections_correlations(n,k);
         end
     end
 else
-    all_centroid_projections_correlations=maximal_cross_correlation;
+    all_projections_correlations=maximal_cross_correlation;
 end
 
 number_of_cells_per_session=zeros(1,number_of_sessions);
@@ -64,9 +64,11 @@ for n=1:number_of_sessions-1
 end
     if maximal_cross_correlation(n)<sufficient_correlation
         if strcmp(alignment_type,'Translations and Rotations')
-            warning(['No appropriate translations/rotations were found for session number ' num2str(registration_order(n))])
-        else
+            warning(['No appropriate translations/rotations were found for session number ' num2str(registration_order(n)) ' - consider using non-rigid transformation'])
+        elseif strcmp(alignment_type,'Translations')
             warning(['No appropriate translations were found for session number ' num2str(registration_order(n)) ' - consider using rotations as well'])
+        else
+            warning(['No appropriate translations were found for session number ' num2str(registration_order(n))])
         end
     end
 end
