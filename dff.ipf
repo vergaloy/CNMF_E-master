@@ -960,7 +960,7 @@ function bootstrap2(wavenom1,wavenom2,sim,del0,comparisons)  //del0==1 delete 0 
 		bootstrapdist[s]=m2-m1
 	endfor
 	sort bootstrapdist bootstrapdist
-	variable CI95=(0.05/2)*sim,CI_MC95=(0.05/comparisons)*sim
+	variable CI95=(0.05/2)*sim,CI_MC95=(0.05/(2*comparisons))*sim
 	print num2str(aver)+" "+num2str(bootstrapdist(sim-CI_MC95))+" "+num2str(bootstrapdist(CI_MC95))
 end
 
@@ -1056,7 +1056,7 @@ function createCI_Results(list1)  //creae ci auto from 2d wave results
 	sort NREMP NREMP
 	sort REMP REMP
 
-	variable CI95=(0.223606798/2)*sim,CI_MC95=(0.223606798/6)*sim
+	variable CI95=(0.05/2)*sim,CI_MC95=(0.05/6)*sim
 	print "wake CI is: "
 	print "NREM CI is: "
 	print "NREM CI is: "
@@ -1171,7 +1171,7 @@ function createCI2_auto(list1,list2,mc)
 	sort NREMP NREMP
 	sort REMP REMP
 
-	variable CI95=(0.05/2)*sim,CI_MC95=(0.05/mc)*sim
+	variable CI95=(0.05/2)*sim,CI_MC95=(0.05/(2*mc))*sim
 	//print "wake CI is: "
 	//print "NREM CI is: "
 	//print "NREM CI is: "
@@ -1207,79 +1207,121 @@ function createCI2_auto_sleep(list,mc)
 	createCI2_auto(list,"list2",mc)
 end
 
+function bootstrap_sum(list1,list2,sim,comparisons)
 
-
-function bootstrap_sum(list1,sim,comparisons)  //boottrap for the number of events
-
-	string list1
+	wave list1,list2
 	variable sim,comparisons
-	
+	make/o/n=(sim,6) boot_dist
 
-	duplicate/o/RMD=[][0] $list1 tt
-	duplicate/o/RMD=[][4] $list1 tt2
-	duplicate/o/RMD=[][8] $list1 tt3
-	Redimension/N=-1 tt,tt2,tt3
-	
-	WaveTransform zapNaNs tt
-	WaveTransform zapNaNs tt2
-		WaveTransform zapNaNs tt3
-
-	variable ms1=sum(tt),ms2=sum(tt2),ms3=sum(tt3)
-	variable pp1=ms1/(ms1+ms2+ms3)*100,pp2=ms2/(ms1+ms2+ms3)*100,pp3=ms3/(ms1+ms2+ms3)*100
-	variable aver1=(ms2-ms1)/(ms1+ms2+ms3)*100,aver2=(ms3-ms2)/(ms1+ms2+ms3)*100,aver3=(ms3-ms1)/(ms1+ms2+ms3)*100
-	duplicate/o tt bootstrapsample
-	duplicate/o tt2 bootstrapsample2
-	duplicate/o tt3 bootstrapsample3
-	
-	
-	variable s,n=numpnts(tt),i,n2=numpnts(tt2),i2,n3=numpnts(tt3),i3
-	make/o/n=(sim) bootstrapdist1,bootstrapdist2,bootstrapdist3,p1,p2,p3
-	variable randnum
-
+	variable i, total_set=(dimsize(list1,1)+dimsize(list2,1)),s,c
 	for (s=0;s<sim;s+=1)
-	
-		for (i=0;i<n;i+=1)
-			randnum=ceil((enoise(0.5)+0.5)*(n-1))
-			bootstrapsample[i]=tt[randnum]
-		endfor
-		for (i2=0;i2<n2;i2+=1)
-			randnum=ceil((enoise(0.5)+0.5)*(n2-1))
-			bootstrapsample2[i2]=tt2[randnum]
-		endfor
-				for (i3=0;i3<n3;i3+=1)
-			randnum=ceil((enoise(0.5)+0.5)*(n3-1))
-			bootstrapsample3[i3]=tt3[randnum]
-		endfor
-		variable m3=	sum(bootstrapsample3)
-		variable m2=	sum(bootstrapsample2)
-		variable m1=	sum(bootstrapsample)
-		variable mt= m1+m2+m3
-		p1[s]=m1/mt*100
-		p2[s]=m2/mt*100
-		p3[s]=m3/mt*100
-		
-		bootstrapdist1[s]=(m2-m1)/mt*100
-		bootstrapdist2[s]=(m3-m2)/mt*100
-		bootstrapdist3[s]=(m3-m1)/mt*100
+		bootstrap_2d(list1)
+		wave bootstrapsample
+		SumDimension/DEST=out/D=0 bootstrapsample
+		out=out/sum(bootstrapsample)
+		boot_dist[s][0]=out[0]
+		boot_dist[s][1]=out[1]
+		boot_dist[s][2]=out[2]
+				
+		bootstrap_2d(list2)
+		wave bootstrapsample
+		SumDimension/DEST=out/D=0 bootstrapsample
+		out=out/sum(bootstrapsample)
+		boot_dist[s][3]=out[0]
+		boot_dist[s][4]=out[1]
+		boot_dist[s][5]=out[2]
 	endfor
-	sort p1 p1
-	sort p2 p2
-	sort p3 p3
-	sort bootstrapdist1 bootstrapdist1
-	sort bootstrapdist2 bootstrapdist2
-	sort bootstrapdist3 bootstrapdist3
+	variable b=binomial(total_set,2)
+	make/o/t/n=6 labels={"BW","BN","BR","AW","AN","AR"}
+	make/o/n=(sim,b) boot_dist_diff
 	
-	variable CI95=(0.05/2)*sim,CI_MC95=(0.05/comparisons)*sim	
-	print num2str(pp1)+" "+num2str(p1(sim-CI95))+" "+num2str(p1(CI95))
-	print num2str(pp2)+" "+num2str(p2(sim-CI95))+" "+num2str(p2(CI95))
-	print num2str(pp3)+" "+num2str(p3(sim-CI95))+" "+num2str(p3(CI95))
+	Make/O/N=(total_set) combi
+	combi = p
+	StatsSample/N=2/ACMB combi
+	wave M_combinations
+	
+	for (i=0;i<b;i+=1)	//set labels
+		SetDimLabel 1,i,$labels(M_combinations[i][0])+"-"+labels(M_combinations[i][1]), boot_dist_diff
+	endfor
+	
+	for (s=0;s<sim;s+=1)
+		for (i=0;i<b;i+=1)	//set labels
+			boot_dist_diff[s][i]=boot_dist[s][(M_combinations[i][0])]-boot_dist[s][(M_combinations[i][1])]
+		endfor
+	endfor
+	sort2dwave(boot_dist_diff)
+	sort2dwave(boot_dist)
+	
+	if (comparisons==0)
+		c=b
+	else
+		c=comparisons
+	endif
+	
+	variable CI=(0.05/(2))*sim,CI_M=(0.05/(2*c))*sim
+	
+	SumDimension/DEST=out/D=0 list1
+	out=out/sum(list1)
+	SumDimension/DEST=temp/D=0 list2
+	temp=temp/sum(list2)
+	Concatenate/NP=0   {temp}, out
+	
+	print "	WAKE baseline CI:"
+	print num2str(out[0])+" "+num2str(boot_dist[sim-CI][0])+" "+num2str(boot_dist[CI][0])
+	print "	NREM baseline CI:"
+	print num2str(out[1])+" "+num2str(boot_dist[sim-CI][1])+" "+num2str(boot_dist[CI][1])
+	print "	REM baseline CI:"
+	print num2str(out[2])+" "+num2str(boot_dist[sim-CI][2])+" "+num2str(boot_dist[CI][2])
+	
 
-	print num2str(aver1)+" "+num2str(bootstrapdist1(sim-CI_MC95))+" "+num2str(bootstrapdist1(CI_MC95))
-	print num2str(aver2)+" "+num2str(bootstrapdist2(sim-CI_MC95))+" "+num2str(bootstrapdist2(CI_MC95))
-	print num2str(aver3)+" "+num2str(bootstrapdist3(sim-CI_MC95))+" "+num2str(bootstrapdist3(CI_MC95))
+	print "	WAKE aftershock CI:"
+	print num2str(out[3])+" "+num2str(boot_dist[sim-CI][3])+" "+num2str(boot_dist[CI][3])
+	print "	NREM aftershock CI:"
+	print num2str(out[4])+" "+num2str(boot_dist[sim-CI][4])+" "+num2str(boot_dist[CI][4])
+	print "	REM aftershock CI:"
+	print num2str(out[5])+" "+num2str(boot_dist[sim-CI][5])+" "+num2str(boot_dist[CI][5])
 	
-	//killwaves p1,p2,p3,tt,tt2,tt3,bootstrapsample,bootstrapsample2,bootstrapsample3,bootstrapdist1,bootstrapdist2,bootstrapdist3
+	
+	print "=================hypothesis testing==========="
+
+	
+	for (i=0;i<b;i+=1)	
+		print "	"+GetDimLabel(boot_dist_diff, 1, i)
+		print num2str(out[M_combinations[i][0]]-out[M_combinations[i][1]])+" "+num2str(boot_dist_diff[sim-CI_M][i])+" "+num2str(boot_dist_diff[CI_M][i])
+	endfor
+	
 end
+
+//--------------------------
+function bootstrap_2d(wavenom1)  
+	wave wavenom1
+	
+	duplicate/o wavenom1 bootstrapsample
+
+	variable n=dimsize(wavenom1,0),i
+
+	variable randnum
+	
+	for (i=0;i<n;i+=1)
+		randnum=ceil((enoise(0.5)+0.5)*(n-1))
+		bootstrapsample[i][]=wavenom1[randnum][q]
+	endfor
+
+end
+//--------------------------
+
+function sort2dwave(name)
+	wave name
+	variable i
+	for (i=0;i<dimsize(name,1);i+=1)
+		duplicate/o/RMD=[][i] name temp
+		Redimension/N=-1 temp
+		sort temp temp
+		name[][i]=temp[p]
+	endfor
+	killwaves temp
+end
+
 
 
 // ================================================================================
@@ -1303,7 +1345,7 @@ function sleep_stats_batch() // main function for batch analysis
 	endfor
 	setdatafolder $cdf2
 end
-
+//--------------------------
 
 function sleep_stats() // get sleep relevant data, used in sleep_stats_batch()
 	variable MisW,RWisW
@@ -1364,6 +1406,8 @@ function sleep_stats() // get sleep relevant data, used in sleep_stats_batch()
 	print tw,tn,tr,tw/new,tn/nen,tr/ner,new*3600/ttime,nen*3600/ttime,ner*3600/ttime	
 end
 
+//--------------------------
+
 Function/S SortedDataFolderList(sourceFolderStr, sortOptions) // sort data folders
 	String sourceFolderStr  // e.g., "root:'A Data Folder'"
 	Variable sortOptions    // e.g., 16 - See SortList for details
@@ -1414,6 +1458,8 @@ function anova() // normal anova, datasets  to compare mus be named "anova"
 	
 return MSSb/MSSw //print F
 end
+
+//--------------------------
 
 // Use this for non-normal/non-homoscedastic  data sets must be named wave"
 function anova_bootstrap(sims)
@@ -1469,7 +1515,7 @@ else
 return 0
 endif
 end
-
+//--------------------------
 // To test bootstrap_anova power
 function test_anova_power(sims,n)
 	variable sims,n
@@ -1527,7 +1573,7 @@ newpath/O Data
 	endfor
 setdatafolder cdf
 end
-
+//--------------------------
 function create_hypnogram()// create the hypnogram data
 
 	Variable numDataFolders = CountObjects(":", 4), i,j
@@ -1586,7 +1632,7 @@ function kill_non_active_cells() //delete waves with 0 events.
 	endfor
 setdatafolder cdf
 end
-
+//--------------------------
 function reorder_waves() // Asign new sorted names after delting in kill_non_active_cells()
 	string	list=wavelist("wave*",",","")
 	list=SortList(list,",", 16)
