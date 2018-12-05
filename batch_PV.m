@@ -2,7 +2,7 @@
 
 
 % Specify the folder where the files live.
-myFolder = 'C:\Users\SSG Lab\Desktop\motion corrected\batch13\180308_090329-Objects\trimmed-Objects';
+myFolder = 'C:\Users\SSG Lab\Desktop\mspractice';
 savefiles=1;
 % Check to make sure that folder actually exists.  Warn user if it doesn't.
 if ~isdir(myFolder)
@@ -87,8 +87,8 @@ merge_thr_spatial = [0.8, 0.1, -inf];  % merge components with highly correlated
 
 % -------------------------  INITIALIZATION   -------------------------  %
 K = [];             % maximum number of neurons per patch. when K=[], take as many as possible.
-min_corr = 0.55;     % minimum local correlation for a seeding pixel  pv=0.7
-min_pnr = 5.5;       % minimum peak-to-noise ratio for a seeding pixel   PV=6
+min_corr = 0.7;     % minimum local correlation for a seeding pixel  pv=0.7
+min_pnr = 6;       % minimum peak-to-noise ratio for a seeding pixel   PV=6
 min_pixel = (gSig-2)^2;      % minimum number of nonzero pixels for each neuron
 bd = 0;             % number of rows/columns to be ignored in the boundary (mainly for motion corrected data)
 frame_range = [];   % when [], uses all frames

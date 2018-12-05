@@ -913,9 +913,6 @@ function bootstrap(wavenom1,sim,alpha)
 	print "CI is: "
 
 	print num2str(aver)+" "+num2str(bootstrapdist(sim-CI95))+" "+num2str(bootstrapdist(CI95))
-
-	Print "For multiples comparision[MC]"
-	print num2str(aver)+" "+num2str(bootstrapdist(sim-CI_MC95))+" "+num2str(bootstrapdist(CI_MC95))
 	print "This is only used to create Confidence interval. Is not okay for hypothesis testing"
 end
 
@@ -1460,6 +1457,94 @@ return MSSb/MSSw //print F
 end
 
 //--------------------------
+function call_anova2way()
+variable q1,q2,q3
+[q1,q2,q3]=anova2way()
+print q1,q2,q3
+end
+
+function [variable q1,variable q2,variable q3]anova2way() // two way anova, datasets  to compare must be 3d matrix named "anova2"
+	wave anova2
+	variable n_v1=dimsize(anova2,1),n_v2=dimsize(anova2,2),i,l,n
+	
+	Variable A=0//get [A]
+	for (l=0;l<n_v1;l+=1) 
+		make/o/n=0 pile
+		for (i=0;i<n_v2;i+=1) 
+			make/o/n=(dimsize(anova2,0)) temp
+			temp=anova2[x][l][i]
+			WaveTransform zapNaNs temp
+			concatenate/NP=0 {temp}, pile
+		endfor
+		n=numpnts(pile)
+		A=A+(sum(pile))^2/n
+	endfor
+
+	
+	Variable B=0//get [B]
+	for (l=0;l<n_v2;l+=1) 
+		make/o/n=0 pile
+		for (i=0;i<n_v1;i+=1) 
+			make/o/n=(dimsize(anova2,0)) temp
+			temp=anova2[x][i][l]
+			WaveTransform zapNaNs temp
+			concatenate/NP=0 {temp}, pile
+		endfor
+		n=numpnts(pile)
+		B=B+(sum(pile))^2/n
+	endfor
+
+	
+	Variable AB=0//get [AB]
+	for (l=0;l<n_v2;l+=1) 
+		for (i=0;i<n_v1;i+=1) 
+			make/o/n=(dimsize(anova2,0)) temp
+			temp=anova2[x][i][l]
+			WaveTransform zapNaNs temp
+			n=numpnts(temp)
+			AB=AB+(sum(temp))^2/n
+		endfor	
+	endfor
+
+	
+	Variable Y=0//get [Y]
+	for (l=0;l<n_v2;l+=1) 
+		for (i=0;i<n_v1;i+=1) 
+			make/o/n=(dimsize(anova2,0)) temp
+			temp=anova2[x][i][l]
+			WaveTransform zapNaNs temp
+			temp=temp^2
+			Y=Y+(sum(temp))
+		endfor	
+	endfor
+
+	
+	Variable T=0//get [T]
+	n=0
+	for (l=0;l<n_v2;l+=1) 
+		for (i=0;i<n_v1;i+=1) 
+			make/o/n=(dimsize(anova2,0)) temp
+			temp=anova2[x][i][l]
+			WaveTransform zapNaNs temp
+			n=n+numpnts(temp)
+			T=T+(sum(temp))
+		endfor	
+	endfor
+	T=T^2/n
+	
+	variable A_MS, B_MS, AB_MS,Y_MS
+	A_MS=(A-T)/(n_v1-1)
+	B_MS=(B-T)/(n_v2-1)
+	AB_MS=(ab-a-b+t)/((n_v1-1)*(n_v2-1))
+	Y_MS=(y-ab)/(n-n_v1*n_v2)
+	q1=A_MS/Y_MS
+	q2=B_MS/Y_MS
+	q3=AB_MS/Y_MS
+	
+return [q1,q2,q3]	
+end
+
+//--------------------------
 
 // Use this for non-normal/non-homoscedastic  data sets must be named wave"
 function anova_bootstrap(sims)
@@ -1515,6 +1600,62 @@ else
 return 0
 endif
 end
+
+// Use this for non-normal/non-homoscedastic  data sets must be named wave"
+function anova2_bootstrap(sims)
+variable sims
+
+	string list=wavelist("wave*",";","DF:0")
+	variable k=itemsinlist(list, ";"),i
+	for (i=0;i<k;i+=1)	
+		string trace=stringfromlist(i,list,";")
+		WaveTransform zapNaNs $trace
+		duplicate/o $trace $"anova"+num2str(i)
+	endfor
+
+	variable sample_F=anova()
+	wave xg
+	duplicate/o xg xg_stored
+
+	make/o/n=(sims) bstrap
+	variable l
+	string list2=wavelist("anova*",";","DF:0")
+	for (l=0;l<sims;l+=1)
+
+	for (i=0;i<k;i+=1)	
+		trace=stringfromlist(i,list,";")
+		duplicate/o $trace temp
+		temp=temp-xg_stored[i]
+		
+		string trace2=stringfromlist(i,list2,";")
+		wave tmp=$trace2
+		tmp=temp[ceil((enoise(0.5)+0.5)*(numpnts(temp)-1))]
+	endfor
+	
+	
+	bstrap[l]=anova()	
+	endfor
+	
+sort bstrap bstrap
+Make/N=1000000/O bstrap_Hist;DelayUpdate
+Histogram/CUM/P/C/B=1 bstrap,bstrap_Hist;DelayUpdate
+
+print "the F-value of the sample is "+num2str(sample_F)
+
+findlevel/q bstrap_Hist,0.9999
+if (sample_F>V_LevelX)
+print "the probability of randomly observing this value is <0.0001"
+else
+print "the probability of randomly observing this value is "+num2str(1-bstrap_Hist(sample_F))
+endif
+findlevel/q bstrap_Hist,0.95
+if (sample_F>V_LevelX)
+return 1
+else
+return 0
+endif
+end
+
 //--------------------------
 // To test bootstrap_anova power
 function test_anova_power(sims,n)
