@@ -1060,14 +1060,9 @@ function createCI_Results(list1)  //creae ci auto from 2d wave results
 	print num2str(we/wt)+" "+num2str(wakep(sim-CI95))+" "+num2str(wakep(CI95))
 	print num2str(ne/nt)+" "+num2str(NREMp(sim-CI95))+" "+num2str(NREMp(CI95))
 	print num2str(re/rt)+" "+num2str(REMp(sim-CI95))+" "+num2str(REMp(CI95))
-	Print "For multiples comparision[MC]"
-	print "wake CI MC corrected (3) is: "
-	print "NREM CI MC corrected (3) is: "
-	print "NREM CI MC corrected (3) is: "
-	print num2str(we/wt)+" "+num2str(wakep(sim-CI_MC95))+" "+num2str(wakep(CI_MC95))
-	print num2str(ne/nt)+" "+num2str(NREMp(sim-CI_MC95))+" "+num2str(NREMp(CI_MC95))
-	print num2str(re/rt)+" "+num2str(REMp(sim-CI_MC95))+" "+num2str(REMp(CI_MC95))
-	print " ''WARNING! use createCI2() instad to create a CI of the difference'' "
+	print " ''WARNING! use createCI2_****() for hypothesis testing''"
+	print " ''Use to CreateCI2_groups(list1,list2,mc) to compare between groups (eg DS vs IMS)"
+	print " ''Use to CreateCI2_sleep(list1) to compare between sleep stages (BL wake vs BL REM)"
 	
 	killwaves wakeP,NREMP,REMP,test
 
@@ -1076,7 +1071,7 @@ end
 // This is used for statistical testing, list1 and list2 are the full path for the 2d list 
 //with the data obtained from getall_batch()
 
-function createCI2_auto(list1,list2,mc)  
+function createCI2_groups(list1,list2,mc)  
 	string list1,list2
 	variable mc
 	wave temp1=$list1,temp2=$list2
@@ -1188,7 +1183,7 @@ end
 
 // this is for hypothesis tesis for sleep conditions in a same group
 
-function createCI2_auto_sleep(list,mc)
+function createCI2_sleep(list,mc)
 	string list
 	variable mc
 	duplicate/o $list list2
@@ -1201,7 +1196,7 @@ function createCI2_auto_sleep(list,mc)
 	list2[][8]=temp[p][0]
 	list2[][9]=temp[p][1]    //R-W
 	print "these confidence interval are for W-N  N-R  R-W comparisons"
-	createCI2_auto(list,"list2",mc)
+	createCI2_groups(list,"list2",mc)
 end
 
 function bootstrap_sum(list1,list2,sim,comparisons)
@@ -1334,6 +1329,7 @@ function sleep_stats_batch() // main function for batch analysis
 	string cdf2
 	cdf2=GetDataFolder(1)
 	String dfList = SortedDataFolderList(cdf2, 16)
+	print "Total Duration, average duratio, episode/h"  
 	for(l=0; l<(numDataFolders); l+=1)
 		String nextPath =stringfromlist(l,dflist,";")
 		nextPath="'"+nextpath+"'"
