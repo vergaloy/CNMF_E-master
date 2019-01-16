@@ -3,7 +3,7 @@
 // ================================================================================
 //********************************************************************************
 
-//MAIN FUNCTION: batch analysis of all mice in a group
+//MAIN FUNCTION: batch analysis of all mice in a grouptest
 
 function getall_batch()
 // PARAMETERS************
