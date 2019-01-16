@@ -9,7 +9,7 @@ function getall_batch()
 // PARAMETERS************
 
 variable ignoreM=1
-variable ignoreRW=0
+variable ignoreRW=1
 variable getS=0
 variable defSF=5.02
 variable deftshift=10
