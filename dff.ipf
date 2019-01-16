@@ -555,8 +555,11 @@ function get_stats2(sf,st,ft,folder,outwave) // starting time and finishing time
 		notewave[dimsize(notewave,0)-1][12]=ERW
 		notewave[dimsize(notewave,0)-1][13]=RWT
 		notewave[dimsize(notewave,0)-1][14]=REMWAKEA[i]
-		notewave[dimsize(notewave,0)-1][15]=REMWAKEAUC[i]
+		notewave[dimsize(notewave,0)-1][15]=REMWAKEAUC[i]	
 	endfor
+	
+	killwaves REMF, NREMF, WAKEF, REMWAKEF,WAKEFRATE,REMWAKEFRATE,REMFRATE,NREMFRATE,REMA
+	killwaves NREMA,WAKEA,REMWAKEA,WAKEARATE,REMWAKEARATE,REMARATE,NREMARATE,WAKEAUC,NREMAUC,REMAUC,REMWAKEAUC
 end
 
 //=======================================
@@ -1830,6 +1833,66 @@ function reorder_waves() // Asign new sorted names after delting in kill_non_act
 	duplicate/o $trace temp
 	killwaves $trace
 	duplicate/o temp $"wave"+num2str(i)
+	endfor
+end
+
+
+//=====================================================================
+//This get the inter-event interval for each cell
+function getiei(sf)
+variable sf
+	string list,trace,output
+	variable k,i
+	wave rem,nrem,wake
+	variable mw=wavemax(wake),mr=wavemax(rem), mn=wavemax(nrem)
+	list=wavelist("wave*",",","")
+	list=SortList(list,",", 16)
+	k=itemsinlist(list, ",")
+	for (i=0;i<k;i+=1)	
+		trace=stringfromlist(i,list,",")
+		
+		//for wake
+		duplicate/o $trace temp
+		temp = (wake[p]==0) ? nan : temp[p]
+		WaveTransform zapNaNs temp
+		output="wakeiei_"+trace
+		findlevels/edge=1/Q/D=$output temp 0.01
+		wave temp_wake=$output
+		if (numpnts(temp_wake)>1)
+			temp_wake=temp_wake/sf
+		else
+			deletepoints 0,3,temp_wake
+		endif
+		differentiate/EP=1/METH=2 $output
+		
+		//for nrem
+		duplicate/o $trace temp
+		temp = (nrem[p]==0) ? nan : temp[p]
+		WaveTransform zapNaNs temp
+		output="nremiei_"+trace
+		findlevels/edge=1/Q/D=$output temp 0.01
+		wave temp_nrem=$output
+		if (numpnts(temp_nrem)>1)
+			temp_nrem=temp_nrem/sf
+		else
+			deletepoints 0,3,temp_nrem
+		endif
+		differentiate/EP=1/METH=2 $output
+		
+		//for rem
+		duplicate/o $trace temp
+		temp = (rem[p]==0) ? nan : temp[p]
+		WaveTransform zapNaNs temp
+		output="remiei_"+trace
+		findlevels/edge=1/Q/D=$output temp 0.01
+		wave temp_rem=$output
+		if (numpnts(temp_rem)>1)
+			temp_rem=temp_rem/sf
+		else
+			deletepoints 0,3,temp_rem
+		endif
+		
+		differentiate/EP=1/METH=2 $output
 	endfor
 end
 
