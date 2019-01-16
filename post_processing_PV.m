@@ -28,7 +28,7 @@ Fs = 5.02;             % frame rate
 tsub = 1;           % temporal downsampling factor
 deconv_options = struct('type', 'ar1', ... % model of the calcium traces. {'ar1', 'ar2'}
     'method', 'foopsi', ... % method for running deconvolution {'foopsi', 'constrained', 'thresholded'}
-    'smin', -3, ...         % minimum spike size. When the value is negative, the actual threshold is abs(smin)*noise level
+    'smin', -5, ...         % minimum spike size. When the value is negative, the actual threshold is abs(smin)*noise level
     'optimize_pars', true, ...  % optimize AR coefficients
     'optimize_b', true, ...% optimize the baseline);
     'max_tau', 80);    % maximum decay time (unit: frame);

@@ -6,6 +6,15 @@
 //MAIN FUNCTION: batch analysis of all mice in a group
 
 function getall_batch()
+// PARAMETERS************
+
+variable ignoreM=1
+variable ignoreRW=0
+variable getS=0
+variable defSF=5.02
+variable deftshift=10
+// *************
+
 	make/o/n=(1,16) Results=nan
 	make/o/n=(1,16) Results1=nan
 	make/o/n=(1,16) Results2=nan
@@ -16,12 +25,22 @@ function getall_batch()
 	cdf2=GetDataFolder(1)
 	
 	for(i=0; i<(numDataFolders); i+=1)
+
 		String nextPath =GetIndexedObjNameDFR($cdf2, 4, i )
 		nextPath="'"+nextpath+"'"
 		setdatafolder $cdf2+nextPath+":"
-		NVAR ts = tshift
-		NVAR saf = sf
-		getall(ts,saf,cdf2+"Results",1,1)	
+		NVAR t1 = tshift
+		NVAR t2 = sf
+		variable ts=t1,sf=t2
+		
+		if (numtype(ts) == 2)
+		ts=deftshift
+		endif
+		
+		if (numtype(sf) == 2)
+		sf=defSF
+		endif
+		getall(ts,sf,cdf2+"Results",ignoreM,ignoreRW,gets)	
 	endfor
 	
 	setdatafolder $cdf2
@@ -37,13 +56,15 @@ end
 
 // This is the code to run the complete analysis/ Tshift is the time shift between the Ca+2 recording
 //and the EEG recording. Usually is 10 seconds.  sf is the sampling frequency.ignore M and RW can be done.
-function getall(tshift,sf,results,ignoreM,ignoreRW)
-	variable tshift,sf,ignoreM,ignoreRW
+function getall(tshift,sf,results,ignoreM,ignoreRW,gets)
+	variable tshift,sf,ignoreM,ignoreRW,gets
 	string results
 	string folder=GetDataFolder(1)
 	variable plot=1 // set as 0 to avoid creating plots
 	setdatafolder folder+"data:C:"
+	if (gets==1)
 	find_peaks(folder)
+	endif
 	string list=wavelist("wave"+"*",",","")
 	variable k=itemsinlist(list, ",")
 	sleep_plot((k*2)+2,tshift,sf,folder)//  here is very important to look in the shift between EEG and Ca recording!!! 
@@ -74,11 +95,11 @@ function getall(tshift,sf,results,ignoreM,ignoreRW)
 
 	endif
 	//print "hour 1"
-	get_stats2(sf,0,3600,folder,results+"1")
+	get_stats2(sf,0,10959,folder,results+"1")
 	//print "hour 2"
 	get_stats2(sf,3600,3600*2,folder,results+"2")
 	//print "hour 3"
-	get_stats2(sf,3600*2,3600*3,folder,results+"3")
+	get_stats2(sf,10959,11872,folder,results+"3")  //get_stats2(sf, starting time,end time,folder,results+" retrival")
 	get_stats2(sf,0,3600*3,folder,results)
 	
 	
@@ -1004,7 +1025,7 @@ end
 function createCI_Results(list1)  //creae ci auto from 2d wave results
 	string list1
 	wave temp=$list1
-	variable wt,nt,rt,we,ne,re
+	variable wt,nt,rt,we,ne,re,rwt,rwe
 	wave WakeT
 
 	wave WakeT,NREMT,REMT,WakeE,NREME,REME
@@ -1018,6 +1039,9 @@ function createCI_Results(list1)  //creae ci auto from 2d wave results
 	duplicate/o/RMD=[][9] temp test
 	integrate test
 	rt=test(inf)
+	duplicate/o/RMD=[][13] temp test
+	integrate test
+	rwt=test(inf)
 	duplicate/o/RMD=[][0] temp test
 	integrate test
 	we=test(inf)
@@ -1027,44 +1051,53 @@ function createCI_Results(list1)  //creae ci auto from 2d wave results
 	duplicate/o/RMD=[][8] temp test
 	integrate test
 	re=test(inf)
+	duplicate/o/RMD=[][12] temp test
+	integrate test
+	rwe=test(inf)
 	
 	
 	variable sim=10000
 
 	variable i,n=dimsize(temp,0),randnum,s
-	make/o/n=(sim) wakeP,NREMP,REMP
+	make/o/n=(sim) wakeP,NREMP,REMP,REMwakeP
 
 	for (s=0;s<sim;s+=1)
-		variable WakeTR=0,NREMTR=0,REMTR=0,WakeER=0,NREMER=0,REMER=0
+		variable WakeTR=0,NREMTR=0,REMTR=0,WakeER=0,NREMER=0,REMER=0,REMWAKETR=0,REMwakeER=0
 		for (i=0;i<n;i+=1)
 			randnum=ceil((enoise(0.5)+0.5)*(n-1))
 			WakeTR=WakeTR+temp[randnum][1]
 			NREMTR=NREMTR+temp[randnum][5]
 			REMTR=REMTR+temp[randnum][9]
+			REMWAKETR=REMWAKETR+temp[randnum][13]
 			WakeER=WakeER+temp[randnum][0]
 			NREMER=NREMER+temp[randnum][4]
 			REMER=REMER+temp[randnum][8]
+			REMwakeER=REMwakeER+temp[randnum][12]
 		endfor
 		wakeP[s]=WakeER/WakeTR
 		NREMP[s]=NREMER/NREMTR
 		REMP[s]=REMER/REMTR
+		REMwakeP[s]=REMwakeER/REMwakeTR
 	endfor
 	sort wakeP wakeP
 	sort NREMP NREMP
 	sort REMP REMP
+	sort REMwakeP REMwakeP
 
-	variable CI95=(0.05/2)*sim,CI_MC95=(0.05/6)*sim
+	variable CI95=(0.05/2)*sim
 	print "wake CI is: "
 	print "NREM CI is: "
 	print "NREM CI is: "
 	print num2str(we/wt)+" "+num2str(wakep(sim-CI95))+" "+num2str(wakep(CI95))
 	print num2str(ne/nt)+" "+num2str(NREMp(sim-CI95))+" "+num2str(NREMp(CI95))
 	print num2str(re/rt)+" "+num2str(REMp(sim-CI95))+" "+num2str(REMp(CI95))
+	print num2str(rwe/rwt)+" "+num2str(REMwakep(sim-CI95))+" "+num2str(REMwakep(CI95))
+	
 	print " ''WARNING! use createCI2_****() for hypothesis testing''"
 	print " ''Use to CreateCI2_groups(list1,list2,mc) to compare between groups (eg DS vs IMS)"
 	print " ''Use to CreateCI2_sleep(list1) to compare between sleep stages (BL wake vs BL REM)"
 	
-	killwaves wakeP,NREMP,REMP,test
+	killwaves wakeP,NREMP,REMP,test,REMwakeP
 
 end
 
@@ -1077,7 +1110,7 @@ function createCI2_groups(list1,list2,mc)
 	wave temp1=$list1,temp2=$list2
 	// the structure of the list is the following:
 	// WT1|NT1|RT1|WE1|NE1|RE1|WT2|NT2|RT2|WE2|NE2|RE2
-	variable wt,nt,rt,we,ne,re,wt2,nt2,rt2,we2,ne2,re2
+	variable wt,nt,rt,rwt,we,ne,re,rwe,wt2,nt2,rt2,rwt2,we2,ne2,re2,rwe2
 
 	
 	duplicate/o/RMD=[][1] temp1 test
@@ -1089,6 +1122,9 @@ function createCI2_groups(list1,list2,mc)
 	duplicate/o/RMD=[][9] temp1 test
 	integrate test
 	rt=test(inf)
+	duplicate/o/RMD=[][13] temp1 test
+	integrate test
+	rwt=test(inf)
 	duplicate/o/RMD=[][0] temp1 test
 	integrate test
 	we=test(inf)
@@ -1098,6 +1134,9 @@ function createCI2_groups(list1,list2,mc)
 	duplicate/o/RMD=[][8] temp1 test
 	integrate test
 	re=test(inf)
+	duplicate/o/RMD=[][12] temp1 test
+	integrate test
+	rwe=test(inf)
 	
 	duplicate/o/RMD=[][1] temp2 test
 	integrate test
@@ -1108,6 +1147,9 @@ function createCI2_groups(list1,list2,mc)
 	duplicate/o/RMD=[][9] temp2 test
 	integrate test
 	rt2=test(inf)
+	duplicate/o/RMD=[][13] temp2 test
+	integrate test
+	rwt2=test(inf)
 	duplicate/o/RMD=[][0] temp2 test
 	integrate test
 	we2=test(inf)
@@ -1117,24 +1159,28 @@ function createCI2_groups(list1,list2,mc)
 	duplicate/o/RMD=[][8] temp2 test
 	integrate test
 	re2=test(inf)
+	duplicate/o/RMD=[][12] temp2 test
+	integrate test
+	rwe2=test(inf)
 	
-	
-	variable sim=10000,w1,nr1,r1,w2,nr2,r2
+	variable sim=10000,w1,nr1,r1,rw1,w2,nr2,r2,rw2
 
 	variable i,n=dimsize(temp1,0),randnum,s,i2,n2=dimsize(temp2,0)
-	make/o/n=(sim) wakeP,NREMP,REMP
+	make/o/n=(sim) wakeP,NREMP,REMP,REMwakeP
 
 	for (s=0;s<sim;s+=1)
-		variable WakeTR=0,NREMTR=0,REMTR=0,WakeER=0,NREMER=0,REMER=0,WakeTR2=0,NREMTR2=0,REMTR2=0,WakeER2=0,NREMER2=0,REMER2=0
+		variable WakeTR=0,NREMTR=0,REMTR=0,REMwakeTR=0,WakeER=0,NREMER=0,REMER=0,REMwakeER=0,WakeTR2=0,NREMTR2=0,REMTR2=0,REMwakeTR2=0,WakeER2=0,NREMER2=0,REMER2=0,REMwakeER2=0
 		
 		for (i=0;i<n;i+=1)
 			randnum=ceil((enoise(0.5)+0.5)*(n-1))
 			WakeTR=WakeTR+temp1[randnum][1]
 			NREMTR=NREMTR+temp1[randnum][5]
 			REMTR=REMTR+temp1[randnum][9]
+			REMwakeTR=REMwakeTR+temp1[randnum][13]
 			WakeER=WakeER+temp1[randnum][0]
 			NREMER=NREMER+temp1[randnum][4]
 			REMER=REMER+temp1[randnum][8]
+			REMwakeER=REMwakeER+temp1[randnum][12]
 		endfor
 		
 		for (i2=0;i2<n2;i2+=1)
@@ -1142,26 +1188,31 @@ function createCI2_groups(list1,list2,mc)
 			WakeTR2=WakeTR2+temp2[randnum][1]
 			NREMTR2=NREMTR2+temp2[randnum][5]
 			REMTR2=REMTR2+temp2[randnum][9]
+			REMwakeTR2=REMwakeTR2+temp2[randnum][13]
 			WakeER2=WakeER2+temp2[randnum][0]
 			NREMER2=NREMER2+temp2[randnum][4]
 			REMER2=REMER2+temp2[randnum][8]
+			REMwakeER2=REMwakeER2+temp2[randnum][12]
 		endfor
 		w1=WakeER/WakeTR
 		nr1=NREMER/NREMTR
 		r1=REMER/REMTR
+		rw1=REMwakeER/REMwakeTR
 		w2=WakeER2/WakeTR2
 		nr2=NREMER2/NREMTR2
 		r2=REMER2/REMTR2
-		
+		rw2=REMwakeER2/REMwakeTR2
 		
 		
 		wakeP[s]=w2-w1
 		NREMP[s]=nr2-nr1
 		REMP[s]=r2-r1
+		REMwakeP[s]=rw2-rw1
 	endfor
 	sort wakeP wakeP
 	sort NREMP NREMP
 	sort REMP REMP
+	sort REMwakeP REMwakeP
 
 	variable CI95=(0.05/2)*sim,CI_MC95=(0.05/(2*mc))*sim
 	//print "wake CI is: "
@@ -1177,8 +1228,8 @@ function createCI2_groups(list1,list2,mc)
 	print num2str(-((we/wt)-(we2/wt2)))+" "+num2str(wakep(sim-CI_MC95))+" "+num2str(wakep(CI_MC95))
 	print num2str(-((ne/nt)-(ne2/nt2)))+" "+num2str(NREMp(sim-CI_MC95))+" "+num2str(NREMp(CI_MC95))
 	print num2str(-((re/rt)-(re2/rt2)))+" "+num2str(REMp(sim-CI_MC95))+" "+num2str(REMp(CI_MC95))
-
-	killwaves wakeP,NREMP,REMP,test
+	print num2str(-((rwe/rwt)-(rwe2/rwt2)))+" "+num2str(REMwakep(sim-CI_MC95))+" "+num2str(REMwakep(CI_MC95))
+	killwaves wakeP,NREMP,REMP,test,REMwakeP
 end
 
 // this is for hypothesis tesis for sleep conditions in a same group

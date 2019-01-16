@@ -4,7 +4,7 @@ clear all
 
 %User defined inputs 
 %==================================
-a=('C:\Users\SSG Lab\Desktop\adicht\') % files directory
+a=('C:\Users\SSG Lab\Desktop\mspractice\adicht\') % files directory
 separator=','; %choose separato e.g.  ' ' --> space  ';'--> ;  '.' --> .
 
 %end of user defined inputs
