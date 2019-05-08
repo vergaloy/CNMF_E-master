@@ -2,7 +2,7 @@
 
 
 % Specify the folder where the files live.
-myFolder = 'C:\Users\SSG Lab\Desktop\mspractice';
+myFolder = 'C:\Users\SSG Lab\Desktop\proccesing data';
 savefiles=1;
 % Check to make sure that folder actually exists.  Warn user if it doesn't.
 if ~isdir(myFolder)
@@ -38,8 +38,8 @@ pars_envs = struct('memory_size_to_use', 120, ...   % GB, memory space you allow
     'patch_dims', [1, 1]);  %GB, patch size
 
 % -------------------------      SPATIAL      -------------------------  %
-gSig = 4;           % pixel, gaussian width of a gaussian kernel for filtering the data. 0 means no filtering   def4
-gSiz = 12;          % pixel, maximum diameter of neurons in the image plane def12
+gSig = 4;           % pixel, gaussian width of a gaussian kernel for filtering the data. 0 means no filtering   def4 //PV= diameter of average neuron
+gSiz = 12;          % pixel, maximum diameter of neurons in the image plane def12 //PV= diameter of the largest neuron
 ssub = 1;           % spatial downsampling factor
 with_dendrites = false;   % with dendrites or not
 if with_dendrites
@@ -57,7 +57,7 @@ spatial_constraints = struct('connected', true, 'circular', false);  % you can i
 spatial_algorithm = 'hals_thresh';
 
 % -------------------------      TEMPORAL     -------------------------  %
-Fs = 5.02;             % frame rate
+Fs = 5.02;             % frame rate  /PV
 tsub = 1;           % temporal downsampling factor
 deconv_options = struct('type', 'ar1', ... % model of the calcium traces. {'ar1', 'ar2'}
     'method', 'foopsi', ... % method for running deconvolution {'foopsi', 'constrained', 'thresholded'}
@@ -66,14 +66,14 @@ deconv_options = struct('type', 'ar1', ... % model of the calcium traces. {'ar1'
     'optimize_b', true, ...% optimize the baseline);
     'max_tau', 250);    % maximum decay time (unit: frame);
 
-nk = 30;             % detrending the slow fluctuation. usually 1 is fine (no detrending)  
+nk = 30;             % detrending the slow fluctuation. usually 1 is fine (no detrending)  /PV
 % when changed, try some integers smaller than total_frame/(Fs*30)
 detrend_method = 'spline';  % compute the local minimum as an estimation of trend.
 
 % -------------------------     BACKGROUND    -------------------------  %
 bg_model = 'ring';  % model of the background {'ring', 'svd'(default), 'nmf'}
 nb = 1;             % number of background sources for each patch (only be used in SVD and NMF model)
-ring_radius = 25;  % when the ring model used, it is the radius of the ring used in the background model.  %PV 18 was working fine
+ring_radius = 25;  % when the ring model used, it is the radius of the ring used in the background model.  %PV 25 was working fine, defined as 2*gSiz. 
 %otherwise, it's just the width of the overlapping area
 num_neighbors = []; % number of neighbors for each neuron
 
@@ -88,7 +88,7 @@ merge_thr_spatial = [0.8, 0.1, -inf];  % merge components with highly correlated
 % -------------------------  INITIALIZATION   -------------------------  %
 K = [];             % maximum number of neurons per patch. when K=[], take as many as possible.
 min_corr = 0.7;     % minimum local correlation for a seeding pixel  pv=0.7
-min_pnr = 6;       % minimum peak-to-noise ratio for a seeding pixel   PV=6
+min_pnr = 6;       % minimum peak-to-noise ratio for a seeding pixel   PV=6  /PV  to see type ShowPNS()
 min_pixel = (gSig-2)^2;      % minimum number of nonzero pixels for each neuron
 bd = 0;             % number of rows/columns to be ignored in the boundary (mainly for motion corrected data)
 frame_range = [];   % when [], uses all frames

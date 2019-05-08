@@ -10,7 +10,7 @@ function getall_batch()
 
 variable ignoreM=1
 variable ignoreRW=1
-variable getS=0
+variable getS=1
 variable defSF=5.02
 variable deftshift=10
 // *************
@@ -1104,9 +1104,9 @@ end
 // This is used for statistical testing, list1 and list2 are the full path for the 2d list 
 //with the data obtained from getall_batch()
 
-function createCI2_groups(list1,list2,mc)  
+function createCI2_groups(list1,list2,mc,same)  
 	string list1,list2
-	variable mc
+	variable mc,same
 	wave temp1=$list1,temp2=$list2
 	// the structure of the list is the following:
 	// WT1|NT1|RT1|WE1|NE1|RE1|WT2|NT2|RT2|WE2|NE2|RE2
@@ -1167,6 +1167,15 @@ function createCI2_groups(list1,list2,mc)
 
 	variable i,n=dimsize(temp1,0),randnum,s,i2,n2=dimsize(temp2,0)
 	make/o/n=(sim) wakeP,NREMP,REMP,REMwakeP
+	
+	if (same==1)
+		if (n>=n2)
+			n=n2
+		else
+			n2=n
+			endif
+	endif
+	
 
 	for (s=0;s<sim;s+=1)
 		variable WakeTR=0,NREMTR=0,REMTR=0,REMwakeTR=0,WakeER=0,NREMER=0,REMER=0,REMwakeER=0,WakeTR2=0,NREMTR2=0,REMTR2=0,REMwakeTR2=0,WakeER2=0,NREMER2=0,REMER2=0,REMwakeER2=0
@@ -1234,9 +1243,9 @@ end
 
 // this is for hypothesis tesis for sleep conditions in a same group
 
-function createCI2_sleep(list,mc)
+function createCI2_sleep(list,mc,same)
 	string list
-	variable mc
+	variable mc,same
 	duplicate/o $list list2
 	wave temp=$list
 
@@ -1247,7 +1256,7 @@ function createCI2_sleep(list,mc)
 	list2[][8]=temp[p][0]
 	list2[][9]=temp[p][1]    //R-W
 	print "these confidence interval are for W-N  N-R  R-W comparisons"
-	createCI2_groups(list,"list2",mc)
+	createCI2_groups(list,"list2",mc,same)
 end
 
 function bootstrap_sum(list1,list2,sim,comparisons)
