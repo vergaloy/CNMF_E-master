@@ -15,18 +15,26 @@ variable defSF=5.02
 variable deftshift=10
 // *************
 
-	make/o/n=(1,16) Results=nan
-	make/o/n=(1,16) Results1=nan
-	make/o/n=(1,16) Results2=nan
-	make/o/n=(1,16) Results3=nan
+	make/o/n=(1,17) Results=nan
+	make/o/n=(1,17) Results1=nan
+	make/o/n=(1,17) Results2=nan
+	make/o/n=(1,17) Results3=nan
 
 	Variable numDataFolders = CountObjects(":", 4), i
 	string cdf2
 	cdf2=GetDataFolder(1)
 	
-	for(i=0; i<(numDataFolders); i+=1)
+	string folderlist=""
+	
+	for(i=0; i<(numDataFolders); i+=1)  //this is to order folders by name
 
 		String nextPath =GetIndexedObjNameDFR($cdf2, 4, i )
+		folderlist+=nextpath+";"
+	endfor
+	folderlist=SortList(folderlist,";",2)
+	
+	for(i=0; i<(numDataFolders); i+=1)
+		nextpath=stringfromlist(i,folderlist,";")
 		nextPath="'"+nextpath+"'"
 		setdatafolder $cdf2+nextPath+":"
 		NVAR t1 = tshift
@@ -40,7 +48,7 @@ variable deftshift=10
 		if (numtype(sf) == 2)
 		sf=defSF
 		endif
-		getall(ts,sf,cdf2+"Results",ignoreM,ignoreRW,gets)	
+		getall(ts,sf,cdf2+"Results",ignoreM,ignoreRW,gets,i)	
 	endfor
 	
 	setdatafolder $cdf2
@@ -56,8 +64,8 @@ end
 
 // This is the code to run the complete analysis/ Tshift is the time shift between the Ca+2 recording
 //and the EEG recording. Usually is 10 seconds.  sf is the sampling frequency.ignore M and RW can be done.
-function getall(tshift,sf,results,ignoreM,ignoreRW,gets)
-	variable tshift,sf,ignoreM,ignoreRW,gets
+function getall(tshift,sf,results,ignoreM,ignoreRW,gets,mouse)
+	variable tshift,sf,ignoreM,ignoreRW,gets,mouse
 	string results
 	string folder=GetDataFolder(1)
 	variable plot=1 // set as 0 to avoid creating plots
@@ -95,12 +103,12 @@ function getall(tshift,sf,results,ignoreM,ignoreRW,gets)
 
 	endif
 	//print "hour 1"
-	get_stats2(sf,0,10959,folder,results+"1")
+	get_stats2(sf,0,10959,folder,results+"1",mouse)
 	//print "hour 2"
-	get_stats2(sf,3600,3600*2,folder,results+"2")
+	get_stats2(sf,3600,3600*2,folder,results+"2",mouse)
 	//print "hour 3"
-	get_stats2(sf,10959,11872,folder,results+"3")  //get_stats2(sf, starting time,end time,folder,results+" retrival")
-	get_stats2(sf,0,3600*3,folder,results)
+	get_stats2(sf,3600*2,3600*3,folder,results+"3",mouse)  //get_stats2(sf, starting time,end time,folder,results+" retrival")
+	get_stats2(sf,0,3600*3,folder,results,mouse)
 	
 	
 	//concatenated_sleep(sf)
@@ -366,8 +374,8 @@ end
 
 // This function save all average data into results.
 
-function get_stats2(sf,st,ft,folder,outwave) // starting time and finishing time in seconds
-	variable sf,st,ft
+function get_stats2(sf,st,ft,folder,outwave,mouse) // starting time and finishing time in seconds
+	variable sf,st,ft,mouse
 	string folder,outwave
 	wave notewave=$outwave
 	find_artifacts(folder)
@@ -555,7 +563,9 @@ function get_stats2(sf,st,ft,folder,outwave) // starting time and finishing time
 		notewave[dimsize(notewave,0)-1][12]=ERW
 		notewave[dimsize(notewave,0)-1][13]=RWT
 		notewave[dimsize(notewave,0)-1][14]=REMWAKEA[i]
-		notewave[dimsize(notewave,0)-1][15]=REMWAKEAUC[i]	
+		notewave[dimsize(notewave,0)-1][15]=REMWAKEAUC[i]
+		notewave[dimsize(notewave,0)-1][16]=mouse
+			
 	endfor
 	
 	killwaves REMF, NREMF, WAKEF, REMWAKEF,WAKEFRATE,REMWAKEFRATE,REMFRATE,NREMFRATE,REMA
@@ -728,12 +738,12 @@ end
 function append_traces(raster) // plot everything inside a folder!!
 	variable raster
 	string folder=GetDataFolder(1)
-	wave t=$folder+"data:S:artifact",w=$folder+"data:SLeep:WAKE"
+	wave t=$folder+"data:S:artifact",w=$folder+"data:Sleep:WAKE"
 	
 	variable j=wavemax(w),k=wavemax(t)
 	t=(t/t)*j
-	appendtograph  $folder+"data:SLeep:REM",$folder+"data:SLeep:WAKE",$folder+"data:SLeep:NREM",$folder+"data:S:artifact"
-	copyScales $folder+"data:SLeep:WAKE", $folder+"data:S:artifact"
+	appendtograph  $folder+"data:Sleep:REM",$folder+"data:Sleep:WAKE",$folder+"data:Sleep:NREM",$folder+"data:S:artifact"
+	copyScales $folder+"data:Sleep:WAKE", $folder+"data:S:artifact"
 	if (raster==0)
 		setdatafolder folder+"data:C_raw:"
 		creategraphs("wave",0)
@@ -922,7 +932,7 @@ function bootstrap(wavenom1,sim,alpha)
 	for (s=0;s<sim;s+=1)
 	
 		for (i=0;i<n;i+=1)
-			randnum=ceil((enoise(0.5)+0.5)*(n-1))
+			randnum=ceil((enoise(0.5)+0.5)*(n))-1
 			bootstrapsample[i]=tt[randnum]
 		endfor
 		
@@ -967,11 +977,11 @@ function bootstrap2(wavenom1,wavenom2,sim,del0,comparisons)  //del0==1 delete 0 
 	for (s=0;s<sim;s+=1)
 	
 		for (i=0;i<n;i+=1)
-			randnum=ceil((enoise(0.5)+0.5)*(n-1))
+			randnum=ceil((enoise(0.5)+0.5)*(n))-1
 			bootstrapsample[i]=tt[randnum]
 		endfor
 		for (i2=0;i2<n2;i2+=1)
-			randnum=ceil((enoise(0.5)+0.5)*(n2-1))
+			randnum=ceil((enoise(0.5)+0.5)*(n2))-1
 			bootstrapsample2[i2]=tt2[randnum]
 		endfor
 		
@@ -1067,7 +1077,7 @@ function createCI_Results(list1)  //creae ci auto from 2d wave results
 	for (s=0;s<sim;s+=1)
 		variable WakeTR=0,NREMTR=0,REMTR=0,WakeER=0,NREMER=0,REMER=0,REMWAKETR=0,REMwakeER=0
 		for (i=0;i<n;i+=1)
-			randnum=ceil((enoise(0.5)+0.5)*(n-1))
+			randnum=ceil((enoise(0.5)+0.5)*(n))-1
 			WakeTR=WakeTR+temp[randnum][1]
 			NREMTR=NREMTR+temp[randnum][5]
 			REMTR=REMTR+temp[randnum][9]
@@ -1104,12 +1114,14 @@ function createCI_Results(list1)  //creae ci auto from 2d wave results
 
 end
 
+
+
 // This is used for statistical testing, list1 and list2 are the full path for the 2d list 
 //with the data obtained from getall_batch()
 
-function createCI2_groups(list1,list2,mc,same)  
+function createCI2_groups(list1,list2,mc, constrained, normalize)  
 	string list1,list2
-	variable mc,same
+	variable mc,constrained,normalize
 	wave temp1=$list1,temp2=$list2
 	// the structure of the list is the following:
 	// WT1|NT1|RT1|WE1|NE1|RE1|WT2|NT2|RT2|WE2|NE2|RE2
@@ -1171,41 +1183,58 @@ function createCI2_groups(list1,list2,mc,same)
 	variable i,n=dimsize(temp1,0),randnum,s,i2,n2=dimsize(temp2,0)
 	make/o/n=(sim) wakeP,NREMP,REMP,REMwakeP
 	
-	if (same==1)
-		if (n>=n2)
-			n=n2
-		else
-			n2=n
-			endif
-	endif
 	
 
 	for (s=0;s<sim;s+=1)
 		variable WakeTR=0,NREMTR=0,REMTR=0,REMwakeTR=0,WakeER=0,NREMER=0,REMER=0,REMwakeER=0,WakeTR2=0,NREMTR2=0,REMTR2=0,REMwakeTR2=0,WakeER2=0,NREMER2=0,REMER2=0,REMwakeER2=0
 		
-		for (i=0;i<n;i+=1)
-			randnum=ceil((enoise(0.5)+0.5)*(n-1))
-			WakeTR=WakeTR+temp1[randnum][1]
-			NREMTR=NREMTR+temp1[randnum][5]
-			REMTR=REMTR+temp1[randnum][9]
-			REMwakeTR=REMwakeTR+temp1[randnum][13]
-			WakeER=WakeER+temp1[randnum][0]
-			NREMER=NREMER+temp1[randnum][4]
-			REMER=REMER+temp1[randnum][8]
-			REMwakeER=REMwakeER+temp1[randnum][12]
-		endfor
+		if (constrained==1)
+			for (i=0;i<n;i+=1)
+				randnum=ceil((enoise(0.5)+0.5)*(n))-1
+				WakeTR=WakeTR+temp1[randnum][1]
+				NREMTR=NREMTR+temp1[randnum][5]
+				REMTR=REMTR+temp1[randnum][9]
+				REMwakeTR=REMwakeTR+temp1[randnum][13]
+				WakeER=WakeER+temp1[randnum][0]
+				NREMER=NREMER+temp1[randnum][4]
+				REMER=REMER+temp1[randnum][8]
+				REMwakeER=REMwakeER+temp1[randnum][12]
+				randnum=constrained_random_number(list2,temp1[randnum][16])
+				WakeTR2=WakeTR2+temp2[randnum][1]
+				NREMTR2=NREMTR2+temp2[randnum][5]
+				REMTR2=REMTR2+temp2[randnum][9]
+				REMwakeTR2=REMwakeTR2+temp2[randnum][13]
+				WakeER2=WakeER2+temp2[randnum][0]
+				NREMER2=NREMER2+temp2[randnum][4]
+				REMER2=REMER2+temp2[randnum][8]
+				REMwakeER2=REMwakeER2+temp2[randnum][12]
+			endfor
+		else	
+			for (i=0;i<n;i+=1)
+				randnum=ceil((enoise(0.5)+0.5)*(n))-1
+				WakeTR=WakeTR+temp1[randnum][1]
+				NREMTR=NREMTR+temp1[randnum][5]
+				REMTR=REMTR+temp1[randnum][9]
+				REMwakeTR=REMwakeTR+temp1[randnum][13]
+				WakeER=WakeER+temp1[randnum][0]
+				NREMER=NREMER+temp1[randnum][4]
+				REMER=REMER+temp1[randnum][8]
+				REMwakeER=REMwakeER+temp1[randnum][12]
+			endfor
 		
-		for (i2=0;i2<n2;i2+=1)
-			randnum=ceil((enoise(0.5)+0.5)*(n2-1))
-			WakeTR2=WakeTR2+temp2[randnum][1]
-			NREMTR2=NREMTR2+temp2[randnum][5]
-			REMTR2=REMTR2+temp2[randnum][9]
-			REMwakeTR2=REMwakeTR2+temp2[randnum][13]
-			WakeER2=WakeER2+temp2[randnum][0]
-			NREMER2=NREMER2+temp2[randnum][4]
-			REMER2=REMER2+temp2[randnum][8]
-			REMwakeER2=REMwakeER2+temp2[randnum][12]
-		endfor
+			for (i2=0;i2<n2;i2+=1)
+				randnum=ceil((enoise(0.5)+0.5)*(n2))-1
+				WakeTR2=WakeTR2+temp2[randnum][1]
+				NREMTR2=NREMTR2+temp2[randnum][5]
+				REMTR2=REMTR2+temp2[randnum][9]
+				REMwakeTR2=REMwakeTR2+temp2[randnum][13]
+				WakeER2=WakeER2+temp2[randnum][0]
+				NREMER2=NREMER2+temp2[randnum][4]
+				REMER2=REMER2+temp2[randnum][8]
+				REMwakeER2=REMwakeER2+temp2[randnum][12]
+			endfor
+		endif
+		
 		w1=WakeER/WakeTR
 		nr1=NREMER/NREMTR
 		r1=REMER/REMTR
@@ -1214,6 +1243,22 @@ function createCI2_groups(list1,list2,mc,same)
 		nr2=NREMER2/NREMTR2
 		r2=REMER2/REMTR2
 		rw2=REMwakeER2/REMwakeTR2
+		
+		if (normalize==1)
+		variable div=nr1
+			nr1=nr1/div
+			r1=r1/div
+			rw1=rw1/div
+			w1=w1/div
+			div=nr2
+			nr2=nr2/div
+			r2=r2/div
+			rw2=rw2/div
+			w2=w2/div
+		endif
+		
+		
+		
 		
 		
 		wakeP[s]=w2-w1
@@ -1227,16 +1272,7 @@ function createCI2_groups(list1,list2,mc,same)
 	sort REMwakeP REMwakeP
 
 	variable CI95=(0.05/2)*sim,CI_MC95=(0.05/(2*mc))*sim
-	//print "wake CI is: "
-	//print "NREM CI is: "
-	//print "NREM CI is: "
-	//print num2str(-((we/wt)-(we2/wt2)))+" "+num2str(wakep(sim-CI95))+" "+num2str(wakep(CI95))
-	//print num2str(-((ne/nt)-(ne2/nt2)))+" "+num2str(NREMp(sim-CI95))+" "+num2str(NREMp(CI95))
-	//print num2str(-((re/rt)-(re2/rt2)))+" "+num2str(REMp(sim-CI95))+" "+num2str(REMp(CI95))
-	//Print "For multiples comparision[MC]"
-	//print "wake CI MC corrected (3) is: "
-	//print "NREM CI MC corrected (3) is: "
-	//print "NREM CI MC corrected (3) is: "
+
 	print num2str(-((we/wt)-(we2/wt2)))+" "+num2str(wakep(sim-CI_MC95))+" "+num2str(wakep(CI_MC95))
 	print num2str(-((ne/nt)-(ne2/nt2)))+" "+num2str(NREMp(sim-CI_MC95))+" "+num2str(NREMp(CI_MC95))
 	print num2str(-((re/rt)-(re2/rt2)))+" "+num2str(REMp(sim-CI_MC95))+" "+num2str(REMp(CI_MC95))
@@ -1244,11 +1280,39 @@ function createCI2_groups(list1,list2,mc,same)
 	killwaves wakeP,NREMP,REMP,test,REMwakeP
 end
 
+// used in createCI2_groups to constrain bootstrap
+
+function constrained_random_number(list,num)
+	string list
+	variable num
+	variable start,finish
+	wave data=$list
+	make/n=(dimsize($list,0))/o temp
+	temp=data[p][16]
+	variable i
+	for (i=0;i<numpnts(temp);i+=1)
+		if (temp[i]==num)
+			start=i
+			break
+		endif
+	endfor
+	
+	for (i=numpnts(temp)-1;i>=0;i-=1)
+	variable dummy=temp[i]
+		if (temp[i]==num)
+			finish=i
+			break
+		endif
+	endfor
+	killwaves temp
+return (ceil((enoise(0.5)+0.5)*(finish-start+1))-1)+start
+end
+
 // this is for hypothesis tesis for sleep conditions in a same group
 
-function createCI2_sleep(list,mc,same)
+function createCI2_sleep(list,mc,constrain,normalize)
 	string list
-	variable mc,same
+	variable mc,constrain,normalize
 	duplicate/o $list list2
 	wave temp=$list
 
@@ -1258,8 +1322,13 @@ function createCI2_sleep(list,mc,same)
 	list2[][5]=temp[p][9]    //N-R
 	list2[][8]=temp[p][0]
 	list2[][9]=temp[p][1]    //R-W
-	print "these confidence interval are for W-N  N-R  R-W comparisons"
-	createCI2_groups(list,"list2",mc,same)
+	list2[][12]=temp[p][0]   
+	list2[][13]=temp[p][1]  	//RW-W
+	
+	 
+	print "these confidence interval are for N-W  R-N  W-R lowTheta-HighTheta comparisons"
+	createCI2_groups(list,"list2",mc,constrain,normalize)
+	killwaves list2
 end
 
 function bootstrap_sum(list1,list2,sim,comparisons)
@@ -1358,7 +1427,7 @@ function bootstrap_2d(wavenom1)
 	variable randnum
 	
 	for (i=0;i<n;i+=1)
-		randnum=ceil((enoise(0.5)+0.5)*(n-1))
+		randnum=ceil((enoise(0.5)+0.5)*(10))-1
 		bootstrapsample[i][]=wavenom1[randnum][q]
 	endfor
 
@@ -1633,7 +1702,7 @@ variable sims
 		
 		string trace2=stringfromlist(i,list2,";")
 		wave tmp=$trace2
-		tmp=temp[ceil((enoise(0.5)+0.5)*(numpnts(temp)-1))]
+		tmp=temp[ceil((enoise(0.5)+0.5)*(numpnts(temp)))-1]
 	endfor
 	
 	
@@ -1688,7 +1757,7 @@ variable sims
 		
 		string trace2=stringfromlist(i,list2,";")
 		wave tmp=$trace2
-		tmp=temp[ceil((enoise(0.5)+0.5)*(numpnts(temp)-1))]
+		tmp=temp[ceil((enoise(0.5)+0.5)*(numpnts(temp)))-1]
 	endfor
 	
 	
@@ -1905,3 +1974,256 @@ variable sf
 	endfor
 end
 
+
+
+Function extract_all_cells()
+	make/t/o/n=(1,4) CellsData
+	Variable numDataFolders = CountObjects(":", 4), i,cell=0
+	string cdf
+	cdf=GetDataFolder(1)
+	string folderlist=""
+	for(i=0; i<(numDataFolders); i+=1)  //this is to order folders by name
+
+		String nextPath =GetIndexedObjNameDFR($cdf, 4, i )
+		folderlist+=nextpath+";"
+	endfor
+	
+	if (DataFolderExists("Extracted_cells")==1)
+		killdatafolder Extracted_cells
+	endif
+	newdatafolder/o Extracted_cells
+	
+	folderlist=SortList(folderlist,";",2)
+	
+	for(i=0; i<(numDataFolders); i+=1)
+		nextpath=stringfromlist(i,folderlist,";")
+		nextPath="'"+nextpath+"'"
+		setdatafolder $cdf+nextPath+":"
+		
+		Variable n2 = CountObjects(":", 4), i2
+		string cdf2
+		cdf2=GetDataFolder(1)
+		string folderlist2=""
+		for(i2=0; i2<(n2); i2+=1)  //this is to order folders by name
+
+			String nextPath2 =GetIndexedObjNameDFR($cdf2, 4, i2)
+			folderlist2+=nextpath2+";"
+		endfor
+		folderlist2=SortList(folderlist2,";",2)
+		
+		for(i2=0; i2<(n2); i2+=1)
+			nextpath2=stringfromlist(i2,folderlist2,";")
+			nextPath2="'"+nextpath2+"'"
+			setdatafolder $cdf2+nextPath2+":Data:S:"
+			
+			
+			string list=wavelist("wave"+"*",";","")
+			variable n3=itemsinlist(list, ";"),i3
+			
+			for(i3=0; i3<(n3); i3+=1)
+				wave trace=$stringfromlist(i3,list,";")
+				duplicate/o trace $"w"+num2str(cell)
+				wave temp=$"w"+num2str(cell)
+				wave wake
+				cell+=1
+				temp = (wake[p]==0) ? nan : temp
+				WaveTransform zapNaNs temp
+				movewave temp $cdf+"Extracted_cells:"
+				InsertPoints/v=(nan) DimSize(cellsdata,0),1,cellsdata
+				cellsdata[dimsize(cellsdata,0)-1][0]=nextpath
+				cellsdata[dimsize(cellsdata,0)-1][1]=nextpath2
+				cellsdata[dimsize(cellsdata,0)-1][2]=num2str(i3)
+			endfor
+		endfor
+	endfor
+	setdatafolder cdf
+DeletePoints 0,1, CellsData
+end
+
+
+Function discard_cells_with_few_events()
+	string cdf=GetDataFolder(1)
+	wave/t cellsdata=$cdf+"CellsData"
+	setdatafolder Extracted_cells
+	string list=wavelist("w"+"*",";","")
+	variable n=itemsinlist(list, ";"),i
+	for(i=0; i<(n); i+=1)
+		wave trace=$stringfromlist(i,list,";")
+		findlevels/edge=1/Q/d=out trace 0.001
+		if (V_LevelsFound<8)
+			cellsdata[i][3]=num2str(1)
+			killwaves trace
+		else
+			cellsdata[i][3]=num2str(0)
+		endif
+	endfor
+setdatafolder cdf
+end
+
+Function Cell_index()
+
+	string list=wavelist("w"+"*",",",""),trace1,trace2
+	variable row=itemsinlist(list, ",")
+	variable column=row,c,r
+	make/o /n=(row) normal=0
+	make/o /n=(row,column) Index=0
+	make/o /n=(row) Avg_Index=0
+	make/o/n=20000 line
+	line=1*p
+	line=line/20000
+	SetScale/I x 0,1,"", line
+	for (r=0;r<row;r+=1)
+		variable suma=0
+		trace1=stringfromlist(r,list,",")
+		Interpolate2/T=1/N=20000/Y=temp1 $trace1
+		SetScale/I x 0,1,"", temp1
+		integrate temp1
+		variable n1=temp1[inf]
+		temp1=temp1/n1
+		for (c=0;c<column;c+=1)
+			
+			trace2=stringfromlist(c,list,",")
+			Interpolate2/T=1/N=20000/Y=temp2 $trace2
+			SetScale/I x 0,1,"", temp2
+			//temp1=(temp1[p]>0) ? 1 : temp1[p]
+			//temp2=(temp2[p]>0) ? 1 : temp2[p]
+			integrate temp2
+			variable n2=temp2[inf]
+			temp2=temp2/n2
+			duplicate/o temp2 diff
+			diff=abs(temp1-temp2)
+			variable D=wavemax(diff)
+			variable Chi=D// 4*D^2*((n1*n2)/(n1+n2))
+			Index[r][c]=Chi	
+			suma=suma+chi
+		endfor	
+		temp1=abs(temp1-line)
+		normal[r]=wavemax(diff)
+		Avg_Index[r]=suma/(row-1)
+	endfor
+	NewImage/K=0 Index
+	ModifyGraph width={Plan,1,top,left}, margin(right)=100
+	ColorScale/N=text0/X=107.50/Y=0.00
+	SetScale d, 0, 0, "Chi square", Index
+	Label left "Cell #";DelayUpdate
+	Label top "Cell #"
+	ModifyImage Index ctab= {*,*,YellowHot,0}
+	Duplicate/o Avg_Index Sort_index
+	sort/R Sort_index Sort_index
+	Display/K=0 Sort_index
+	ModifyGraph mode=3,marker=19
+	Label left "Chi-square";DelayUpdate
+	Label bottom "Sorted cell index"
+end
+
+
+function normalize_mouse_avg_activity(list)
+	string list
+	duplicate/o $list data
+	variable mouse,totalmouse=data[dimsize(data,0)-1][16]
+
+	for (mouse=0;mouse<=totalmouse;mouse+=1)
+		variable first=mousefirstcell(list,mouse),last=mouselastcell(list,mouse),i
+		variable w,n,r,wr
+		for (i=first;i<=last;i+=1)
+			w+=data[i][0]
+			n+=data[i][4]
+			r+=data[i][8]
+			wr+=data[i][12]
+		endfor	
+		w=w/(last-first+1)
+		n=n/(last-first+1)
+		r=r/(last-first+1)
+		wr=wr/(last-first+1)
+		for (i=first;i<=last;i+=1)
+			data[i][0]=data[i][0]-w
+			data[i][4]=data[i][4]-n
+			data[i][8]=data[i][8]-r
+			data[i][12]=data[i][12]-wr
+		endfor	
+	endfor
+end
+
+
+
+function mousefirstcell(list,num)
+	string list
+	variable num
+	variable start
+	wave data=$list
+	make/n=(dimsize($list,0))/o temp
+	temp=data[p][16]
+	variable i
+	for (i=0;i<numpnts(temp);i+=1)
+		if (temp[i]==num)
+			start=i
+			break
+		endif
+	endfor
+return start
+end
+
+function mouselastcell(list,num)
+	string list
+	variable num
+	variable start,finish
+	wave data=$list
+	make/n=(dimsize($list,0))/o temp
+	temp=data[p][16]
+	variable i
+	
+	for (i=numpnts(temp)-1;i>=0;i-=1)
+	variable dummy=temp[i]
+		if (temp[i]==num)
+			finish=i
+			break
+		endif
+	endfor
+return finish
+end
+
+
+function cut_waves_batch(name,first,del)   // delete points from all cells mathching the templete "name". if del==0, it cuts until the end 
+	string name
+	variable first,del
+	variable out
+	string list=wavelist(name+"*",";","") 
+	variable k=itemsinlist(list, ";"),i
+	for (i=0;i<k;i+=1)
+		string trace=stringfromlist(i,list,";")
+		if (del==0)
+			out=numpnts($trace)-first
+		else
+			out=del
+		endif
+		deletepoints first,out, $trace	
+	endfor
+end
+
+function loop_all_folders()
+	Variable numDataFolders = CountObjects(":", 4), i
+	string cdf2
+	cdf2=GetDataFolder(1)
+	
+	string folderlist=""
+	
+	for(i=0; i<(numDataFolders); i+=1)  //this is to order folders by name
+		String nextPath =GetIndexedObjNameDFR($cdf2, 4, i )
+		folderlist+=nextpath+";"
+	endfor
+	folderlist=SortList(folderlist,";",2)
+	
+	for(i=0; i<(numDataFolders); i+=1)
+	
+		nextpath=stringfromlist(i,folderlist,";")
+		nextPath="'"+nextpath+"'"
+		string dummy=cdf2+nextPath+":data:C_raw"
+		
+		setdatafolder $cdf2+nextPath+":data:C_raw"
+		cut_waves_batch("wave",0,3600*5.02)
+				setdatafolder $cdf2+nextPath+":data:C"
+		cut_waves_batch("wave",0,3600*5.02)
+		setdatafolder $cdf2+nextPath+":data:S"
+		killwaves/A
+	endfor
+end
