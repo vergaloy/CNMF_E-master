@@ -1,7 +1,8 @@
-% CA1_analysis
+% test
+
 
 % Specify the folder where the files live.
-myFolder = 'C:\Users\Galoy\Documents\New folder\sakthi-Objects';
+myFolder = 'C:\Users\Galoy\Desktop\champion data-Objects';
 savefiles=1;
 % Check to make sure that folder actually exists.  Warn user if it doesn't.
 if ~isdir(myFolder)
@@ -32,13 +33,13 @@ nam = neuron.select_data(nam);  %if nam is [], then select data interactively
 
 %% parameters
 % -------------------------    COMPUTATION    -------------------------  %
-pars_envs = struct('memory_size_to_use', 16, ...   % GB, memory space you allow to use in MATLAB
-    'memory_size_per_patch', 0.5, ...   % GB, space for loading data within one patch
+pars_envs = struct('memory_size_to_use', 120, ...   % GB, memory space you allow to use in MATLAB
+    'memory_size_per_patch', 8, ...   % GB, space for loading data within one patch
     'patch_dims', [1, 1]);  %GB, patch size
 
 % -------------------------      SPATIAL      -------------------------  %
-gSig = 3;           % pixel, gaussian width of a gaussian kernel for filtering the data. 0 means no filtering   def4 //PV= diameter of average neuron
-gSiz = 13;          % pixel, maximum diameter of neurons in the image plane def12 //PV= diameter of the largest neuron
+gSig = 4;           % pixel, gaussian width of a gaussian kernel for filtering the data. 0 means no filtering   def4 //PV= diameter of average neuron
+gSiz = 12;          % pixel, maximum diameter of neurons in the image plane def12 //PV= diameter of the largest neuron
 ssub = 1;           % spatial downsampling factor
 with_dendrites = false;   % with dendrites or not
 if with_dendrites
@@ -65,30 +66,31 @@ deconv_options = struct('type', 'ar1', ... % model of the calcium traces. {'ar1'
     'optimize_b', true, ...% optimize the baseline);
     'max_tau', 100);    % maximum decay time (unit: frame);
 
-nk = 1;             % detrending the slow fluctuation. usually 1 is fine (no detrending)  /PV
+nk = 0;             % detrending the slow fluctuation. usually 1 is fine (no detrending)  /PV
 % when changed, try some integers smaller than total_frame/(Fs*30)
 detrend_method = 'spline';  % compute the local minimum as an estimation of trend.
 
 % -------------------------     BACKGROUND    -------------------------  %
 bg_model = 'ring';  % model of the background {'ring', 'svd'(default), 'nmf'}
 nb = 1;             % number of background sources for each patch (only be used in SVD and NMF model)
-ring_radius = 25;  % when the ring model used, it is the radius of the ring used in the background model.  %PV 25 was working fine, defined as 2*gSiz. 
+ring_radius = 20;  % when the ring model used, it is the radius of the ring used in the background model.  %PV 25 was working fine, defined as 2*gSiz. 
 %otherwise, it's just the width of the overlapping area
 num_neighbors = []; % number of neighbors for each neuron
+bg_ssub = 2;        % downsample background for a faster speed 
 
 % -------------------------      MERGING      -------------------------  %
 show_merge = false;  % if true, manually verify the merging step
 merge_thr = 0.45;     % thresholds for merging neurons; [spatial overlap ratio, temporal correlation of calcium traces, spike correlation]
 method_dist = 'mean';   % method for computing neuron distances {'mean', 'max'}
-dmin = 12;       % minimum distances between two neurons. it is used together with merge_thr
-dmin_only = 12;  % merge neurons if their distances are smaller than dmin_only.
+dmin = 4;       % minimum distances between two neurons. it is used together with merge_thr
+dmin_only = 2;  % merge neurons if their distances are smaller than dmin_only.
 merge_thr_spatial = [0.8, 0.1, -inf];  % merge components with highly correlated spatial shapes (corr=0.8) and small temporal correlations (corr=0.1)
 
 % -------------------------  INITIALIZATION   -------------------------  %
 K = [];             % maximum number of neurons per patch. when K=[], take as many as possible.
-min_corr = 0.8;     % minimum local correlation for a seeding pixel  pv=0.7
-min_pnr = 8;       % minimum peak-to-noise ratio for a seeding pixel   PV=6  /PV  to see type ShowPNS()
-min_pixel = (gSig-2)^2;      % minimum number of nonzero pixels for each neuron
+min_corr = 0.6;     % minimum local correlation for a seeding pixel  pv=0.7
+min_pnr = 5.5;       % minimum peak-to-noise ratio for a seeding pixel   PV=6  /PV  to see type ShowPNS()
+min_pixel = (gSig)^2;      % minimum number of nonzero pixels for each neuron
 bd = 0;             % number of rows/columns to be ignored in the boundary (mainly for motion corrected data)
 frame_range = [];   % when [], uses all frames
 save_initialization = false;    % save the initialization procedure as a video.
@@ -129,6 +131,7 @@ neuron.updateParams('gSig', gSig, ...       % -------- spatial --------
     'nb', nb, ...
     'ring_radius', ring_radius, ...
     'num_neighbors', num_neighbors, ...
+    'bg_ssub', bg_ssub, ...
     'merge_thr', merge_thr, ...             % -------- merging ---------
     'dmin', dmin, ...
     'method_dist', method_dist, ...
@@ -241,7 +244,7 @@ Coor = neuron.show_contours(0.6);
 
 
 %% create a video for displaying the
-amp_ac = 2400;
+amp_ac = 5;
 range_ac = [0, amp_ac];
 multi_factor = 20;
 range_Y = [0, amp_ac*multi_factor];
@@ -253,7 +256,7 @@ fix_Baseline(200,neuron)%% PV
 neuron.C = deconvTemporal(neuron, use_parallel,1);
 
 neuron.PNR=PNR;
-neuron.save_neurons();
+%neuron.save_neurons();
 cnmfe_path = neuron.save_workspace();
 
 

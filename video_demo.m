@@ -6,10 +6,10 @@ obj=neuron
 kt=1
 amp_ac = 5;
 range_ac = [0, amp_ac];
-multi_factor = 100;
+multi_factor = 50;
 range_Y = [0, amp_ac*multi_factor];
 save_avi= false;
-frame_range=[1 2000];
+frame_range=[1 1000];
 clear total totalraw
 if ~exist('kt', 'var')||isempty(kt)
     kt = 1;
@@ -72,7 +72,7 @@ col = temp(randi(64, K,1), :);
 for m=1:3
     Y_mixed(:, :, m) = obj.A* (diag(col(:,m))*obj.C(:, tmp_range(1):tmp_range(2)));
 end
-Y_mixed = uint16(Y_mixed/(1*amp_ac)*65536);
+Y_mixed = uint16(Y_mixed/(1*amp_ac)*250);
 %% play and save
 ax_y =   axes('position', [0.015, 0.51, 0.3, 0.42]);
 ax_bg=   axes('position', [0.015, 0.01, 0.3, 0.42]);
@@ -138,12 +138,22 @@ totalraw=totalraw-background;
 
 final=mat2gray(totalraw+total*0.7);
 final=final*256;
-for k = 1 : size(video,3)
+for k = 1 : size(final,3)
  final2(:,:,k)= kron(final(:,:,k), ones(3));  
 end
 final2=uint8(final2);
-saveastiff(final2, 'C:\Users\SSG Lab\Desktop\motion corrected\20180117_103500\Video\all events434.tiff');
 
+v = VideoWriter('newfile.mp4','MPEG-4');
+colormap(gray(256))
+v.FrameRate = 60;
+open(v)
+
+for k = 1:size(final2,3)
+   frame = final2(:,:,k);
+   writeVideo(v,frame);
+end
+
+close(v);
 
 
 

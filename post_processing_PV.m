@@ -24,7 +24,7 @@ spatial_constraints = struct('connected', true, 'circular', false);  % you can i
 spatial_algorithm = 'hals_thresh';
 
 % -------------------------      TEMPORAL     -------------------------  %
-Fs = 5.02;             % frame rate
+Fs = 10;             % frame rate
 tsub = 1;           % temporal downsampling factor
 deconv_options = struct('type', 'ar1', ... % model of the calcium traces. {'ar1', 'ar2'}
     'method', 'foopsi', ... % method for running deconvolution {'foopsi', 'constrained', 'thresholded'}
@@ -33,7 +33,7 @@ deconv_options = struct('type', 'ar1', ... % model of the calcium traces. {'ar1'
     'optimize_b', true, ...% optimize the baseline);
     'max_tau', 80);    % maximum decay time (unit: frame);
 
-nk = 30;             % detrending the slow fluctuation. usually 1 is fine (no detrending)  
+nk = 0;             % detrending the slow fluctuation. usually 1 is fine (no detrending)  
 % when changed, try some integers smaller than total_frame/(Fs*30)
 detrend_method = 'spline';  % compute the local minimum as an estimation of trend.
 
@@ -107,7 +107,7 @@ neuron.updateParams('gSig', gSig, ...       % -------- spatial --------
     'center_psf', center_psf);
 neuron.Fs = Fs;
 %%
-fix_Baseline(200,neuron)%% PV
+%fix_Baseline(200,neuron)%% PV
 neuron.C = deconvTemporal(neuron, use_parallel,1);
 
 neuron.remove_false_positives();
