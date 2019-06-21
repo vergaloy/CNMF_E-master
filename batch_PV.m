@@ -2,7 +2,11 @@
 
 
 % Specify the folder where the files live.
+<<<<<<< HEAD
 myFolder = 'C:\Users\SSG Lab\Desktop\20190614DK\D\mouse 2\circle-Objects';
+=======
+myFolder = 'C:\Users\Galoy\Documents\New folder\pablo-Objects';
+>>>>>>> ff14bfc45fe9cc485fe9e03e650f0c557fe8aca3
 savefiles=1;
 % Check to make sure that folder actually exists.  Warn user if it doesn't.
 if ~isdir(myFolder)
@@ -57,7 +61,7 @@ spatial_constraints = struct('connected', true, 'circular', false);  % you can i
 spatial_algorithm = 'hals_thresh';
 
 % -------------------------      TEMPORAL     -------------------------  %
-Fs = 5.02;             % frame rate  /PV
+Fs = 10;             % frame rate  /PV
 tsub = 1;           % temporal downsampling factor
 deconv_options = struct('type', 'ar1', ... % model of the calcium traces. {'ar1', 'ar2'}
     'method', 'foopsi', ... % method for running deconvolution {'foopsi', 'constrained', 'thresholded'}
@@ -88,7 +92,7 @@ merge_thr_spatial = [0.8, 0.1, -inf];  % merge components with highly correlated
 % -------------------------  INITIALIZATION   -------------------------  %
 K = [];             % maximum number of neurons per patch. when K=[], take as many as possible.
 min_corr = 0.7;     % minimum local correlation for a seeding pixel  pv=0.7
-min_pnr = 6;       % minimum peak-to-noise ratio for a seeding pixel   PV=6  /PV  to see type ShowPNS()
+min_pnr = 5;       % minimum peak-to-noise ratio for a seeding pixel   PV=6  /PV  to see type ShowPNS()
 min_pixel = (gSig-2)^2;      % minimum number of nonzero pixels for each neuron
 bd = 0;             % number of rows/columns to be ignored in the boundary (mainly for motion corrected data)
 frame_range = [];   % when [], uses all frames
@@ -242,7 +246,7 @@ Coor = neuron.show_contours(0.6);
 
 
 %% create a video for displaying the
-amp_ac = 2400;
+amp_ac = 5;
 range_ac = [0, amp_ac];
 multi_factor = 20;
 range_Y = [0, amp_ac*multi_factor];
