@@ -1,6 +1,6 @@
 %% Constrained Nonnegative Matrix Factorization for microEndoscopic data  * *
 %% *STEP*0: select data
-
+warning('off','all') %add by Natsu
 
 neuron = Sources2D();
 nam = [];          % this demo data is very small, here we just use it as an example
@@ -14,7 +14,7 @@ pars_envs = struct('memory_size_to_use', 128, ...   % GB, memory space you allow
     'patch_dims', [64, 64]);  %GB, patch size
 
 % -------------------------      SPATIAL      -------------------------  %
-gSig = 3;           % pixel, gaussian width of a gaussian kernel for filtering the data. 0 means no filtering
+gSig = 4;           % pixel, gaussian width of a gaussian kernel for filtering the data. 0 means no filtering
 gSiz = 12;          % pixel, neuron diameter
 ssub = 1;           % spatial downsampling factor
 with_dendrites = false;   % with dendrites or not

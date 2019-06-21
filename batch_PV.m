@@ -2,7 +2,7 @@
 
 
 % Specify the folder where the files live.
-myFolder = 'C:\Users\SSG Lab\Desktop\proccesing data';
+myFolder = 'C:\Users\SSG Lab\Desktop\20190614DK\D\mouse 2\circle-Objects';
 savefiles=1;
 % Check to make sure that folder actually exists.  Warn user if it doesn't.
 if ~isdir(myFolder)
@@ -35,7 +35,7 @@ nam = neuron.select_data(nam);  %if nam is [], then select data interactively
 % -------------------------    COMPUTATION    -------------------------  %
 pars_envs = struct('memory_size_to_use', 120, ...   % GB, memory space you allow to use in MATLAB
     'memory_size_per_patch', 8, ...   % GB, space for loading data within one patch
-    'patch_dims', [1, 1]);  %GB, patch size
+    'patch_dims', [60, 60]);  %GB, patch size
 
 % -------------------------      SPATIAL      -------------------------  %
 gSig = 4;           % pixel, gaussian width of a gaussian kernel for filtering the data. 0 means no filtering   def4 //PV= diameter of average neuron
@@ -66,7 +66,7 @@ deconv_options = struct('type', 'ar1', ... % model of the calcium traces. {'ar1'
     'optimize_b', true, ...% optimize the baseline);
     'max_tau', 250);    % maximum decay time (unit: frame);
 
-nk = 30;             % detrending the slow fluctuation. usually 1 is fine (no detrending)  /PV
+nk = 1;             % detrending the slow fluctuation. usually 1 is fine (no detrending)  /PV
 % when changed, try some integers smaller than total_frame/(Fs*30)
 detrend_method = 'spline';  % compute the local minimum as an estimation of trend.
 
