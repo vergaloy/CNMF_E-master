@@ -55,38 +55,6 @@ variable sf=20000
 	end
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 function Get_AUC_and_Amplitude()
 	string list=wavelist("wave*"+"_ev*",",",""),trace
 	list=SortList(list,",", 16)
@@ -632,6 +600,7 @@ function Loop_Rise()
 		nextPath="'"+nextpath+"'"
 		wave temp2=$cdf2+nextPath+":events:rise"
 		print mean(temp2)*1000
+		setdatafolder $cdf2
 		Concatenate/NP=0   {temp2}, rise_all
 	endfor
 end
@@ -731,5 +700,159 @@ function Plot_each_transient()
 	
 endfor
 end
+
+function rise_time_sorted_analysis(destination,reference)
+	wave destination,reference
+	duplicate/o reference w2
+	duplicate/o destination w1
+	variable s=0.0005,e=0.003, delta=0.0001
+	variable cut
+	for (s=s;s<e;s+=delta)
+		findlevel/q w2, s
+		cut=floor(V_LevelX)
+		variable dummy=V_LevelX
+		duplicate/o/r=[0,cut] w1 boots
+		deletepoints 0, cut+1, w2
+		deletepoints 0, cut+1, w1
+		//print numpnts(boots)
+		bootstrap_mini("boots",1000,0.05)
+	endfor
+end
+
+function rise_time_sorted_analysis_diff(destination,reference)
+	string destination,reference
+	string cdf=GetDataFolder(1)
+	variable s=0.0005,e=0.003, delta=0.0001
+	variable cut,start=s
+	for (s=s;s<e;s+=delta)
+		if (s==start)
+		duplicate/o $cdf+"Early:"+reference w12
+		duplicate/o $cdf+"Early:"+destination w11
+		endif
+		findlevel/q w12, s
+		cut=floor(V_LevelX)
+		variable dummy=V_LevelX
+		duplicate/o/r=[0,cut] w11 boots1
+		deletepoints 0, cut+1, w12
+		deletepoints 0, cut+1, w11
+		if (s==start)
+		duplicate/o $cdf+"Late:"+reference w22
+		duplicate/o $cdf+"Late:"+destination w21
+		endif
+		findlevel/q w22, s
+		cut=floor(V_LevelX)
+		duplicate/o/r=[0,cut] w21 boots2
+		deletepoints 0, cut+1, w22
+		deletepoints 0, cut+1, w21
+		
+		
+		
+		//print numpnts(boots)
+		
+		bootstrap_dif("boots1",cdf+"boots2",10000,0,15)
+	endfor
+	//killwaves w11,w12,w21,w22
+end
+
+
+function bootstrap_mini(wavenom1,sim,alpha)
+	string wavenom1
+	variable sim,alpha
+	wave tt=$wavenom1
+	variable aver=mean($wavenom1)
+	duplicate/o $wavenom1 bootstrapsample
+	variable s,n=numpnts($wavenom1),i
+	make/o/n=(sim) bootstrapdist
+	variable randnum
+	for (s=0;s<sim;s+=1)
+		for (i=0;i<n;i+=1)
+			randnum=ceil((enoise(0.5)+0.5)*(n))-1
+			bootstrapsample[i]=tt[randnum]
+		endfor
+		bootstrapdist[s]=mean(bootstrapsample)
+	endfor
+	sort bootstrapdist bootstrapdist
+	variable CI95=(alpha/2)*sim,CI_MC95=(alpha/6)*sim
+	print num2str(aver)+" "+num2str(bootstrapdist(sim-CI95))+" "+num2str(bootstrapdist(CI95))
+	killwaves bootstrapdist,bootstrapsample
+end
+
+// This function creat bootstrap of the average difference between two data sets.
+//del0 can be 1 or 0. if it's 1. any 0 value while be zapped out of the wave.	
 	
+function bootstrap_dif(wavenom1,wavenom2,sim,del0,comparisons)  //del0==1 delete 0 from wave
+	string wavenom1,wavenom2
+	variable sim,del0,comparisons
 	
+	wave tt=$wavenom1,tt2=$wavenom2
+	WaveTransform zapNaNs tt
+	WaveTransform zapNaNs tt2
+	
+	if (Del0==1)
+		Extract/o $wavenom1, $wavenom1, tt!=0
+		Extract/o $wavenom2, $wavenom2, tt2!=0
+	endif
+	variable ms1=mean($wavenom1),ms2=mean($wavenom2)
+	variable aver=ms2-ms1
+	duplicate/o $wavenom1 bootstrapsample
+	duplicate/o $wavenom2 bootstrapsample2
+
+	variable s,n=numpnts($wavenom1),i,n2=numpnts($wavenom2),i2
+	make/o/n=(sim) bootstrapdist
+	variable randnum
+
+	for (s=0;s<sim;s+=1)
+	
+		for (i=0;i<n;i+=1)
+			randnum=ceil((enoise(0.5)+0.5)*(n))-1
+			bootstrapsample[i]=tt[randnum]
+		endfor
+		for (i2=0;i2<n2;i2+=1)
+			randnum=ceil((enoise(0.5)+0.5)*(n2))-1
+			bootstrapsample2[i2]=tt2[randnum]
+		endfor
+		
+		variable m2=	mean(bootstrapsample2)
+		variable m1=	mean(bootstrapsample)
+		
+		bootstrapdist[s]=m2-m1
+	endfor
+	sort bootstrapdist bootstrapdist
+	variable CI95=(0.05/2)*sim,CI_MC95=(0.05/(2*comparisons))*sim
+	print num2str(aver)+" "+num2str(bootstrapdist(sim-CI_MC95))+" "+num2str(bootstrapdist(CI_MC95))
+killwaves bootstrapdist,bootstrapsample
+end
+
+
+function get_parameter_rise_thr(parameter,thr)//parameter= "amplitude","rise","frequecny",etc...
+	string parameter
+	variable thr
+
+	Variable numDataFolders = CountObjects(":", 4), i
+	string cdf2
+	cdf2=GetDataFolder(1)
+	String dfList = SortedDataFolderList(cdf2, 16)
+	make/o/n=0 Amp
+	
+	for(i=0; i<(numDataFolders); i+=1)
+		String nextPath =stringfromlist(i,dflist,";")
+		nextPath="'"+nextpath+"'"
+		wave temp=$cdf2+nextPath+":events:"+parameter
+		duplicate/o temp parameter_temp
+		duplicate/o $cdf2+nextPath+":events:rise" rise_temp
+		sort rise_temp parameter_temp
+		sort rise_temp rise_temp
+		findlevel/q rise_temp, thr
+		variable cut=floor(V_LevelX)
+		duplicate/o/r=[0,cut] parameter_temp temp2
+		print mean(temp2)
+	endfor	
+	killwaves parameter_temp,temp2,rise_temp
+end
+	
+function pring()
+	variable i	
+	for(i=0; i<100; i+=1)
+		print (gnoise(2)+5)
+	endfor
+end
