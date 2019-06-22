@@ -1,5 +1,5 @@
 % Specify the folder where the files live.
-myFolder = 'C:\Users\SSG Lab\Desktop\Sakthi poryect\6_21_2019\DG_120_180_300_360_480_540_HC\processed-Objects';
+myFolder = 'C:\Users\SSG Lab\Desktop\Sakthi poryect\CA1 conc-Objects';
 savefiles=1;
 % Check to make sure that folder actually exists.  Warn user if it doesn't.
 if ~isdir(myFolder)
@@ -36,7 +36,7 @@ pars_envs = struct('memory_size_to_use', 128, ...   % GB, memory space you allow
 
 % -------------------------      SPATIAL      -------------------------  %
 gSig = 3;           % pixel, gaussian width of a gaussian kernel for filtering the data. 0 means no filtering
-gSiz = 13;          % pixel, neuron diameter
+gSiz = 12;          % pixel, neuron diameter
 ssub = 1;           % spatial downsampling factor
 with_dendrites = true;   % with dendrites or not
 if with_dendrites
@@ -70,7 +70,7 @@ detrend_method = 'spline';  % compute the local minimum as an estimation of tren
 % -------------------------     BACKGROUND    -------------------------  %
 bg_model = 'ring';  % model of the background {'ring', 'svd'(default), 'nmf'}
 nb = 1;             % number of background sources for each patch (only be used in SVD and NMF model)
-ring_radius = 18;  % when the ring model used, it is the radius of the ring used in the background model.
+ring_radius = 20;  % when the ring model used, it is the radius of the ring used in the background model.
 %otherwise, it's just the width of the overlapping area
 num_neighbors = []; % number of neighbors for each neuron
 bg_ssub = 2;        % downsample background for a faster speed 
@@ -85,8 +85,8 @@ merge_thr_spatial = [0.8, 0.4, -inf];  % merge components with highly correlated
 
 % -------------------------  INITIALIZATION   -------------------------  %
 K = [];             % maximum number of neurons per patch. when K=[], take as many as possible.
-min_corr = 0.7;     % minimum local correlation for a seeding pixel  /pv 0.6 6.5
-min_pnr = 7;       % minimum peak-to-noise ratio for a seeding pixel/6.5
+min_corr = 0.6;     % minimum local correlation for a seeding pixel  /pv 0.6 6.5
+min_pnr = 6.5;       % minimum peak-to-noise ratio for a seeding pixel/6.5
 min_pixel = gSig^2;      % minimum number of nonzero pixels for each neuron
 bd = 0;             % number of rows/columns to be ignored in the boundary (mainly for motion corrected data)
 frame_range = [];   % when [], uses all frames

@@ -1,45 +1,81 @@
 tic  %Start timer
 %%clear all %delte all variables
 %% Pre-Sets: These are the user-defined variables.  
-stimulus=120; %%in s
-stimulus_off=180;
+clearvars -except neuron
+
+stimulus=125; %%in s
+stimulus_on=175;
+discard=1;
+make_trials=1;
+path=neuron.C;
+
+
 PSTH.Fs=neuron.Fs;
-PSTH.frame_range=neuron.frame_range(2);
-PSTH.C=full(neuron.C);
-m=max(neuron.C(:));
+PSTH.frame_range=size(neuron.C,2);
+PSTH.C=full(path);
+if(path==neuron.S)
+PSTH.C(PSTH.C>0)=1;   
+end
+m=max(PSTH.C(:));
 PSTH.C=PSTH.C/m;
-for n=1:size(neuron.S,1)
-    t1=PSTH.C(n,:);
-    PSTH.activity(n)=(mean(t1));
-end
-[~,in]=sort(PSTH.activity,'ascend');
-for n=1:size(neuron.S,1)
-PSTH.C(n,1:size(neuron.S,2))=PSTH.C(in(n),:);
+
+if(make_trials==1)
+temp(1:size(neuron.C,1),1:PSTH.Fs*(stimulus+stimulus_on))=0;
+trials=(PSTH.frame_range/PSTH.Fs)/(stimulus+stimulus_on);
+for t=1:trials
+temp=temp+PSTH.C(1:size(neuron.C,1),(t-1)*PSTH.Fs*(stimulus+stimulus_on)+1:t*PSTH.Fs*(stimulus+stimulus_on));
+end    
+PSTH.C=temp;
+PSTH.frame_range=size(PSTH.C,2);
 end
 
-
+if (discard==1);
 
 for n=1:size(neuron.S,1)
     t1=PSTH.C(n,1:stimulus*PSTH.Fs);
-    t2=PSTH.C(n,(stimulus+5)*PSTH.Fs:stimulus_off*PSTH.Fs);
-    [h,p]=ttest2(t1,t2);
+    PSTH.activity(n)=(mean(t1));
+end
+[h,in]=sort(PSTH.activity,'descend');
+
+for n=1:size(PSTH.C,1)
+PSTH.C2(n,1:size(PSTH.C,2))=PSTH.C(in(n),:);
+end
+PSTH.C=PSTH.C2;
+clear PSTH.C2
+PSTH.C(h<0.01,:)=[];
+PSTH.activity=[];
+end
+
+
+for n=1:size(PSTH.C,1)
+    t1=PSTH.C(n,1:stimulus*PSTH.Fs);
+    t2=PSTH.C(n,(stimulus+5)*PSTH.Fs:stimulus_on*PSTH.Fs);
+    [~,p]=ttest2(t1,t2);
     PSTH.P(n)=p;
     PSTH.activity(n)=(mean(t2));
 end
 [~,in]=sort(PSTH.activity,'ascend');
-for n=1:size(neuron.S,1)
-PSTH.C_sorted(n,1:size(neuron.S,2))=PSTH.C(in(n),:);
+for n=1:size(PSTH.C,1)
+PSTH.C_sorted(n,1:size(PSTH.C,2))=PSTH.C(in(n),:);
 end
 
 x=(-stimulus:1/PSTH.Fs:(PSTH.frame_range/PSTH.Fs)-stimulus-1/PSTH.Fs);
-y=(1:size(neuron.S,1));
-PSTH.CTotal=sum(PSTH.C,1)/size(neuron.C,1);
+y=(1:size(PSTH.C,1));
+PSTH.CTotal=sum(PSTH.C,1)/size(PSTH.C,1);
 
 
 h=imagesc(x,y,PSTH.C_sorted,[0 1]);
 %%set(h, 'XData', [-120 60]);
 colormap('hot')
 xticks(-120:30:(PSTH.frame_range/PSTH.Fs)-stimulus-1/PSTH.Fs);
+
+
 figure
 plot(x,PSTH.CTotal);
-xticks(-120:30:(PSTH.frame_range/PSTH.Fs)-stimulus-1/PSTH.Fs);
+xticks(-stimulus:stimulus:(PSTH.frame_range/PSTH.Fs)-stimulus-1/PSTH.Fs);
+x =(-stimulus:PSTH.bin_size:(PSTH.bin_num-(stimulus/PSTH.bin_size)-1)*PSTH.bin_size);
+b=bar(x,PSTH.Total,'histc');
+set(b,'FaceColor','k')
+xticks(-120:30:180)
+
+

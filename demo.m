@@ -1,5 +1,6 @@
 %% Constrained Nonnegative Matrix Factorization for microEndoscopic data  * *
 %% *STEP*0: select data
+clear all
 warning('off','all') %add by Natsu
 
 neuron = Sources2D();
@@ -11,12 +12,12 @@ nam = neuron.select_data(nam);  %if nam is [], then select data interactively
 %% parameters
 % -------------------------    COMPUTATION    -------------------------  %
 pars_envs = struct('memory_size_to_use', 128, ...   % GB, memory space you allow to use in MATLAB
-    'memory_size_per_patch', 8, ...   % GB, space for loading data within one patch
-    'patch_dims', [64, 64]);  %GB, patch size
+    'memory_size_per_patch', 80, ...   % GB, space for loading data within one patch
+    'patch_dims', [6400, 64000]);  %GB, patch size
 
 % -------------------------      SPATIAL      -------------------------  %
 gSig = 3;           % pixel, gaussian width of a gaussian kernel for filtering the data. 0 means no filtering
-gSiz = 13;          % pixel, neuron diameter
+gSiz = 12;          % pixel, neuron diameter
 ssub = 1;           % spatial downsampling factor
 with_dendrites = true;   % with dendrites or not
 if with_dendrites
@@ -38,7 +39,7 @@ Fs = 10;             % frame rate
 tsub = 1;           % temporal downsampling factor
 deconv_options = struct('type', 'ar1', ... % model of the calcium traces. {'ar1', 'ar2'}
     'method', 'foopsi', ... % method for running deconvolution {'foopsi', 'constrained', 'thresholded'}
-    'smin', -5, ...         % minimum spike size. When the value is negative, the actual threshold is abs(smin)*noise level
+    'smin', -3, ...         % minimum spike size. When the value is negative, the actual threshold is abs(smin)*noise level
     'optimize_pars', true, ...  % optimize AR coefficients
     'optimize_b', true, ...% optimize the baseline);
     'max_tau', 100);    % maximum decay time (unit: frame);
@@ -50,7 +51,7 @@ detrend_method = 'spline';  % compute the local minimum as an estimation of tren
 % -------------------------     BACKGROUND    -------------------------  %
 bg_model = 'ring';  % model of the background {'ring', 'svd'(default), 'nmf'}
 nb = 1;             % number of background sources for each patch (only be used in SVD and NMF model)
-ring_radius = 18;  % when the ring model used, it is the radius of the ring used in the background model.
+ring_radius = 20;  % when the ring model used, it is the radius of the ring used in the background model.
 %otherwise, it's just the width of the overlapping area
 num_neighbors = []; % number of neighbors for each neuron
 bg_ssub = 2;        % downsample background for a faster speed 
@@ -69,11 +70,11 @@ min_corr = 0.8;     % minimum local correlation for a seeding pixel
 min_pnr = 8;       % minimum peak-to-noise ratio for a seeding pixel
 min_pixel = gSig^2;      % minimum number of nonzero pixels for each neuron
 bd = 0;             % number of rows/columns to be ignored in the boundary (mainly for motion corrected data)
-frame_range = [];   % when [], uses all frames
+frame_range = [1, 1000];   % when [], uses all frames
 save_initialization = false;    % save the initialization procedure as a video.
-use_parallel = true;    % use parallel computation for parallel computing
-show_init = true;   % show initialization results
-choose_params = true; % manually choose parameters
+use_parallel = false;    % use parallel computation for parallel computing
+show_init = false;   % show initialization results
+choose_params = false; % manually choose parameters
 center_psf = true;  % set the value as true when the background fluctuation is large (usually 1p data)
 % set the value as false when the background fluctuation is small (2p)
 
@@ -144,120 +145,3 @@ neuron.show_contours(0.6);
 %%
 neuron.PNR=PNR;
 ShowPNS
-%% 
-% _If necessary, repeat steps 1 and 2 with new cor and PNR parameters._
-%% *STEP4: Update background and merge neurons.*
-%%
-%% estimate the background components
-neuron.update_background_parallel(use_parallel);
-neuron_init = neuron.copy();
-
-%%  merge neurons and update spatial/temporal components
-neuron.merge_neurons_dist_corr(show_merge);
-neuron.merge_high_corr(show_merge, merge_thr_spatial);
-neuron.show_contours(0.6);
-%% STEP5: Pick up neurons from the residual (Can be skipped)
-%%
-%% pick neurons from the residual
-[center_res, Cn_res, PNR_res] =neuron.initComponents_residual_parallel([], save_initialization, use_parallel, min_corr_res, min_pnr_res, seed_method_res);
-if show_init
-    axes(ax_init);
-    plot(center_res(:, 2), center_res(:, 1), '.g', 'markersize', 10);
-end
-neuron_init_res = neuron.copy();
-neuron.show_contours(0.6);
-%% STEP6: Update spatial & temporal components, delete false positives and merge neurons
-%%
-% update spatial
-if update_sn
-    neuron.update_spatial_parallel(use_parallel, true);
-    udpate_sn = false;
-else
-    neuron.update_spatial_parallel(use_parallel);
-end
-% merge neurons based on correlations 
-neuron.merge_high_corr(show_merge, merge_thr_spatial);
-
-for m=1:2
-    % update temporal
-    neuron.update_temporal_parallel(use_parallel);
-    
-    % delete bad neurons
-    neuron.remove_false_positives();
-    
-    % merge neurons based on temporal correlation + distances 
-    neuron.merge_neurons_dist_corr(show_merge);
-end
-neuron.options.spatial_algorithm = 'nnls';
-%%-------------------------
-neuron.show_contours(0.6);
-%% STEP7: Add a manual intervention and run the whole procedure for a second time
-% NOTE*** Don't run this program using "run section" or "Run all" bouton. Select 
-% all and press F9. This is because 
-% 
-% an error in the internal matlab livescript structure (images dont update 
-% inside a loop) 
-%%
-show_merge = true;
-neuron.orderROIs('snr');   % order neurons in different ways {'snr', 'decay_time', 'mean', 'circularity'}
-neuron.viewNeurons([], neuron.C_raw);
-
-% merge closeby neurons
-neuron.merge_close_neighbors(true, dmin_only);
-
-% delete neurons
-tags = neuron.tag_neurons_parallel();  % find neurons with fewer nonzero pixels than min_pixel and silent calcium transients
-ids = find(tags>0);
-if ~isempty(ids)
-    neuron.viewNeurons(ids, neuron.C_raw);
-end
-%%  STEP8: run the whole procedure for a second time
-%%
-%% run more iterations
-neuron.update_background_parallel(use_parallel);
-neuron.update_spatial_parallel(use_parallel);
-neuron.update_temporal_parallel(use_parallel);
-
-K = size(neuron.A,2);
-tags = neuron.tag_neurons_parallel();  % find neurons with fewer nonzero pixels than min_pixel and silent calcium transients
-neuron.remove_false_positives();
-neuron.merge_neurons_dist_corr(show_merge);
-neuron.merge_high_corr(show_merge, merge_thr_spatial);
-
-if K~=size(neuron.A,2)
-    neuron.update_spatial_parallel(use_parallel);
-    neuron.update_temporal_parallel(use_parallel);
-    neuron.remove_false_positives();
-end
-neuron.show_contours(0.6);
-%% STEP9: save the workspace for future analysis
-%%
-fix_Baseline(100,neuron)%% PV
-neuron.C = deconvTemporal(neuron, use_parallel,1);
-Coor = neuron.show_contours(0.6);
-
-cnmfe_path = neuron.save_workspace();
-neuron.save_neurons();
-
-%% Useful Commands
-% Check neurons:
-%%
-%neuron.orderROIs('snr');   % order neurons in different ways {'snr', 'decay_time', 'mean', 'circularity'}
-%neuron.viewNeurons([], neuron.C_raw);
-%% 
-% Create Video
-
-amp_ac = 20;
-range_ac = [0, amp_ac];
-multi_factor = 60;
-range_Y = [0, amp_ac*multi_factor];
-save_demixed=1;
-%avi_filename = neuron.show_demixed_video(save_demixed, 1, [], amp_ac, range_ac, range_Y, multi_factor);
-%% 
-% Show neurons
-
-%Coor = neuron.show_contours(0.6);
-%% 
-% DECONVOLVE signal
-%%
-%neuron.C = deconvTemporal(neuron, use_parallel,1);
