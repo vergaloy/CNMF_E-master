@@ -108,28 +108,32 @@ end
 %% run deconvolution
 c = y;
 s = y;
+b0 = options.b;
+
 switch lower(options.method)
     case 'foopsi'  %% use FOOPSI
         if strcmpi(options.type, 'ar1')  % AR 1
             if options.smin<0
                 options.smin = abs(options.smin)*options.sn;
             end
-            
-            gmax = exp(-1/options.max_tau);
-            [c, s, options.b, options.pars] = foopsi_oasisAR1(y-options.b, options.pars, options.lambda, ...
-                options.smin, options.optimize_b, options.optimize_pars, [], options.maxIter, gmax);
+            gmax = exp(-1/options.max_tau); 
+            [c, s, options.b, options.pars] = foopsi_oasisAR1(y-b0, options.pars, options.lambda, ...
+                options.smin, options.optimize_b, options.optimize_pars, [], options.maxIter, ...
+                options.tau_range, gmax);
+            options.b = options.b + b0; 
         elseif strcmpi(options.type, 'ar2') % AR 2
             if options.smin<0
                 options.smin = abs(options.smin)*options.sn/max_ht(options.pars);
             end
-            [c, s, options.b, options.pars] = foopsi_oasisAR2(y-options.b, options.pars, options.lambda, ...
+            [c, s, options.b, options.pars] = foopsi_oasisAR2(y-b0, options.pars, options.lambda, ...
                 options.smin);
+            options.b = options.b + b0;
         elseif strcmpi(options.type, 'exp2')   % difference of two exponential functions
             kernel = exp2kernel(options.pars, options.window);
-            [c, s] = onnls(y-options.b, kernel, options.lambda, ...
+            [c, s] = onnls(y-b0, kernel, options.lambda, ...
                 options.shift, options.window);
         elseif strcmpi(options.type, 'kernel') % convolution kernel itself
-            [c, s] = onnls(y-options.b, options.pars, options.lambda, ...
+            [c, s] = onnls(y-b0, options.pars, options.lambda, ...
                 options.shift, options.window);
         else
             disp('to be done');
@@ -138,7 +142,7 @@ switch lower(options.method)
         if strcmpi(options.type, 'ar1')  % AR1
             [c, s, options.b, options.pars, options.lambda] = constrained_oasisAR1(y,...
                 options.pars, options.sn, options.optimize_b, options.optimize_pars, ...
-                [], options.maxIter);
+                [], options.maxIter, options.tau_range);
         else
             [cc, options.b, c1, options.pars, options.sn, s] = constrained_foopsi(y,[],[],options.pars,options.sn, ...
                 options.extra_params);
@@ -151,13 +155,14 @@ switch lower(options.method)
         if strcmpi(options.type, 'ar1')
             [c, s, options.b, options.pars, options.smin] = thresholded_oasisAR1(y,...
                 options.pars, options.sn, options.optimize_b, options.optimize_pars, ...
-                [], options.maxIter, options.thresh_factor, options.p_noise);
+                [], options.maxIter, options.thresh_factor, options.p_noise, ...
+                options.tau_range);
             %             if and(options.smin==0, options.optimize_smin) % smin is given
             %                 [c, s, options.b, options.pars, options.smin] = thresholded_oasisAR1(y,...
             %                     options.pars, options.sn, options.optimize_b, options.optimize_pars, ...
             %                     [], options.maxIter, options.thresh_factor);
             %             else
-            %                 [c, s] = oasisAR1(y-options.b, options.pars, options.lambda, ...
+            %                 [c, s] = oasisAR1(y-b0, options.pars, options.lambda, ...
             %                     options.smin);
             %             end
         elseif strcmpi(options.type, 'ar2')
@@ -169,17 +174,17 @@ switch lower(options.method)
             %                     options.pars, options.sn, options.optimize_b, options.optimize_pars, ...
             %                     [], options.maxIter, options.thresh_factor);
             %             else
-            %                 [c, s] = oasisAR2(y-options.b, options.pars, options.lambda, ...
+            %                 [c, s] = oasisAR2(y-b0, options.pars, options.lambda, ...
             %                     options.smin);
             %             end
         elseif strcmpi(options.type, 'exp2')   % difference of two exponential functions
             d = options.pars(1);
             r = options.pars(2);
             options.pars = (exp(log(d)*(1:win)) - exp(log(r)*(1:win))) / (d-r); % convolution kernel
-            [c, s] = onnls(y-options.b, options.pars, options.lambda, ...
+            [c, s] = onnls(y-b0, options.pars, options.lambda, ...
                 options.shift, options.window, [], [], [], options.smin);
         elseif strcmpi(options.type, 'kernel') % convolution kernel itself
-            [c, s] = onnls(y-options.b, options.pars, options.lambda, ...
+            [c, s] = onnls(y-b0, options.pars, options.lambda, ...
                 options.shift, options.window, [], [], [], options.smin);
         else
             disp('to be done');
@@ -193,7 +198,7 @@ end
 
 % deal with large residual
 if options.remove_large_residuals && strcmpi(options.method, 'foopsi')
-    ind = (abs(smooth(y-c, 3))>options.smin);
+    ind = (abs(fastsmooth(y-c, 3))>options.smin);
     c(ind) = max(0, y(ind));
 end
 
@@ -217,9 +222,10 @@ options.smin = 0;
 options.maxIter = 10;
 options.thresh_factor = 1.0;
 options.extra_params = [];
-options.p_noise = 0.9999;
-options.max_tau = 300;
-options.remove_large_residuals = true; 
+options.p_noise = 0.9999; 
+options.max_tau = 100; 
+options.tau_range = []; 
+options.remove_large_residuals = false; 
 
 if isempty(varargin)
     return;
@@ -325,6 +331,9 @@ while k<=nargin
             % to the next
             options.p_noise = varargin{k+1};
             k = k+2;
+        case 'tau_range'
+            options.tau_range = varargin{k+1}; 
+            k = k+2; 
         case 'remove_large_residuals'
             % remove large residuals by setting c(t) = y(t) 
             options.remove_large_residuals = true;

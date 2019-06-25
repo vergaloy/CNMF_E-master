@@ -56,8 +56,8 @@ spatial_algorithm = 'hals_thresh';
 % -------------------------      TEMPORAL     -------------------------  %
 Fs = 10;             % frame rate
 tsub = 1;           % temporal downsampling factor
-deconv_options = struct('type', 'ar1', ... % model of the calcium traces. {'ar1', 'ar2'}
-    'method', 'foopsi', ... % method for running deconvolution {'foopsi', 'constrained', 'thresholded'}
+deconv_options = struct('type', 'ar2', ... % model of the calcium traces. {'ar1', 'ar2'}
+    'method', 'thresholded', ... % method for running deconvolution {'foopsi', 'constrained', 'thresholded'}
     'smin', -5, ...         % minimum spike size. When the value is negative, the actual threshold is abs(smin)*noise level
     'optimize_pars', true, ...  % optimize AR coefficients
     'optimize_b', true, ...% optimize the baseline);
@@ -249,8 +249,8 @@ range_Y = [0, amp_ac*multi_factor];
 %avi_filename = neuron.show_demixed_video(save_demixed, 1, [], amp_ac, range_ac, range_Y, multi_factor);
 
 %% save neurons shapes
-fix_Baseline(50*Fs,neuron)%% PV
-neuron.C = deconvTemporal(neuron, use_parallel,1);
+fix_Baseline(50*neuron.Fs,neuron)%% PV
+neuron.C = deconvTemporal(neuron, 1,1);
 
 neuron.PNR=PNR;
 %neuron.save_neurons();

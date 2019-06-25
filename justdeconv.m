@@ -24,16 +24,16 @@ spatial_constraints = struct('connected', true, 'circular', false);  % you can i
 spatial_algorithm = 'hals_thresh';
 
 % -------------------------      TEMPORAL     -------------------------  %
-Fs = 5.02;             % frame rate
+Fs = 10;             % frame rate
 tsub = 1;           % temporal downsampling factor
-deconv_options = struct('type', 'ar1', ... % model of the calcium traces. {'ar1', 'ar2'}   
+deconv_options = struct('type', 'ar2', ... % model of the calcium traces. {'ar1', 'ar2'}   
     'method', 'foopsi', ... % method for running deconvolution {'foopsi', 'constrained', 'thresholded'}
     'smin', -5, ...         % minimum spike size. When the value is negative, the actual threshold is abs(smin)*noise level
     'optimize_pars', true, ...  % optimize AR coefficients
     'optimize_b', true, ...% optimize the baseline);
     'max_tau', 100);    % maximum decay time (unit: frame);
 
-nk = 100;             % detrending the slow fluctuation. usually 1 is fine (no detrending)  PV 30 was working fine
+nk = 1;             % detrending the slow fluctuation. usually 1 is fine (no detrending)  PV 30 was working fine
 % when changed, try some integers smaller than total_frame/(Fs*30)
 detrend_method = 'spline';  % compute the local minimum as an estimation of trend.
 
@@ -109,7 +109,7 @@ neuron.Fs = Fs;
 
 %%
 
-neuron.C = deconvTemporal(neuron, use_parallel,1);
+neuron.C = deconvTemporal(neuron, 1,1);
 
 
 

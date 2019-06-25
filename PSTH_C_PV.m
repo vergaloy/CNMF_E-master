@@ -1,12 +1,11 @@
-tic  %Start timer
 %%clear all %delte all variables
 %% Pre-Sets: These are the user-defined variables.  
 clearvars -except neuron
 
-stimulus_onset=124; %%in s
+stimulus_onset=125; %%in s
 stimulus_duration=60;
 Trial_duration=300;
-discard=1;
+discard=0;
 make_trials=1;
 path=neuron.C;
 
@@ -74,7 +73,7 @@ hold on
 x1=0;
 x2=stimulus_duration;
 y1=0;
-y2=size(neuron.C,1);
+y2=size(neuron.C,1)+1;
 x = [x1, x2, x2, x1, x1];
 y = [y1, y1, y2, y2, y1];
 plot(x, y, 'b-', 'LineWidth', 3);
