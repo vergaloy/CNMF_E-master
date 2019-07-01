@@ -13,4 +13,4 @@ newStr = reverse(neuron.file);
 newStr = string(extractBetween(newStr,".","\"));
 newStr = reverse(newStr);
 path=pwd+"\session_"+newStr+"_"+date+".mat";
-save(path,session)
+save(path,"session")

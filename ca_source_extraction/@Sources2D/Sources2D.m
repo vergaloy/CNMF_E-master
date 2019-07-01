@@ -1897,12 +1897,12 @@ classdef Sources2D < handle
                 Coor = obj.get_contours(thr);
                 obj.Coor = Coor;
             else
-                Coor = obj.Coor;
+               Coor = obj.Coor;
             end
             figure('papersize', [obj.options.d2, obj.options.d1]/40);
             init_fig;
             plot_contours(obj.A(:, ind), img, thr,with_label, [], obj.Coor(ind), 2);
-            colormap gray;
+            %colormap gray;
             try
                 file_path = [obj.P.log_folder,  'contours_neurons', strrep(get_date(), ' ', '_'), '.pdf'];
                 saveas(gcf, file_path);

@@ -88,7 +88,7 @@ function getall(tshift,sf,results,ignoreM,ignoreRW,gets,mouse)
 	if (plot==1)
 		Display /W=(405.75,291.5,1121.25,587)/K=1  ::Sleep:REM,::Sleep:WAKE,::Sleep:NREM,::Sleep:REMWAKE
 		setdatafolder folder+"data:C_raw:"
-		creategraphs("wave",0)
+		creategraphs("wave",0,sf)
 		setdatafolder folder+"data:S:"
 		creategraphs2("wave",0)	
 		setdatafolder folder+"data:sleep:"
@@ -688,8 +688,8 @@ end
 //***** THIS FUNCTIOnS ARE FOR showing traces*****
 
 // main function for ploting (Set raster to 0 to plot the traces and to 1 to plot the raster)
-function plot_data_from_all_subfolders(raster)
-	variable raster
+function plot_data_from_all_subfolders(raster,sf)
+	variable raster,sf
 	display/k=1
 	Variable numDataFolders = CountObjects(":", 4), l
 	string cdf,list
@@ -708,7 +708,7 @@ function plot_data_from_all_subfolders(raster)
 			offset=0
 		endif
 		
-		append_traces(raster)
+		append_traces(raster,sf)
 		offset_traces(b,offset)
 	
 	endfor
@@ -729,14 +729,15 @@ function save_graph(raster)
 end
 
 // graph traces
-function graph_traces()
+function graph_traces(sf)
+variable sf
 	display
-	append_traces(0)
+	append_traces(0,sf)
 	modify_wave_apparence()
 end
 
-function append_traces(raster) // plot everything inside a folder!!
-	variable raster
+function append_traces(raster,sf) // plot everything inside a folder!!
+	variable raster,sf
 	string folder=GetDataFolder(1)
 	wave t=$folder+"data:S:artifact",w=$folder+"data:Sleep:WAKE"
 	
@@ -746,7 +747,7 @@ function append_traces(raster) // plot everything inside a folder!!
 	copyScales $folder+"data:Sleep:WAKE", $folder+"data:S:artifact"
 	if (raster==0)
 		setdatafolder folder+"data:C_raw:"
-		creategraphs("wave",0)
+		creategraphs("wave",0,sf)
 	endif
 	setdatafolder folder+"data:S:"
 	creategraphs2("wave",0)	
@@ -755,9 +756,9 @@ function append_traces(raster) // plot everything inside a folder!!
 end
 // This function is to graph the raw calcium signals
 
-function creategraphs(wavenames,disp)
+function creategraphs(wavenames,disp,sf)
 	string wavenames
-	variable disp
+	variable disp,sf
 	string list,trace,temp
 	variable k,i
 	if (disp==1)
@@ -769,10 +770,10 @@ function creategraphs(wavenames,disp)
 	for (i=0;i<k;i+=1)	
 		trace=stringfromlist(i,list,",")
 		wave twave=$trace
-		SetScale/P x 0,0.199203,"", twave
+		SetScale/P x 0,1/sf,"", twave
 		AppendToGraph twave	/TN=raw	
 		string traces = tracenamelist("",";", 1) 
-		ModifyGraph offset[itemsinlist(traces, ";")-1]={0,i*2}
+		ModifyGraph offset[itemsinlist(traces, ";")-1]={0,i*0.6}
 	endfor	
 end
 		
