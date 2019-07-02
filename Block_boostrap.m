@@ -34,7 +34,7 @@ for n=1:size(DataC,1)
     means=sort(means,'descend');
     p=1-find(means<0,1)/sims;
     if (isempty(p))
-        p=1/sims
+        p=1/sims;
     end
     P(n)=p;
 end

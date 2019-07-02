@@ -1,6 +1,6 @@
 %%clear all %delte all variables
 %% Pre-Sets: These are the user-defined variables.  
-clearvars -except neuron test P
+clearvars -except neuron test
 
 stimulus_onset=30; %%in s
 stimulus_duration=30;
@@ -56,11 +56,10 @@ for n=1:size(PSTH.C,1)
     PSTH.P(n)=p;
     PSTH.activity(n)=(mean(t2)-mean(t1));
 end
-if (exist('P','var')==1)
-[~,in]=sort(P,'ascend');    
+if (exist(P,'var')==1)
+    
 else    
 [~,in]=sort(PSTH.activity,'ascend');
-end
 for n=1:size(PSTH.C,1)
 PSTH.C_sorted(n,1:size(PSTH.C,2))=PSTH.C(in(n),:);
 end

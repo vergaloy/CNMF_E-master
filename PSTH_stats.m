@@ -29,5 +29,4 @@ BL=PSTH.C;
 BL(:,trail_data>0)=[];  
 stim=PSTH.C;
 stim(:,trail_data==0)=[];  
-P=Block_boostrap(BL,stim,1000,1000);
-
+P=Block_boostrap(BL,stim,1000,10000);
