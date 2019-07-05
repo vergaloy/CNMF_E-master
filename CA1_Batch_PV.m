@@ -1,5 +1,5 @@
 % Specify the folder where the files live.
-myFolder = 'C:\Users\SSG Lab\Desktop\Sakthi poryect\6_24_2019\LIS36_CA1_1500sec_BSL1_180_1321_1500_opto181_1320_every1min_20 secsilence\20s-Objects';
+myFolder = 'C:\Users\Galoy\Desktop\CAtest\190704-Objects';
 savefiles=1;
 % Check to make sure that folder actually exists.  Warn user if it doesn't.
 if ~isdir(myFolder)
@@ -35,8 +35,8 @@ pars_envs = struct('memory_size_to_use', 128, ...   % GB, memory space you allow
     'patch_dims', [100, 100]);  %GB, patch size
 
 % -------------------------      SPATIAL      -------------------------  %
-gSig = 4;           % pixel, gaussian width of a gaussian kernel for filtering the data. 0 means no filtering
-gSiz = 12;          % pixel, neuron diameter
+gSig = 5;           % pixel, gaussian width of a gaussian kernel for filtering the data. 0 means no filtering
+gSiz = 30;          % pixel, neuron diameter
 ssub = 1;           % spatial downsampling factor
 with_dendrites = true;   % with dendrites or not
 if with_dendrites
@@ -56,6 +56,7 @@ spatial_algorithm = 'hals_thresh';
 % -------------------------      TEMPORAL     -------------------------  %
 Fs = 10;             % frame rate
 tsub = 1;           % temporal downsampling factor
+%ker=create_kernel('exp2', [1, 0.1]*10,ceil(6*1*10), [ ], [ ], false);
 deconv_options = struct('type', 'ar2', ... % model of the calcium traces. {'ar1', 'ar2'}
     'method', 'foopsi', ... % method for running deconvolution {'foopsi', 'constrained', 'thresholded'}
     'smin', -5, ...         % minimum spike size. When the value is negative, the actual threshold is abs(smin)*noise level
@@ -70,7 +71,7 @@ detrend_method = 'spline';  % compute the local minimum as an estimation of tren
 % -------------------------     BACKGROUND    -------------------------  %
 bg_model = 'ring';  % model of the background {'ring', 'svd'(default), 'nmf'}
 nb = 1;             % number of background sources for each patch (only be used in SVD and NMF model)
-ring_radius = gSiz*2;  % when the ring model used, it is the radius of the ring used in the background model.
+ring_radius = 20;  % when the ring model used, it is the radius of the ring used in the background model.
 %otherwise, it's just the width of the overlapping area
 num_neighbors = []; % number of neighbors for each neuron
 bg_ssub = 2;        % downsample background for a faster speed 
@@ -85,7 +86,7 @@ merge_thr_spatial = [0.8, 0.4, -inf];  % merge components with highly correlated
 
 % -------------------------  INITIALIZATION   -------------------------  %
 K = [];             % maximum number of neurons per patch. when K=[], take as many as possible.
-min_corr = 0.8;     % minimum local correlation for a seeding pixel  /pv 0.6 6.5
+min_corr = 0.5;     % minimum local correlation for a seeding pixel  /pv 0.6 6.5
 min_pnr = 8;       % minimum peak-to-noise ratio for a seeding pixel/6.5
 min_pixel = gSig^2;      % minimum number of nonzero pixels for each neuron
 bd = 0;             % number of rows/columns to be ignored in the boundary (mainly for motion corrected data)
@@ -237,7 +238,7 @@ neuron.orderROIs('snr');
 cnmfe_path = neuron.save_workspace();
 
 %% show neuron contours
-Coor = neuron.show_contours(0.6);
+Coor = neuron.show_contours(0.6, [], neuron.Cn, false);
 
 
 %% create a video for displaying the
@@ -260,6 +261,7 @@ cnmfe_path = neuron.save_workspace();
  % neuron.orderROIs('snr');   % order neurons in different ways {'snr', 'decay_time', 'mean', 'circularity'}
  %neuron.viewNeurons([], neuron.C_raw);
 %ShowPNS
+%neuron.Coor=[]
 %neuron.show_contours(0.6, [], neuron.PNR, false)
 
 
