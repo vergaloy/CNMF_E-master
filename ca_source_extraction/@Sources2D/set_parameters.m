@@ -61,7 +61,7 @@ end
 
 %%
 %% choose the radius of the ring
-if strcmpi('obj.options.background_model', 'ring')
+if strcmpi(obj.options.background_model, 'ring')
     fprintf('\n*** Determine the ring radius for estimating background fluctuations.\n');
     fprintf('\t-------------------------- GUIDE --------------------------\n');
     fprintf('\tThe ring radius is selected to be larger than neuron diameters. \n');

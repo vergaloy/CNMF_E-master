@@ -16,10 +16,10 @@ pars_envs = struct('memory_size_to_use', 128, ...   % GB, memory space you allow
     'patch_dims', [300, 300]);  %GB, patch size
 
 % -------------------------      SPATIAL      -------------------------  %
-gSig = 12;           % pixel, gaussian width of a gaussian kernel for filtering the data. 0 means no filtering
-gSiz = 30;          % pixel, neuron diameter
-ssub = 1;           % spatial downsampling factor
-with_dendrites = false;   % with dendrites or not
+gSig = 15;           % pixel, gaussian width of a gaussian kernel for filtering the data. 0 means no filtering
+gSiz = 60;          % pixel, neuron diameter
+ssub = 2;           % spatial downsampling factor
+with_dendrites = true;   % with dendrites or not
 if with_dendrites
     % determine the search locations by dilating the current neuron shapes
     updateA_search_method = 'dilate';  %#ok<UNRCH>
@@ -67,7 +67,7 @@ merge_thr_spatial = [0.8, 0.4, -inf];  % merge components with highly correlated
 % -------------------------  INITIALIZATION   -------------------------  %
 K = [];             % maximum number of neurons per patch. when K=[], take as many as possible.
 min_corr = 0.5;     % minimum local correlation for a seeding pixel
-min_pnr = 8;       % minimum peak-to-noise ratio for a seeding pixel
+min_pnr = 6;       % minimum peak-to-noise ratio for a seeding pixel
 min_pixel = gSig^2;      % minimum number of nonzero pixels for each neuron
 bd = 0;             % number of rows/columns to be ignored in the boundary (mainly for motion corrected data)
 frame_range = [1, 1000];   % when [], uses all frames
@@ -141,7 +141,7 @@ if show_init
     plot(center(:, 2), center(:, 1), '.r', 'markersize', 10);
 end
 neuron.PNR=PNR;
-neuron.show_contours(0.3, [], neuron.PNR, false)
+neuron.show_contours(0.3, [], neuron.PNR.*neuron.Cn, false)
 %% *STEP3: Get Peak-to-noise ratio and correlation (can be skipped, but useful to estimate PNS and correlation initialization parameters)*
 %%
 ShowPNS

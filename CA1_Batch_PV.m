@@ -1,5 +1,5 @@
 % Specify the folder where the files live.
-myFolder = 'C:\Users\Galoy\Desktop\CAtest\190704-Objects';
+myFolder = 'C:\Users\Galoy\Desktop\CAtest\sakthi\sakthi-Objects\filtered-Objects';
 savefiles=1;
 % Check to make sure that folder actually exists.  Warn user if it doesn't.
 if ~isdir(myFolder)
@@ -35,9 +35,9 @@ pars_envs = struct('memory_size_to_use', 128, ...   % GB, memory space you allow
     'patch_dims', [100, 100]);  %GB, patch size
 
 % -------------------------      SPATIAL      -------------------------  %
-gSig = 5;           % pixel, gaussian width of a gaussian kernel for filtering the data. 0 means no filtering
-gSiz = 30;          % pixel, neuron diameter
-ssub = 1;           % spatial downsampling factor
+gSig = 15;           % pixel, gaussian width of a gaussian kernel for filtering the data. 0 means no filtering
+gSiz = 60;          % pixel, neuron diameter
+ssub = 2;           % spatial downsampling factor
 with_dendrites = true;   % with dendrites or not
 if with_dendrites
     % determine the search locations by dilating the current neuron shapes
@@ -71,7 +71,7 @@ detrend_method = 'spline';  % compute the local minimum as an estimation of tren
 % -------------------------     BACKGROUND    -------------------------  %
 bg_model = 'ring';  % model of the background {'ring', 'svd'(default), 'nmf'}
 nb = 1;             % number of background sources for each patch (only be used in SVD and NMF model)
-ring_radius = 20;  % when the ring model used, it is the radius of the ring used in the background model.
+ring_radius = 60;  % when the ring model used, it is the radius of the ring used in the background model.
 %otherwise, it's just the width of the overlapping area
 num_neighbors = []; % number of neighbors for each neuron
 bg_ssub = 2;        % downsample background for a faster speed 
@@ -87,7 +87,7 @@ merge_thr_spatial = [0.8, 0.4, -inf];  % merge components with highly correlated
 % -------------------------  INITIALIZATION   -------------------------  %
 K = [];             % maximum number of neurons per patch. when K=[], take as many as possible.
 min_corr = 0.5;     % minimum local correlation for a seeding pixel  /pv 0.6 6.5
-min_pnr = 8;       % minimum peak-to-noise ratio for a seeding pixel/6.5
+min_pnr = 6;       % minimum peak-to-noise ratio for a seeding pixel/6.5
 min_pixel = gSig^2;      % minimum number of nonzero pixels for each neuron
 bd = 0;             % number of rows/columns to be ignored in the boundary (mainly for motion corrected data)
 frame_range = [];   % when [], uses all frames
@@ -250,7 +250,7 @@ range_Y = [0, amp_ac*multi_factor];
 %avi_filename = neuron.show_demixed_video(save_demixed, 1, [], amp_ac, range_ac, range_Y, multi_factor);
 
 %% save neurons shapes
-fix_Baseline(50*neuron.Fs,neuron)%% PV
+%fix_Baseline(50*neuron.Fs,neuron)%% PV
 neuron.C = deconvTemporal(neuron, 1,1);
 
 neuron.PNR=PNR;
