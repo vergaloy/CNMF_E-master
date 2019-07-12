@@ -1,14 +1,15 @@
 clear all
 %NMF minimize the function e=X-W*H
 %Create Test Data
+rng('default') % For reproducibility
 Frequency=0.05;
-participation=6;
+participation=10;
 P1 = round(poissrnd(participation,5,1)*poissrnd(Frequency,1,500));   %sequence 1
 P2(5,500)=zeros;
 P2(1:3,:) = round(poissrnd(participation,3,1)*poissrnd(Frequency,1,500));    %sequence 2
 
-noise=poissrnd(Frequency/5,5,500)*participation;       %Add noise
-X(1:5,1:500)=P1+P2+noise;
+noise=poissrnd(Frequency*2,5,500)*participation;       %Add noise
+X(1:5,1:500)=P1+P2+noise/5;
 
 %Plot Original data
 figure;
@@ -43,7 +44,7 @@ opt = statset('Maxiter',1000,'Display','final');
                  'algorithm','als');
 
 H=H./std(H,0,2); %Normalize intensity vector
-H(H<2)=0; % delete no significant intensity
+%H(H<2)=0; % delete no significant intensity
  %Plot predicted patterns            
 P1r=W(:,1)*H(1,:);
 P2r=W(:,2)*H(2,:);
