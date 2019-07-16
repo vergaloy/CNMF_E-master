@@ -1,9 +1,11 @@
 %rng('default') % For reproducibility
-X1 = mvnrnd([3;7;5],[2 0.7 0.3;0.7 2 0.7;0.3 0.7 2],1000); %create random multivariate data;
-X2 = mvnrnd([0;0;5],[2 0.7 0.3;0.7 2 0.7;0.3 0.7 2],1000); %create random multivariate data;
+%X1 = mvnrnd([3;7;5],[2 0.7 0.3;0.7 2 0.7;0.3 0.7 2],1000); %create random multivariate data;
+%X2 = mvnrnd([0;0;5],[2 0.7 0.3;0.7 2 0.7;0.3 0.7 2],1000); %create random multivariate data;
 %X3 = mvnrnd([0;0],[2 0.7;0.7 2],1000);
 %X3 = mvnrnd([3;2],[2 0.7;0.7 2],1000);
 %calcualte the mean difference between of X1 and X2;
+
+
 dX=transpose(mean(X2,1)-mean(X1,1));
 
 
@@ -22,10 +24,10 @@ V=V(:,I);
 %calcualte distance
 Distance=sqrt(sum(((V'*dX)').^2./D))
 
-figure
-scatter3(X1(:,1),X1(:,2),X1(:,3))
-hold on
-scatter3(X2(:,1),X2(:,2),X2(:,3))
+%figure
+%scatter3(X1(:,1),X1(:,2),X1(:,3))
+%hold on
+%scatter3(X2(:,1),X2(:,2),X2(:,3))
 
 
 
