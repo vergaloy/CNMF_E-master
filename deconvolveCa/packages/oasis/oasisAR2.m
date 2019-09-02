@@ -41,7 +41,7 @@ g2 = g(2);
 if ~exist('lam', 'var') || isempty(lam);   lam = 0; end
 if ~exist('smin', 'var') || isempty(smin);   smin = 0; end
 if ~exist('T_over_ISI', 'var') || isempty(T_over_ISI)
-    T_over_ISI = 1;
+    T_over_ISI = 1;  %% changed by PV original was 1
 end
 if ~exist('jitter', 'var') || isempty(jitter)
     jitter = false;
@@ -140,7 +140,11 @@ len_active_set = size(active_set,1);
 
 %% construct solution for all t
 c = zeros(T,1);
-for ii=1:len_active_set
+%t=active_set(:,1);
+%t(t<0.3)=0;
+%active_set(:,1)=t;
+%active_set=remove_single_spikes(active_set,100);
+for ii=1:size(active_set,1);
     vi = active_set(ii,1);
     ti = active_set(ii,3);
     li = active_set(ii,4);

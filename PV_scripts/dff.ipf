@@ -6,14 +6,14 @@
 //MAIN FUNCTION: batch analysis of all mice in a grouptest
 
 function getall_batch()
-// PARAMETERS************
+	// PARAMETERS************
 
-variable ignoreM=1
-variable ignoreRW=1
-variable getS=1
-variable defSF=5.02
-variable deftshift=10
-// *************
+	variable ignoreM=1
+	variable ignoreRW=1
+	variable getS=1
+	variable defSF=5.02
+	variable deftshift=10
+	// *************
 
 	make/o/n=(1,17) Results=nan
 	make/o/n=(1,17) Results1=nan
@@ -42,11 +42,11 @@ variable deftshift=10
 		variable ts=t1,sf=t2
 		
 		if (numtype(ts) == 2)
-		ts=deftshift
+			ts=deftshift
 		endif
 		
 		if (numtype(sf) == 2)
-		sf=defSF
+			sf=defSF
 		endif
 		getall(ts,sf,cdf2+"Results",ignoreM,ignoreRW,gets,i)	
 	endfor
@@ -71,7 +71,7 @@ function getall(tshift,sf,results,ignoreM,ignoreRW,gets,mouse)
 	variable plot=1 // set as 0 to avoid creating plots
 	setdatafolder folder+"data:C:"
 	if (gets==1)
-	find_peaks(folder)
+		find_peaks(folder)
 	endif
 	string list=wavelist("wave"+"*",",","")
 	variable k=itemsinlist(list, ",")
@@ -730,7 +730,7 @@ end
 
 // graph traces
 function graph_traces(sf)
-variable sf
+	variable sf
 	display
 	append_traces(0,sf)
 	modify_wave_apparence()
@@ -993,7 +993,16 @@ function bootstrap2(wavenom1,wavenom2,sim,del0,comparisons)  //del0==1 delete 0 
 	endfor
 	sort bootstrapdist bootstrapdist
 	variable CI95=(0.05/2)*sim,CI_MC95=(0.05/(2*comparisons))*sim
-	print num2str(aver)+" "+num2str(bootstrapdist(sim-CI_MC95))+" "+num2str(bootstrapdist(CI_MC95))
+	//print num2str(aver)+" "+num2str(bootstrapdist(sim-CI_MC95))+" "+num2str(bootstrapdist(CI_MC95))
+	
+	findlevel/q bootstrapdist,0
+	variable tp=1-(abs(V_LevelX-(sim/2))*2)/sim
+			
+	if (numtype(tp)==2)
+				tp=1/sim
+	endif
+	
+	return tp
 end
 
 // create confindence interval of the mean difference of several data sets.
@@ -1118,7 +1127,8 @@ end
 
 
 // This is used for statistical testing, list1 and list2 are the full path for the 2d list 
-//with the data obtained from getall_batch()
+//with the data obtained from getall_batch() //constrained means the wake-nrem-rem data coming from the same
+//cell are bootstraped together.
 
 function createCI2_groups(list1,list2,mc, constrained, normalize)  
 	string list1,list2
@@ -1246,7 +1256,7 @@ function createCI2_groups(list1,list2,mc, constrained, normalize)
 		rw2=REMwakeER2/REMwakeTR2
 		
 		if (normalize==1)
-		variable div=nr1
+			variable div=nr1
 			nr1=nr1/div
 			r1=r1/div
 			rw1=rw1/div
@@ -1278,7 +1288,7 @@ function createCI2_groups(list1,list2,mc, constrained, normalize)
 	print num2str(-((ne/nt)-(ne2/nt2)))+" "+num2str(NREMp(sim-CI_MC95))+" "+num2str(NREMp(CI_MC95))
 	print num2str(-((re/rt)-(re2/rt2)))+" "+num2str(REMp(sim-CI_MC95))+" "+num2str(REMp(CI_MC95))
 	print num2str(-((rwe/rwt)-(rwe2/rwt2)))+" "+num2str(REMwakep(sim-CI_MC95))+" "+num2str(REMwakep(CI_MC95))
-	killwaves wakeP,NREMP,REMP,test,REMwakeP
+	//killwaves wakeP,NREMP,REMP,test,REMwakeP
 end
 
 // used in createCI2_groups to constrain bootstrap
@@ -1289,7 +1299,7 @@ function constrained_random_number(list,num)
 	variable start,finish
 	wave data=$list
 	make/n=(dimsize($list,0))/o temp
-	temp=data[p][16]
+	temp=data[p][15]
 	variable i
 	for (i=0;i<numpnts(temp);i+=1)
 		if (temp[i]==num)
@@ -1299,14 +1309,14 @@ function constrained_random_number(list,num)
 	endfor
 	
 	for (i=numpnts(temp)-1;i>=0;i-=1)
-	variable dummy=temp[i]
+		variable dummy=temp[i]
 		if (temp[i]==num)
 			finish=i
 			break
 		endif
 	endfor
 	killwaves temp
-return (ceil((enoise(0.5)+0.5)*(finish-start+1))-1)+start
+	return (ceil((enoise(0.5)+0.5)*(finish-start+1))-1)+start
 end
 
 // this is for hypothesis tesis for sleep conditions in a same group
@@ -1474,12 +1484,17 @@ end
 //--------------------------
 
 function sleep_stats() // get sleep relevant data, used in sleep_stats_batch()
+	string cdf=GetDataFolder(1)
+	duplicate/o $cdf+"data:S:artifact" $cdf+"data:Sleep:artifact"
+	
+	setdatafolder  $cdf+"data:Sleep"
 	variable MisW,RWisW
 	wave wake,nrem,rem,remwake,M,artifact
 	duplicate/o Wake hypno
 	variable t1,t2
 
 	artifact = (numtype(artifact[p]) == 2) ? 0 : artifact
+	artifact = (numtype(artifact[p]) == 1) ? 0 : artifact
 	hypno=nrem+rem*2-artifact
 	variable ti=wavemax(hypno)
 	hypno=hypno/ti
@@ -1582,14 +1597,14 @@ function anova() // normal anova, datasets  to compare mus be named "anova"
 	
 	variable MSSb=sum(sumsqrP)/(k-1)
 	
-return MSSb/MSSw //print F
+	return MSSb/MSSw //print F
 end
 
 //--------------------------
 function call_anova2way()
-variable q1,q2,q3
-[q1,q2,q3]=anova2way()
-print q1,q2,q3
+	variable q1,q2,q3
+	[q1,q2,q3]=anova2way()
+	print q1,q2,q3
 end
 
 function [variable q1,variable q2,variable q3]anova2way() // two way anova, datasets  to compare must be 3d matrix named "anova2"
@@ -1670,14 +1685,14 @@ function [variable q1,variable q2,variable q3]anova2way() // two way anova, data
 	q2=B_MS/Y_MS
 	q3=AB_MS/Y_MS
 	
-return [q1,q2,q3]	
+	return [q1,q2,q3]	
 end
 
 //--------------------------
 
 // Use this for non-normal/non-homoscedastic  data sets must be named wave"
 function anova_bootstrap(sims)
-variable sims
+	variable sims
 
 	string list=wavelist("wave*",";","DF:0")
 	variable k=itemsinlist(list, ";"),i
@@ -1696,43 +1711,43 @@ variable sims
 	string list2=wavelist("anova*",";","DF:0")
 	for (l=0;l<sims;l+=1)
 
-	for (i=0;i<k;i+=1)	
-		trace=stringfromlist(i,list,";")
-		duplicate/o $trace temp
-		temp=temp-xg_stored[i]
+		for (i=0;i<k;i+=1)	
+			trace=stringfromlist(i,list,";")
+			duplicate/o $trace temp
+			temp=temp-xg_stored[i]
 		
-		string trace2=stringfromlist(i,list2,";")
-		wave tmp=$trace2
-		tmp=temp[ceil((enoise(0.5)+0.5)*(numpnts(temp)))-1]
+			string trace2=stringfromlist(i,list2,";")
+			wave tmp=$trace2
+			tmp=temp[ceil((enoise(0.5)+0.5)*(numpnts(temp)))-1]
+		endfor
+	
+	
+		bstrap[l]=anova()	
 	endfor
 	
-	
-	bstrap[l]=anova()	
-	endfor
-	
-sort bstrap bstrap
-Make/N=1000000/O bstrap_Hist;DelayUpdate
-Histogram/CUM/P/C/B=1 bstrap,bstrap_Hist;DelayUpdate
+	sort bstrap bstrap
+	Make/N=1000000/O bstrap_Hist;DelayUpdate
+	Histogram/CUM/P/C/B=1 bstrap,bstrap_Hist;DelayUpdate
 
-print "the F-value of the sample is "+num2str(sample_F)
+	print "the F-value of the sample is "+num2str(sample_F)
 
-findlevel/q bstrap_Hist,0.9999
-if (sample_F>V_LevelX)
-print "the probability of randomly observing this value is <0.0001"
-else
-print "the probability of randomly observing this value is "+num2str(1-bstrap_Hist(sample_F))
-endif
-findlevel/q bstrap_Hist,0.95
-if (sample_F>V_LevelX)
-return 1
-else
-return 0
-endif
+	findlevel/q bstrap_Hist,0.9999
+	if (sample_F>V_LevelX)
+		print "the probability of randomly observing this value is <0.0001"
+	else
+		print "the probability of randomly observing this value is "+num2str(1-bstrap_Hist(sample_F))
+	endif
+	findlevel/q bstrap_Hist,0.95
+	if (sample_F>V_LevelX)
+		return 1
+	else
+		return 0
+	endif
 end
 
 // Use this for non-normal/non-homoscedastic  data sets must be named wave"
 function anova2_bootstrap(sims)
-variable sims
+	variable sims
 
 	string list=wavelist("wave*",";","DF:0")
 	variable k=itemsinlist(list, ";"),i
@@ -1751,45 +1766,45 @@ variable sims
 	string list2=wavelist("anova*",";","DF:0")
 	for (l=0;l<sims;l+=1)
 
-	for (i=0;i<k;i+=1)	
-		trace=stringfromlist(i,list,";")
-		duplicate/o $trace temp
-		temp=temp-xg_stored[i]
+		for (i=0;i<k;i+=1)	
+			trace=stringfromlist(i,list,";")
+			duplicate/o $trace temp
+			temp=temp-xg_stored[i]
 		
-		string trace2=stringfromlist(i,list2,";")
-		wave tmp=$trace2
-		tmp=temp[ceil((enoise(0.5)+0.5)*(numpnts(temp)))-1]
+			string trace2=stringfromlist(i,list2,";")
+			wave tmp=$trace2
+			tmp=temp[ceil((enoise(0.5)+0.5)*(numpnts(temp)))-1]
+		endfor
+	
+	
+		bstrap[l]=anova()	
 	endfor
 	
-	
-	bstrap[l]=anova()	
-	endfor
-	
-sort bstrap bstrap
-Make/N=1000000/O bstrap_Hist;DelayUpdate
-Histogram/CUM/P/C/B=1 bstrap,bstrap_Hist;DelayUpdate
+	sort bstrap bstrap
+	Make/N=1000000/O bstrap_Hist;DelayUpdate
+	Histogram/CUM/P/C/B=1 bstrap,bstrap_Hist;DelayUpdate
 
-print "the F-value of the sample is "+num2str(sample_F)
+	print "the F-value of the sample is "+num2str(sample_F)
 
-findlevel/q bstrap_Hist,0.9999
-if (sample_F>V_LevelX)
-print "the probability of randomly observing this value is <0.0001"
-else
-print "the probability of randomly observing this value is "+num2str(1-bstrap_Hist(sample_F))
-endif
-findlevel/q bstrap_Hist,0.95
-if (sample_F>V_LevelX)
-return 1
-else
-return 0
-endif
+	findlevel/q bstrap_Hist,0.9999
+	if (sample_F>V_LevelX)
+		print "the probability of randomly observing this value is <0.0001"
+	else
+		print "the probability of randomly observing this value is "+num2str(1-bstrap_Hist(sample_F))
+	endif
+	findlevel/q bstrap_Hist,0.95
+	if (sample_F>V_LevelX)
+		return 1
+	else
+		return 0
+	endif
 end
 
 //--------------------------
 // To test bootstrap_anova power
 function test_anova_power(sims,n)
 	variable sims,n
-tic()
+	tic()
 	variable l
 	make/o/n=(sims) typeI_parametric
 	make/o/n=(sims) typeI_permutation
@@ -1805,11 +1820,11 @@ tic()
 			typeI_parametric[l]=0
 		endif
 
-typeI_permutation[l]=anova_bootstrap(1000)
+		typeI_permutation[l]=anova_bootstrap(1000)
 	endfor
-print "Type I error for ANOVA is "+num2str(sum(typeI_parametric)/sims)
-print "Type I error for ANOVA with resampling method is "+num2str(sum(typeI_permutation)/sims)
-toc()
+	print "Type I error for ANOVA is "+num2str(sum(typeI_parametric)/sims)
+	print "Type I error for ANOVA with resampling method is "+num2str(sum(typeI_permutation)/sims)
+	toc()
 end
 
 // ================================================================================
@@ -1817,31 +1832,31 @@ end
 
 
 function export_data() //export all data into a txt file
-create_hypnogram()
+	create_hypnogram()
 	Variable numDataFolders = CountObjects(":", 4), i,j
 	string cdf,list,t1,nextPath
 	cdf=GetDataFolder(1)
 	
-newpath/O Data
+	newpath/O Data
 	
 	for(i=0; i<(numDataFolders); i+=1)
-	nextPath =GetIndexedObjNameDFR($cdf, 4, i )
-	nextPath="'"+nextpath+"'"
-	setdatafolder $cdf+nextPath+":data:s:"
-	t1=wavelist("wave*",";","")
-	t1=SortList(t1,",", 16)	
-	Save/P=Data/o/B/G/M="\r\n"/DLIM=" " t1 as "mouse_"+num2str(i+1)+"_S.txt"	
+		nextPath =GetIndexedObjNameDFR($cdf, 4, i )
+		nextPath="'"+nextpath+"'"
+		setdatafolder $cdf+nextPath+":data:s:"
+		t1=wavelist("wave*",";","")
+		t1=SortList(t1,",", 16)	
+		Save/P=Data/o/B/G/M="\r\n"/DLIM=" " t1 as "mouse_"+num2str(i+1)+"_S.txt"	
 	
-	setdatafolder $cdf+nextPath+":data:C_raw:"
-	t1=wavelist("wave*",";","")
-	t1=SortList(t1,",", 16)	
-	Save/P=Data/o/B/G/M="\r\n"/DLIM=" " t1 as "mouse_"+num2str(i+1)+"_raw.txt"	
+		setdatafolder $cdf+nextPath+":data:C_raw:"
+		t1=wavelist("wave*",";","")
+		t1=SortList(t1,",", 16)	
+		Save/P=Data/o/B/G/M="\r\n"/DLIM=" " t1 as "mouse_"+num2str(i+1)+"_raw.txt"	
 	
-	setdatafolder $cdf+nextPath+":data:sleep:"
-	Save/P=Data/B/o/G/M="\r\n"/DLIM=" " "hypno" as "mouse_"+num2str(i+1)+"_hypnogram.txt"
+		setdatafolder $cdf+nextPath+":data:sleep:"
+		Save/P=Data/B/o/G/M="\r\n"/DLIM=" " "hypno" as "mouse_"+num2str(i+1)+"_hypnogram.txt"
 	
 	endfor
-setdatafolder cdf
+	setdatafolder cdf
 end
 //--------------------------
 function create_hypnogram()// create the hypnogram data
@@ -1854,17 +1869,17 @@ function create_hypnogram()// create the hypnogram data
 		nextPath =GetIndexedObjNameDFR($cdf, 4, i )
 		nextPath="'"+nextpath+"'"
 		setdatafolder $cdf+nextPath+":data:Sleep:"
-	duplicate/o $cdf+nextPath+":data:S:artifact" $cdf+nextPath+":data:Sleep:artifact"
-	wave wake,nrem,rem,artifact
-	make/o/n=(numpnts(wake)) hypno
-	artifact = (numtype(artifact) == 2) ? 0 : artifact
+		duplicate/o $cdf+nextPath+":data:S:artifact" $cdf+nextPath+":data:Sleep:artifact"
+		wave wake,nrem,rem,artifact
+		make/o/n=(numpnts(wake)) hypno
+		artifact = (numtype(artifact) == 2) ? 0 : artifact
 	
-	variable nm=wavemax(nrem),rm=wavemax(rem)
-	wave hypno
-	hypno=(nrem/nm)+2*(rem/rm)
-	hypno = (artifact>0) ? -1 : hypno
+		variable nm=wavemax(nrem),rm=wavemax(rem)
+		wave hypno
+		hypno=(nrem/nm)+2*(rem/rm)
+		hypno = (artifact>0) ? -1 : hypno
 	endfor
-setdatafolder cdf
+	setdatafolder cdf
 
 end
 
@@ -1889,9 +1904,9 @@ function kill_non_active_cells() //delete waves with 0 events.
 		for (l=0;l<k;l+=1)	
 			string trace=stringfromlist(l,list,";")
 			if (wavemax($trace)==0)	
-			print nextPath
-			print trace
-			killwaves/z $cdf+nextPath+":data:S:wave"+num2str(l),$cdf+nextPath+":data:C_raw:wave"+num2str(l), $cdf+nextPath+":data:C:wave"+num2str(l)
+				print nextPath
+				print trace
+				killwaves/z $cdf+nextPath+":data:S:wave"+num2str(l),$cdf+nextPath+":data:C_raw:wave"+num2str(l), $cdf+nextPath+":data:C:wave"+num2str(l)
 			endif
 		endfor
 		reorder_waves()	
@@ -1900,7 +1915,7 @@ function kill_non_active_cells() //delete waves with 0 events.
 		setdatafolder $cdf+nextPath+":data:C:"
 		reorder_waves()	
 	endfor
-setdatafolder cdf
+	setdatafolder cdf
 end
 //--------------------------
 function reorder_waves() // Asign new sorted names after delting in kill_non_active_cells()
@@ -1908,10 +1923,10 @@ function reorder_waves() // Asign new sorted names after delting in kill_non_act
 	list=SortList(list,",", 16)
 	variable 	k=itemsinlist(list, ","),i
 	for (i=0;i<k;i+=1)
-	string trace=stringfromlist(i,list,",")
-	duplicate/o $trace temp
-	killwaves $trace
-	duplicate/o temp $"wave"+num2str(i)
+		string trace=stringfromlist(i,list,",")
+		duplicate/o $trace temp
+		killwaves $trace
+		duplicate/o temp $"wave"+num2str(i)
 	endfor
 end
 
@@ -1919,7 +1934,7 @@ end
 //=====================================================================
 //This get the inter-event interval for each cell
 function getiei(sf)
-variable sf
+	variable sf
 	string list,trace,output
 	variable k,i
 	wave rem,nrem,wake
@@ -2038,7 +2053,7 @@ Function extract_all_cells()
 		endfor
 	endfor
 	setdatafolder cdf
-DeletePoints 0,1, CellsData
+	DeletePoints 0,1, CellsData
 end
 
 
@@ -2058,7 +2073,7 @@ Function discard_cells_with_few_events()
 			cellsdata[i][3]=num2str(0)
 		endif
 	endfor
-setdatafolder cdf
+	setdatafolder cdf
 end
 
 Function Cell_index()
@@ -2161,7 +2176,7 @@ function mousefirstcell(list,num)
 			break
 		endif
 	endfor
-return start
+	return start
 end
 
 function mouselastcell(list,num)
@@ -2174,13 +2189,13 @@ function mouselastcell(list,num)
 	variable i
 	
 	for (i=numpnts(temp)-1;i>=0;i-=1)
-	variable dummy=temp[i]
+		variable dummy=temp[i]
 		if (temp[i]==num)
 			finish=i
 			break
 		endif
 	endfor
-return finish
+	return finish
 end
 
 
@@ -2222,7 +2237,7 @@ function loop_all_folders()
 		
 		setdatafolder $cdf2+nextPath+":data:C_raw"
 		cut_waves_batch("wave",0,3600*5.02)
-				setdatafolder $cdf2+nextPath+":data:C"
+		setdatafolder $cdf2+nextPath+":data:C"
 		cut_waves_batch("wave",0,3600*5.02)
 		setdatafolder $cdf2+nextPath+":data:S"
 		killwaves/A
@@ -2296,4 +2311,450 @@ function seperate_C_raw_by_sleep_state()
 							
 	endfor
 	setdatafolder cdf
+end
+
+//bootstrap statistical power
+
+// This is used for statistical testing, list1 and list2 are the full path for the 2d list 
+//with the data obtained from getall_batch() //constrained 
+
+function createCI2_groups_power_boots(list1,list2,mc, constrained, normalize)  
+	string list1,list2
+	variable mc,constrained,normalize
+	wave temp1=$list1,temp2=$list2
+	// the structure of the list is the following:
+	// WT1|NT1|RT1|WE1|NE1|RE1|WT2|NT2|RT2|WE2|NE2|RE2
+	variable wt,nt,rt,rwt,we,ne,re,rwe,wt2,nt2,rt2,rwt2,we2,ne2,re2,rwe2
+
+	
+	duplicate/o/RMD=[][1] temp1 test
+	integrate test
+	wt=test(inf)
+	duplicate/o/RMD=[][5] temp1 test
+	integrate test
+	nt=test(inf)
+	duplicate/o/RMD=[][9] temp1 test
+	integrate test
+	rt=test(inf)
+	duplicate/o/RMD=[][13] temp1 test
+	integrate test
+	rwt=test(inf)
+	duplicate/o/RMD=[][0] temp1 test
+	integrate test
+	we=test(inf)
+	duplicate/o/RMD=[][4] temp1 test
+	integrate test
+	ne=test(inf)
+	duplicate/o/RMD=[][8] temp1 test
+	integrate test
+	re=test(inf)
+	duplicate/o/RMD=[][12] temp1 test
+	integrate test
+	rwe=test(inf)
+	
+	duplicate/o/RMD=[][1] temp2 test
+	integrate test
+	wt2=test(inf)
+	duplicate/o/RMD=[][5] temp2 test
+	integrate test
+	nt2=test(inf)
+	duplicate/o/RMD=[][9] temp2 test
+	integrate test
+	rt2=test(inf)
+	duplicate/o/RMD=[][13] temp2 test
+	integrate test
+	rwt2=test(inf)
+	duplicate/o/RMD=[][0] temp2 test
+	integrate test
+	we2=test(inf)
+	duplicate/o/RMD=[][4] temp2 test
+	integrate test
+	ne2=test(inf)
+	duplicate/o/RMD=[][8] temp2 test
+	integrate test
+	re2=test(inf)
+	duplicate/o/RMD=[][12] temp2 test
+	integrate test
+	rwe2=test(inf)
+	
+	variable sim=10000,w1,nr1,r1,rw1,w2,nr2,r2,rw2
+
+	variable i,n=dimsize(temp1,0),randnum,s,i2,n2=dimsize(temp2,0)
+	make/o/n=(sim) wakeP,NREMP,REMP,REMwakeP
+	
+	variable po=5
+	
+	make/o/n=(n) P_W=0
+	make/o/n=(n) P_N=0
+	make/o/n=(n) P_R=0
+	
+	for (po=5;po<n;po+=1)
+
+		for (s=0;s<sim;s+=1)
+			variable WakeTR=0,NREMTR=0,REMTR=0,REMwakeTR=0,WakeER=0,NREMER=0,REMER=0,REMwakeER=0,WakeTR2=0,NREMTR2=0,REMTR2=0,REMwakeTR2=0,WakeER2=0,NREMER2=0,REMER2=0,REMwakeER2=0
+		
+			if (constrained==1)
+				for (i=0;i<po;i+=1)
+					randnum=constrained_random_number(list1,temp1[randnum][15])
+					WakeTR=WakeTR+temp1[randnum][1]
+					NREMTR=NREMTR+temp1[randnum][5]
+					REMTR=REMTR+temp1[randnum][9]
+					REMwakeTR=REMwakeTR+temp1[randnum][13]
+					WakeER=WakeER+temp1[randnum][0]
+					NREMER=NREMER+temp1[randnum][4]
+					REMER=REMER+temp1[randnum][8]
+					REMwakeER=REMwakeER+temp1[randnum][12]
+					randnum=constrained_random_number(list2,temp1[randnum][15])
+					WakeTR2=WakeTR2+temp2[randnum][1]
+					NREMTR2=NREMTR2+temp2[randnum][5]
+					REMTR2=REMTR2+temp2[randnum][9]
+					REMwakeTR2=REMwakeTR2+temp2[randnum][13]
+					WakeER2=WakeER2+temp2[randnum][0]
+					NREMER2=NREMER2+temp2[randnum][4]
+					REMER2=REMER2+temp2[randnum][8]
+					REMwakeER2=REMwakeER2+temp2[randnum][12]
+				endfor
+			else	
+				for (i=0;i<po;i+=1)
+					randnum=ceil((enoise(0.5)+0.5)*(n))-1
+					WakeTR=WakeTR+temp1[randnum][1]
+					NREMTR=NREMTR+temp1[randnum][5]
+					REMTR=REMTR+temp1[randnum][9]
+					REMwakeTR=REMwakeTR+temp1[randnum][13]
+					WakeER=WakeER+temp1[randnum][0]
+					NREMER=NREMER+temp1[randnum][4]
+					REMER=REMER+temp1[randnum][8]
+					REMwakeER=REMwakeER+temp1[randnum][12]
+				endfor
+		
+				for (i2=0;i2<po;i2+=1)
+					randnum=ceil((enoise(0.5)+0.5)*(n2))-1
+					WakeTR2=WakeTR2+temp2[randnum][1]
+					NREMTR2=NREMTR2+temp2[randnum][5]
+					REMTR2=REMTR2+temp2[randnum][9]
+					REMwakeTR2=REMwakeTR2+temp2[randnum][13]
+					WakeER2=WakeER2+temp2[randnum][0]
+					NREMER2=NREMER2+temp2[randnum][4]
+					REMER2=REMER2+temp2[randnum][8]
+					REMwakeER2=REMwakeER2+temp2[randnum][12]
+				endfor
+			endif
+		
+			w1=WakeER/WakeTR
+			nr1=NREMER/NREMTR
+			r1=REMER/REMTR
+			rw1=REMwakeER/REMwakeTR
+			w2=WakeER2/WakeTR2
+			nr2=NREMER2/NREMTR2
+			r2=REMER2/REMTR2
+			rw2=REMwakeER2/REMwakeTR2
+		
+			if (normalize==1)
+				variable div=nr1
+				nr1=nr1/div
+				r1=r1/div
+				rw1=rw1/div
+				w1=w1/div
+				div=nr2
+				nr2=nr2/div
+				r2=r2/div
+				rw2=rw2/div
+				w2=w2/div
+			endif
+		
+		
+		
+		
+		
+			wakeP[s]=w2-w1
+			NREMP[s]=nr2-nr1
+			REMP[s]=r2-r1
+			REMwakeP[s]=rw2-rw1
+		endfor
+		sort wakeP wakeP
+		sort NREMP NREMP
+		sort REMP REMP
+		sort REMwakeP REMwakeP
+		variable tp
+		findlevel/q wakeP,0
+		tp=1-(abs(V_LevelX-(sim/2))*2)/sim
+		if (numtype(tp)==2)
+			tp=1/sim
+		endif
+		P_W[po]=tp
+      
+
+		findlevel/q NREMP,0
+		tp=1-(abs(V_LevelX-(sim/2))*2)/sim
+		if (numtype(tp)==2)
+			tp=1/sim
+		endif
+		P_N[po]= tp
+
+		findlevel/q REMP,0
+		tp=1-(abs(V_LevelX-(sim/2))*2)/sim
+		if (numtype(tp)==2)
+			tp=1/sim
+		endif
+		P_R[po]= tp
+
+	endfor
+end
+
+
+function createCI2_groups_power(list1,list2)  
+	string list1,list2
+	wave temp1=$list1,temp2=$list2
+	variable wt,nt,rt,rwt,we,ne,re,rwe,wt2,nt2,rt2,rwt2,we2,ne2,re2,rwe2
+	
+	duplicate/o/RMD=[][1] temp1 test
+	integrate test
+	wt=test(inf)
+	duplicate/o/RMD=[][5] temp1 test
+	integrate test
+	nt=test(inf)
+	duplicate/o/RMD=[][9] temp1 test
+	integrate test
+	rt=test(inf)
+	duplicate/o/RMD=[][13] temp1 test
+	integrate test
+	rwt=test(inf)
+	duplicate/o/RMD=[][0] temp1 test
+	integrate test
+	we=test(inf)
+	duplicate/o/RMD=[][4] temp1 test
+	integrate test
+	ne=test(inf)
+	duplicate/o/RMD=[][8] temp1 test
+	integrate test
+	re=test(inf)
+	duplicate/o/RMD=[][12] temp1 test
+	integrate test
+	rwe=test(inf)
+	
+	duplicate/o/RMD=[][1] temp2 test
+	integrate test
+	wt2=test(inf)
+	duplicate/o/RMD=[][5] temp2 test
+	integrate test
+	nt2=test(inf)
+	duplicate/o/RMD=[][9] temp2 test
+	integrate test
+	rt2=test(inf)
+	duplicate/o/RMD=[][13] temp2 test
+	integrate test
+	rwt2=test(inf)
+	duplicate/o/RMD=[][0] temp2 test
+	integrate test
+	we2=test(inf)
+	duplicate/o/RMD=[][4] temp2 test
+	integrate test
+	ne2=test(inf)
+	duplicate/o/RMD=[][8] temp2 test
+	integrate test
+	re2=test(inf)
+	duplicate/o/RMD=[][12] temp2 test
+	integrate test
+	rwe2=test(inf)
+	
+	variable sim=1000,w1,nr1,r1,rw1,w2,nr2,r2,rw2
+
+	variable i,n=dimsize(temp1,0),randnum,s,i2,n2=dimsize(temp2,0),loops
+	make/o/n=(sim) wakeP,NREMP,REMP,REMwakeP
+	
+	variable po=5,spo
+	
+	
+	if (n>=n2)
+		loops=n2
+	else
+		loops=n
+	endif
+	
+	make/o/n=(loops,4) P_W_T=0
+	make/o/n=(loops,4) P_N_T=0
+	make/o/n=(loops,4) P_R_T=0
+	
+	for (po=5;po<loops;po+=1)
+	
+		make/o/n=(sim) P_W=0
+		make/o/n=(sim) P_N=0
+		make/o/n=(sim) P_R=0
+				
+		for (spo=0;spo<sim;spo+=1)
+		
+			shuffle2d(temp1,po)
+			wave out
+			duplicate/o out permute1
+			shuffle2d(temp2,po)
+			duplicate/o out permute2
+
+
+			for (s=0;s<sim;s+=1)
+				variable WakeTR=0,NREMTR=0,REMTR=0,REMwakeTR=0,WakeER=0,NREMER=0,REMER=0,REMwakeER=0,WakeTR2=0,NREMTR2=0,REMTR2=0,REMwakeTR2=0,WakeER2=0,NREMER2=0,REMER2=0,REMwakeER2=0
+			
+
+				for (i=0;i<po;i+=1)
+					randnum=ceil((enoise(0.5)+0.5)*(po))-1
+					WakeTR=WakeTR+permute1[randnum][1]
+					NREMTR=NREMTR+permute1[randnum][5]
+					REMTR=REMTR+permute1[randnum][9]
+					REMwakeTR=REMwakeTR+permute1[randnum][13]
+					WakeER=WakeER+permute1[randnum][0]
+					NREMER=NREMER+permute1[randnum][4]
+					REMER=REMER+permute1[randnum][8]
+					REMwakeER=REMwakeER+permute1[randnum][12]
+				endfor
+		
+				for (i2=0;i2<po;i2+=1)
+					randnum=ceil((enoise(0.5)+0.5)*(po))-1
+					WakeTR2=WakeTR2+permute2[randnum][1]
+					NREMTR2=NREMTR2+permute2[randnum][5]
+					REMTR2=REMTR2+permute2[randnum][9]
+					REMwakeTR2=REMwakeTR2+permute2[randnum][13]
+					WakeER2=WakeER2+permute2[randnum][0]
+					NREMER2=NREMER2+permute2[randnum][4]
+					REMER2=REMER2+permute2[randnum][8]
+					REMwakeER2=REMwakeER2+permute2[randnum][12]
+				endfor
+		
+				w1=WakeER/WakeTR
+				nr1=NREMER/NREMTR
+				r1=REMER/REMTR
+				rw1=REMwakeER/REMwakeTR
+				w2=WakeER2/WakeTR2
+				nr2=NREMER2/NREMTR2
+				r2=REMER2/REMTR2
+				rw2=REMwakeER2/REMwakeTR2
+
+				wakeP[s]=w2-w1
+				NREMP[s]=nr2-nr1
+				REMP[s]=r2-r1
+				REMwakeP[s]=rw2-rw1
+			
+			endfor
+		
+			sort wakeP wakeP
+			sort NREMP NREMP
+			sort REMP REMP
+			sort REMwakeP REMwakeP
+			variable tp
+			findlevel/q wakeP,0
+			tp=1-(abs(V_LevelX-(sim/2))*2)/sim
+			if (numtype(tp)==2)
+				tp=1/sim
+			endif
+			P_W[spo]=tp
+      
+
+			findlevel/q NREMP,0
+			tp=1-(abs(V_LevelX-(sim/2))*2)/sim
+			if (numtype(tp)==2)
+				tp=1/sim
+			endif
+			P_N[spo]= tp
+
+			findlevel/q REMP,0
+			tp=1-(abs(V_LevelX-(sim/2))*2)/sim
+			
+			if (numtype(tp)==2)
+				tp=1/sim
+			endif
+			
+			P_R[spo]= tp
+		endfor
+		sort P_W P_W
+		sort P_N P_N
+		sort P_R P_R
+		
+		wavestats/q/W P_W	
+		wave M_WaveStats
+		P_W_T[po][0]=M_WaveStats[3]
+		P_W_T[po][1]=M_WaveStats[25]
+		P_W_T[po][2]=M_WaveStats[24]
+		P_W_T[po][3]=M_WaveStats[26]
+		wavestats/q/W P_N
+		P_N_T[po][0]=M_WaveStats[3]
+		P_N_T[po][1]=M_WaveStats[25]
+		P_N_T[po][2]=M_WaveStats[24]
+		P_N_T[po][3]=M_WaveStats[25]
+		wavestats/q/W P_R
+		P_R_T[po][0]=M_WaveStats[3]
+		P_R_T[po][1]=M_WaveStats[25]
+		P_R_T[po][2]=M_WaveStats[24]
+		P_R_T[po][3]=M_WaveStats[25]
+		print po
+	
+	endfor
+end
+
+
+
+function shuffle2d(inwave,n)
+	wave inwave
+	variable n
+	variable row=DimSize(inwave,0)
+	variable columns=DimSize(inwave,1)
+    
+	make/o/n=(row)  perm=0
+	perm=p
+	shuffle(perm)
+	make/o/n=(n,columns)  Out=0
+
+	variable i
+	for(i = 0; i<n; i+=1)
+		Out[i][]=inwave[perm[i]][q]
+                        
+	endfor
+end
+	
+	
+	
+	
+function T_test_power(w1,w2)
+	wave w1,w2
+
+	variable n1=dimsize(w1,0)
+	variable n2=dimsize(w2,0),po,i,loops
+	variable sim=1000
+
+	if (n1<=n2)
+		loops=n2
+	else
+		loops=n1
+	endif
+	
+	make/o/n=(loops+1,5) P_value=0;
+	
+	for (po=3;po<=loops;po+=1)	
+		print po
+		variable p1,p2
+		make/o/n=(sim) temp
+		for (i=0;i<sim;i+=1)
+			if (po>n1)
+				p1=n1
+			else
+				p1=po
+			endif
+			
+			if (po>n2)
+				p2=n2
+			else
+				p2=po
+			endif
+			shuffle2d(w1,p1)
+			wave out
+			duplicate/o out permute1
+			shuffle2d(w2,p2)
+			duplicate/o out permute2			
+			temp[i]=bootstrap2("permute1","permute2",sim,0,1)
+		endfor
+		wavestats/q/W temp	
+		wave M_WaveStats
+		P_value[po][0]=p1+p2-2
+		P_value[po][1]=M_WaveStats[3]
+		P_value[po][2]=M_WaveStats[25]
+		P_value[po][3]=M_WaveStats[24]
+		P_value[po][4]=M_WaveStats[25]				
+	endfor
 end

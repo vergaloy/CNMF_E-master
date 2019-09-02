@@ -14,7 +14,7 @@
 % Example:
 %
 % % Generate example data: 2 groups, of 10 and 15, respectively
-% X = [randn(10,5); randn(15,5) + 1.5];  Y = [zeros(10,1); ones(15,1)];
+% X = [randn(10,5); randn(15,5) + 10];  Y = [zeros(10,1); ones(15,1)];
 %
 % % Calculate linear discriminant coefficients
 % W = LDA(X,Y);

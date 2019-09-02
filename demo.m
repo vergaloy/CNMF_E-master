@@ -1,14 +1,25 @@
+%% Constrained Nonnegative Matrix Factorization for microEndoscopic data  * *
+%% *STEP*0: select data
+clear all
+warning('off','all') %add by Natsu
+
+neuron = Sources2D();
+nam = [];          % this demo data is very small, here we just use it as an example
+nam = neuron.select_data(nam);  %if nam is [], then select data interactively
+%% *Step 1: parameter specification*
+
+% -------------------------    COMPUTATION    -------------------------  %
 %% parameters
 % -------------------------    COMPUTATION    -------------------------  %
-pars_envs = struct('memory_size_to_use', 120, ...   % GB, memory space you allow to use in MATLAB
-    'memory_size_per_patch', 6, ...   % GB, space for loading data within one patch
-    'patch_dims', [60, 60]);  %GB, patch size
+pars_envs = struct('memory_size_to_use', 16, ...   % GB, memory space you allow to use in MATLAB
+    'memory_size_per_patch', 16, ...   % GB, space for loading data within one patch
+    'patch_dims', [65, 65]);  %GB, patch size
 
 % -------------------------      SPATIAL      -------------------------  %
-gSig = 4;           % pixel, gaussian width of a gaussian kernel for filtering the data. 0 means no filtering
-gSiz = 12;          % pixel, neuron diameter
+gSig = 2;           % pixel, gaussian width of a gaussian kernel for filtering the data. 0 means no filtering
+gSiz = 8;          % pixel, neuron diameter
 ssub = 1;           % spatial downsampling factor
-with_dendrites = false;   % with dendrites or not
+with_dendrites = true;   % with dendrites or not
 if with_dendrites
     % determine the search locations by dilating the current neuron shapes
     updateA_search_method = 'dilate';  %#ok<UNRCH>
@@ -24,39 +35,40 @@ spatial_constraints = struct('connected', true, 'circular', false);  % you can i
 spatial_algorithm = 'hals_thresh';
 
 % -------------------------      TEMPORAL     -------------------------  %
-Fs = 5.02;             % frame rate
+Fs = 10;             % frame rate
 tsub = 1;           % temporal downsampling factor
-deconv_options = struct('type', 'ar2', ... % model of the calcium traces. {'ar1', 'ar2'}   
-    'method', 'thresholded', ... % method for running deconvolution {'foopsi', 'constrained', 'thresholded'}
+deconv_options = struct('type', 'ar2', ... % model of the calcium traces. {'ar1', 'ar2'}
+    'method', 'foopsi', ... % method for running deconvolution {'foopsi', 'constrained', 'thresholded'}
     'smin', -5, ...         % minimum spike size. When the value is negative, the actual threshold is abs(smin)*noise level
     'optimize_pars', true, ...  % optimize AR coefficients
     'optimize_b', true, ...% optimize the baseline);
     'max_tau', 100);    % maximum decay time (unit: frame);
 
-nk = 30;             % detrending the slow fluctuation. usually 1 is fine (no detrending)  PV 30 was working fine
+nk = 3;             % detrending the slow fluctuation. usually 1 is fine (no detrending)
 % when changed, try some integers smaller than total_frame/(Fs*30)
 detrend_method = 'spline';  % compute the local minimum as an estimation of trend.
 
 % -------------------------     BACKGROUND    -------------------------  %
 bg_model = 'ring';  % model of the background {'ring', 'svd'(default), 'nmf'}
 nb = 1;             % number of background sources for each patch (only be used in SVD and NMF model)
-ring_radius = 25;  % when the ring model used, it is the radius of the ring used in the background model.  %PV 18 was working fine
+ring_radius = 10;  % when the ring model used, it is the radius of the ring used in the background model.
 %otherwise, it's just the width of the overlapping area
 num_neighbors = []; % number of neighbors for each neuron
+bg_ssub = 1;        % downsample background for a faster speed 
 
 % -------------------------      MERGING      -------------------------  %
-show_merge = true;  % if true, manually verify the merging step
-merge_thr = 0.25;     % thresholds for merging neurons; [spatial overlap ratio, temporal correlation of calcium traces, spike correlation]
-method_dist = 'mean';   % method for computing neuron distances {'mean', 'max'}
-dmin = 12;       % minimum distances between two neurons. it is used together with merge_thr
-dmin_only = 12;  % merge neurons if their distances are smaller than dmin_only.
-merge_thr_spatial = [0.8, 0.2, -inf];  % merge components with highly correlated spatial shapes (corr=0.8) and small temporal correlations (corr=0.1)
+show_merge = false;  % if true, manually verify the merging step
+merge_thr = 0.65;     % thresholds for merging neurons; [spatial overlap ratio, temporal correlation of calcium traces, spike correlation]
+method_dist = 'max';   % method for computing neuron distances {'mean', 'max'}
+dmin = 5;       % minimum distances between two neurons. it is used together with merge_thr
+dmin_only = 2;  % merge neurons if their distances are smaller than dmin_only.
+merge_thr_spatial = [0.8, 0.4, -inf];  % merge components with highly correlated spatial shapes (corr=0.8) and small temporal correlations (corr=0.1)
 
 % -------------------------  INITIALIZATION   -------------------------  %
 K = [];             % maximum number of neurons per patch. when K=[], take as many as possible.
-min_corr = 0.8;     % minimum local correlation for a seeding pixel  pv=0.8
-min_pnr = 8;       % minimum peak-to-noise ratio for a seeding pixel   PV=8
-min_pixel = (gSig-2)^2;      % minimum number of nonzero pixels for each neuron
+min_corr = 0.7;     % minimum local correlation for a seeding pixel
+min_pnr = 6;       % minimum peak-to-noise ratio for a seeding pixel
+min_pixel = gSig^2;      % minimum number of nonzero pixels for each neuron
 bd = 0;             % number of rows/columns to be ignored in the boundary (mainly for motion corrected data)
 frame_range = [];   % when [], uses all frames
 save_initialization = false;    % save the initialization procedure as a video.
@@ -67,9 +79,9 @@ center_psf = true;  % set the value as true when the background fluctuation is l
 % set the value as false when the background fluctuation is small (2p)
 
 % -------------------------  Residual   -------------------------  %
-min_corr_res = 0.7;   %@v 0.7
-min_pnr_res = 6;  %PV 6
-seed_method_res = 'auto';  % method for initializing neurons from the residual
+min_corr_res = 0.7;
+min_pnr_res = 6;
+seed_method_res = 'manual';  % method for initializing neurons from the residual
 update_sn = true;
 
 % ----------------------  WITH MANUAL INTERVENTION  --------------------  %
@@ -77,7 +89,7 @@ with_manual_intervention = true;
 
 % -------------------------  FINAL RESULTS   -------------------------  %
 save_demixed = true;    % save the demixed file or not
-kt = 1;                 % frame intervals
+kt = 3;                 % frame intervals
 
 % -------------------------    UPDATE ALL    -------------------------  %
 neuron.updateParams('gSig', gSig, ...       % -------- spatial --------
@@ -97,6 +109,7 @@ neuron.updateParams('gSig', gSig, ...       % -------- spatial --------
     'nb', nb, ...
     'ring_radius', ring_radius, ...
     'num_neighbors', num_neighbors, ...
+    'bg_ssub', bg_ssub, ...
     'merge_thr', merge_thr, ...             % -------- merging ---------
     'dmin', dmin, ...
     'method_dist', method_dist, ...
@@ -107,13 +120,28 @@ neuron.updateParams('gSig', gSig, ...       % -------- spatial --------
     'center_psf', center_psf);
 neuron.Fs = Fs;
 
+%% *STEP2: LOAD VIDEO DATA*
 %%
+neuron.options.seed_method  ='manual';
+% distribute data  in blocks and be ready to run source extraction
+neuron.getReady(pars_envs);
 
-neuron.C = deconvTemporal(neuron, 1,1);
-clearvars -except neuron hypno
+% change parameters for optimized initialization
+    [gSig, gSiz, ring_radius, min_corr, min_pnr] = neuron.set_parameters();
 
+[center, Cn, PNR] = neuron.initComponents_parallel(K, frame_range, save_initialization, 0);
+neuron.compactSpatial();
 
-
-
-  % neuron.orderROIs('snr');   % order neurons in different ways {'snr', 'decay_time', 'mean', 'circularity'}
-   % neuron.viewNeurons([], neuron.C_raw);
+%show intialized seeds.
+if show_init
+    figure();
+    ax_init= axes();
+    imagesc(Cn, [0, 1]); colormap gray;
+    hold on;
+    plot(center(:, 2), center(:, 1), '.r', 'markersize', 10);
+end
+neuron.PNR=PNR;
+neuron.show_contours(0.3, [], neuron.PNR, false)
+%% *STEP3: Get Peak-to-noise ratio and correlation (can be skipped, but useful to estimate PNS and correlation initialization parameters)*
+%%
+ShowPNS

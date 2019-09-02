@@ -101,7 +101,7 @@ if isempty(options.pars) || all(options.pars==0)
         case 'kernel'
             g = estimate_time_constant(y, 2, options.sn);
             taus = ar2exp(g);
-            options.pars = exp2kernel(taus, options.win);  % convolution kernel
+            % options.pars = exp2kernel(taus, options.win);  % convolution kernel
     end
 end
 
@@ -166,6 +166,9 @@ switch lower(options.method)
             %                     options.smin);
             %             end
         elseif strcmpi(options.type, 'ar2')
+            if options.smin<0
+                options.smin = abs(options.smin)*options.sn;
+            end
             [c, s, options.b, options.pars, options.smin] = thresholded_oasisAR2(y,...
                 options.pars, options.sn, options.smin, options.optimize_b, options.optimize_pars, ...
                 [], options.maxIter, options.thresh_factor);

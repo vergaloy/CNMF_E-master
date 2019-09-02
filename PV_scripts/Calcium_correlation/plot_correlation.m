@@ -1,7 +1,7 @@
-ob=M1;  %object name
-bin=1;
-sf=5.02;
-end_range=50;
+ob=sleepdata;  %name of the folder storing the calcium transients
+bin=1;  % bin size of the correlated calcium activity in seconds
+sf=5.02; %sample frequncy
+end_range=100;  % number of trials to show
 
 
 ob.b.CWB=create_corr(ob.b.CW,bin,sf) ;
