@@ -1495,7 +1495,7 @@ function sleep_stats() // get sleep relevant data, used in sleep_stats_batch()
 
 	artifact = (numtype(artifact[p]) == 2) ? 0 : artifact
 	artifact = (numtype(artifact[p]) == 1) ? 0 : artifact
-	hypno=nrem+rem*2-artifact
+	hypno=remwake*0.5+nrem+rem*2-artifact
 	variable ti=wavemax(hypno)
 	hypno=hypno/ti
 	variable new,nen,ner,nem,nerw

@@ -1,20 +1,14 @@
-function [W,H]=NMF(X)
+function [W,H,E]=NMF(X)
 
 N=size(X,1)*size(X,2);
 % Find intial W H
-
-for order=1:size(X,1)*0.5  
+ 
 opt = statset('Maxiter',100,'TolFun', 1e-4,'TolX',1e-4);    
-[~,H0,D0] = nnmf(X,order,'replicates',100,'options',opt);
-k=order*(size(H0,2)+size(H0,1)); 
-AICc(order)=N*log(D0)+2*k+(2*k*(k+1))/(N-k-1);            %N*log(D0)/2+k+k*(k+1)/(N-k-1);  %compute Akaike's Information Criterion              
-end  
-[~,K]=min(AICc);  % Find optimal number of patterns
-[W0,H0,~] = nnmf(X,K,'replicates',1000);
+[W0,H0,~] = nnmf(X,1,'replicates',1000,'options',opt); 
 
 %Get optimal results
-opt = statset('Maxiter',1000,'Display','final','TolFun', 1e-8,'TolX',1e-8);
-[W,H,~] = nnmf(X,K,'w0',W0,'h0',H0,...
+opt = statset('Maxiter',1000,'TolFun', 1e-4,'TolX',1e-4);
+[W,H,E] = nnmf(X,1,'w0',W0,'h0',H0,...
                  'options',opt,...
                  'algorithm','als');
 

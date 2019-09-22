@@ -1,9 +1,8 @@
 %%Preparate data
 justdeconv;   %deconvolve the raw calcium signal
 sleepdata=separate_by_sleep(neuron.C,hypno);     %separate the C signal in sleep stages, require a
-file "hypno" with the sleep data, 0=wake, 0.5=NREM  1=REM, negative
-=artifact
-disp('Deconvolving traces and sorting by sleep stage..Ok')
+%file "hypno" with the sleep data, 0=wake, 0.5=NREM  1=REM, negative =artifact
+%disp('Deconvolving traces and sorting by sleep stage..Ok')
 %% Bin data
 binsize=5;
 sf=5.02;
