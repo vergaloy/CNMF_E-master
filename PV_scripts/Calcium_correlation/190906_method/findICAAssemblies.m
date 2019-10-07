@@ -15,9 +15,11 @@ if( size( deltaFoF , 1 ) >= size( deltaFoF , 2 ) )
     X = transpose( deltaFoF );
     
     
-    opts.threshold.method = 'MarcenkoPastur';
+    opts.threshold.method = 'circularshift';
+    opts.threshold.permutations_percentile = 95;
+    opts.threshold.number_of_permutations = 1000;
     opts.Patterns.method = 'ICA';
-    opts.Patterns.number_of_iterations = 500;
+    opts.Patterns.number_of_iterations = 1000;
     
     ica_assembly_patterns = assembly_patterns( X , opts );
     
@@ -26,9 +28,9 @@ if( size( deltaFoF , 1 ) >= size( deltaFoF , 2 ) )
     
     opts.threshold.method = 'circularshift';
     opts.threshold.permutations_percentile = 95;
-    opts.threshold.number_of_permutations = 500;
+    opts.threshold.number_of_permutations = 1000;
     opts.Patterns.method = 'ICA';
-    opts.Patterns.number_of_iterations = 500;
+    opts.Patterns.number_of_iterations = 1000;
     
     ica_assembly_patterns = assembly_patterns( X , opts );
     
@@ -39,7 +41,7 @@ if( size( deltaFoF , 1 ) >= size( deltaFoF , 2 ) )
     for i = 1:numel( KS_significance )
         
         output_args(i).cs_assembly_vectors = cs_assembly_vectors;
-        output_args(i).cs_assemblies = transpose( cellfun( @(v) find( abs(v) > mean(abs(v)) + 1 * std(abs(v)) ) , output_args(i).cs_assembly_vectors , 'UniformOutput' , false ) );
+        output_args(i).cs_assemblies = transpose( cellfun( @(v) find( abs(v) > mean(abs(v)) + 0.5 * std(abs(v)) ) , output_args(i).cs_assembly_vectors , 'UniformOutput' , false ) );
         output_args(i).cs_assemblies = output_args(i).cs_assemblies( ~cellfun( @isempty , output_args(i).cs_assemblies , 'UniformOutput' , true ) );
         
         
@@ -50,7 +52,7 @@ if( size( deltaFoF , 1 ) >= size( deltaFoF , 2 ) )
         output_args(i).mp_assembly_vectors = output_args(i).mp_assembly_vectors( cellfun( @(x) kstest( zscore( x ) , 'Alpha' , output_args(i).ks_alpha ) , output_args(i).mp_assembly_vectors , 'UniformOutput' , true ) );
         % \_ select only those assembly vectors whose components seem to not come from a standard normal distribution
         
-        output_args(i).mp_assemblies = transpose( cellfun( @(v) find( abs(v) > mean(abs(v)) + 2 * std(abs(v)) ) , output_args(i).mp_assembly_vectors , 'UniformOutput' , false ) );
+        output_args(i).mp_assemblies = transpose( cellfun( @(v) find( abs(v) > mean(abs(v)) + 0.67 * std(abs(v)) ) , output_args(i).mp_assembly_vectors , 'UniformOutput' , false ) );
         output_args(i).mp_assemblies = output_args(i).mp_assemblies( ~cellfun( @isempty , output_args(i).mp_assemblies , 'UniformOutput' , true ) );
         
         

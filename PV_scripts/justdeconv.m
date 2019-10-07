@@ -1,3 +1,6 @@
+function neuron=justdeconv(neuron)
+
+
 %% parameters
 % -------------------------    COMPUTATION    -------------------------  %
 pars_envs = struct('memory_size_to_use', 120, ...   % GB, memory space you allow to use in MATLAB
@@ -110,8 +113,6 @@ neuron.Fs = Fs;
 %%
 
 neuron.C = deconvTemporal(neuron, 1,1);
-clearvars -except neuron hypno
-
 
 
 

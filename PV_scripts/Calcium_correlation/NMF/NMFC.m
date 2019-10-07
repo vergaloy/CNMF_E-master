@@ -1,32 +1,26 @@
-function [W,H,D]=NMFC(X,Sparsity)
+function [W,H]=NMFC(X)
 
 N=size(X,1)*size(X,2);
 % Find intial W H
 
-for order=1:size(X,1)*0.9  
-opt = statset('Maxiter',100,'TolFun', 1e-8,'TolX',1e-8);    
-[~,H0,R0] = nnmf(X,order,'replicates',100,'options',opt);
-k=size(H0,2)*size(H0,1); 
-AICc(order)=N*log(R0)/2+k+k*(k+1)/(N-k-1);  %compute Akaike's Information Criterion              
-end   
-[~,K]=min(AICc);  % Find optimal number of patterns
-
- [ W,D,H,~] =nnmf_sca(X,K,'diag','both',Sparsity,'random',1000,10);
-
- T=W;
- T(T>0)=1;
- T=sum(T);
- W(:,T<2)=[];
- H(T<2,:)=[];
-figure;
-for i=1:size(H,1)
-m=ceil(size(H,1)/2);
-n=2;
-subplot(m,n,i);
-imagesc(W(:,i)*H(i,:))
-colormap('hot')
+for order=1:8  
+opt = statset('Maxiter',100,'TolFun', 1e-4,'TolX',1e-4);    
+[~,~,D0] = nnmf(X,order,'replicates',100,'options',opt);
+k=order*(size(X,1)+size(X,2)); 
+AICc(order)=N*log(D0)+2*k+(2*k*(k+1))/(N-k-1);  %compute Akaike's Information Criterion  
+if order>1   
+    if AICc(order)>AICc(order-1)
+        break
+    end
 end
 
+end   
 
-figure;
-stackedplot(H')
+[~,K]=min(AICc);  % Find optimal number of patterns
+[W0,H0,~] = nnmf(X,K,'replicates',100,'options',opt);
+
+%Get optimal results
+opt = statset('Maxiter',1000,'TolFun', 1e-4,'TolX',1e-4);
+[W,H,~] = nnmf(X,K,'w0',W0,'h0',H0,...
+                 'options',opt,...
+                 'algorithm','als');

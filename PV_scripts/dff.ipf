@@ -19,6 +19,8 @@ function getall_batch()
 	make/o/n=(1,17) Results1=nan
 	make/o/n=(1,17) Results2=nan
 	make/o/n=(1,17) Results3=nan
+	make/o/n=(1,17) Results4=nan
+	make/o/n=(1,17) Results5=nan
 
 	Variable numDataFolders = CountObjects(":", 4), i
 	string cdf2
@@ -56,7 +58,9 @@ function getall_batch()
 	DeletePoints 0,1, Results1
 	DeletePoints 0,1, Results2
 	DeletePoints 0,1, Results3
-	delete_cells_with_0_Ca_transients()
+	DeletePoints 0,1, Results4
+	DeletePoints 0,1, Results5
+	//delete_cells_with_0_Ca_transients()
 end
 
 // ================================================================================
@@ -90,7 +94,7 @@ function getall(tshift,sf,results,ignoreM,ignoreRW,gets,mouse)
 		setdatafolder folder+"data:C_raw:"
 		creategraphs("wave",0,sf)
 		setdatafolder folder+"data:S:"
-		creategraphs2("wave",0)	
+		creategraphs2("wave",0,sf)	
 		setdatafolder folder+"data:sleep:"
 		Legend/C/N=text0/J/F=0/A=MC/X=30.47/Y=-62.46 "\\s(REM) REM \\s(WAKE) WAKE \\s(NREM) NREM"
 		ModifyGraph mode(REM)=7,mode(WAKE)=7,mode(NREM)=7,mode(REMWAKE)=7
@@ -103,12 +107,14 @@ function getall(tshift,sf,results,ignoreM,ignoreRW,gets,mouse)
 
 	endif
 	//print "hour 1"
-	get_stats2(sf,0,10959,folder,results+"1",mouse)
+	get_stats2(sf,0,600,folder,results,mouse) // homecage
 	//print "hour 2"
-	get_stats2(sf,3600,3600*2,folder,results+"2",mouse)
+	get_stats2(sf,980,1580,folder,results+"1",mouse) // CtxA
 	//print "hour 3"
-	get_stats2(sf,3600*2,3600*3,folder,results+"3",mouse)  //get_stats2(sf, starting time,end time,folder,results+" retrival")
-	get_stats2(sf,0,3600*3,folder,results,mouse)
+	get_stats2(sf,1580,1880,folder,results+"2",mouse)  // ?
+	get_stats2(sf,1903,10903,folder,results+"3",mouse)// sleep
+	get_stats2(sf,11109,11703,folder,results+"4",mouse)
+	get_stats2(sf,11738,12338,folder,results+"5",mouse)
 	
 	
 	//concatenated_sleep(sf)
@@ -121,7 +127,7 @@ end
 //========================================
 
 function delete_cells_with_0_Ca_transients()
-	wave results,results1,results2,results3
+	wave results,results1,results2,results3,results4,results5
 	variable n=DimSize(results,0),i
 	for (i=0;i<n;i+=1)
 		variable t=results[i][0]+results[i][4]+results[i][8]+results[i][12]
@@ -130,6 +136,8 @@ function delete_cells_with_0_Ca_transients()
 			DeletePoints i,1, Results1
 			DeletePoints i,1, Results2
 			DeletePoints i,1, Results3
+			DeletePoints i,1, Results4
+			DeletePoints i,1, Results5
 			i=i-1
 			n=n-1
 		endif
@@ -351,11 +359,11 @@ function sleep_plot(a,t,sf,folder)
 	deletepoints 0,sf*t, M
 	deletepoints 0,sf*t, REMWAKE
 
-	SetScale/P x 0,0.199203,"", NREM
-	SetScale/P x 0,0.199203,"", REM
-	SetScale/P x 0,0.199203,"", WAKE
-	SetScale/P x 0,0.199203,"", M
-	SetScale/P x 0,0.199203,"", REMWAKE
+	SetScale/P x 0,1/sf,"", NREM
+	SetScale/P x 0,1/sf,"", REM
+	SetScale/P x 0,1/sf,"", WAKE
+	SetScale/P x 0,1/sf,"", M
+	SetScale/P x 0,1/sf,"", REMWAKE
 	deletepoints numpnts(wave0),1, wave0
 	
 	Print "                           "
@@ -486,7 +494,7 @@ function get_stats2(sf,st,ft,folder,outwave,mouse) // starting time and finishin
 			duplicate/o $folder+"Data:Sleep:REM" rems
 			temporal=temporal*REM
 			temporal=temporal/tt
-			SetScale/P x 0,0.199203,"", temporal
+			SetScale/P x 0,1/sf,"", temporal
 			integrate temporal
 			REMAUC[i]=wavemax(temporal)/ER		
 		endif
@@ -500,7 +508,7 @@ function get_stats2(sf,st,ft,folder,outwave,mouse) // starting time and finishin
 			duplicate/o $folder+"Data:C:wave"+num2str(i) temporal	
 			temporal=temporal*NREM
 			temporal=temporal/tt
-			SetScale/P x 0,0.199203,"", temporal
+			SetScale/P x 0,1/sf,"", temporal
 			integrate temporal
 			NREMAUC[i]=wavemax(temporal)/EN
 		endif
@@ -515,7 +523,7 @@ function get_stats2(sf,st,ft,folder,outwave,mouse) // starting time and finishin
 			duplicate/o $folder+"Data:C:wave"+num2str(i) temporal	
 			temporal=temporal*wake
 			temporal=temporal/tt
-			SetScale/P x 0,0.199203,"", temporal
+			SetScale/P x 0,1/sf,"", temporal
 			integrate temporal
 			WAKEAUC[i]=wavemax(temporal)/EW
 		endif		
@@ -532,7 +540,7 @@ function get_stats2(sf,st,ft,folder,outwave,mouse) // starting time and finishin
 			duplicate/o $folder+"Data:C:wave"+num2str(i) temporal	
 			temporal=temporal*REMWAKE
 			temporal=temporal/tt
-			SetScale/P x 0,0.199203,"", temporal
+			SetScale/P x 0,1/sf,"", temporal
 			integrate temporal
 			REMWAKEAUC[i]=wavemax(temporal)/ERW
 			
@@ -750,7 +758,7 @@ function append_traces(raster,sf) // plot everything inside a folder!!
 		creategraphs("wave",0,sf)
 	endif
 	setdatafolder folder+"data:S:"
-	creategraphs2("wave",0)	
+	creategraphs2("wave",0,sf)	
 	setdatafolder folder+"data:sleep:"	
 	setdatafolder folder
 end
@@ -773,16 +781,16 @@ function creategraphs(wavenames,disp,sf)
 		SetScale/P x 0,1/sf,"", twave
 		AppendToGraph twave	/TN=raw	
 		string traces = tracenamelist("",";", 1) 
-		ModifyGraph offset[itemsinlist(traces, ";")-1]={0,i*0.6}
+		ModifyGraph offset[itemsinlist(traces, ";")-1]={0,i*2}
 	endfor	
 end
 		
 
 // This function is to graph the deconvolved calcium signals.
 
-function creategraphs2(wavenames,disp)
+function creategraphs2(wavenames,disp,sf)
 	string wavenames
-	variable disp
+	variable disp,sf
 	string list,trace,temp
 	variable k,i
 	if (disp==1)
@@ -796,7 +804,7 @@ function creategraphs2(wavenames,disp)
 		duplicate/o $trace $"graph_"+num2str(i)
 		wave twave=$"graph_"+num2str(i)
 		twave= (twave==0) ? nan : twave[p]
-		SetScale/P x 0,0.199203,"", twave
+		SetScale/P x 0,1/sf,"", twave
 		AppendToGraph twave	/TN=S	
 		string traces = tracenamelist("",";", 1) 
 		ModifyGraph offset[itemsinlist(traces, ";")-1]={0,i*2}		
@@ -1008,7 +1016,8 @@ end
 // create confindence interval of the mean difference of several data sets.
 //this will compare all datasets named "wave" inside the current folder.
 
-function bootstrap_allwaves()  // create CI for all the waves named "wave*" in the folder
+function bootstrap_allwaves(mc)  // create CI for all the waves named "wave*" in the folder
+	variable mc
 	string list=wavelist("wave*",",","")
 	list=SortList(list,",", 16)
 	variable k=itemsinlist(list, ","),i
@@ -1023,7 +1032,7 @@ function bootstrap_allwaves()  // create CI for all the waves named "wave*" in t
 		string swave2=stringfromlist(M_combinations[i][1],list,",")
 		
 		print "   Comp"+num2str(M_combinations[i][1]+1)+"-"+num2str(M_combinations[i][0]+1)
-		bootstrap2(swave1,swave2,10000,1,b)
+		print bootstrap2(swave1,swave2,10000,1,mc)
 	endfor
 end
 
@@ -1127,9 +1136,7 @@ end
 
 
 // This is used for statistical testing, list1 and list2 are the full path for the 2d list 
-//with the data obtained from getall_batch() //constrained means the wake-nrem-rem data coming from the same
-//cell are bootstraped together.
-
+//with the data obtained from getall_batch() // DONT USE CONSTRAINED!!!
 function createCI2_groups(list1,list2,mc, constrained, normalize)  
 	string list1,list2
 	variable mc,constrained,normalize
