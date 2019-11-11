@@ -9,6 +9,7 @@ for surr_idx = 1:number_of_surrogates
         ControlSpikeCount(neuron_idx,:) = SpikeCount(neuron_idx,auxbin);
     end
     CorrelationMatrix = corr(ControlSpikeCount');
+    CorrelationMatrix(isnan(CorrelationMatrix))=0;
     [garbage,eigenvalues]=eig(CorrelationMatrix);
     control_max_eig(surr_idx)=max(reshape(eigenvalues,1,[]));
 end

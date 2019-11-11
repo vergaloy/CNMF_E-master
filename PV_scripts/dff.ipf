@@ -107,7 +107,7 @@ function getall(tshift,sf,results,ignoreM,ignoreRW,gets,mouse)
 
 	endif
 	//print "hour 1"
-	get_stats2(sf,0,600,folder,results,mouse) // homecage
+	get_stats2(sf,0,3600*3,folder,results,mouse) // homecage
 	//print "hour 2"
 	get_stats2(sf,980,1580,folder,results+"1",mouse) // CtxA
 	//print "hour 3"
@@ -1497,12 +1497,19 @@ function sleep_stats() // get sleep relevant data, used in sleep_stats_batch()
 	setdatafolder  $cdf+"data:Sleep"
 	variable MisW,RWisW
 	wave wake,nrem,rem,remwake,M,artifact
+	wake = (wake != 0) ? 1 : wake
+	nrem = (nrem != 0) ? 1 : nrem
+	rem = (rem != 0) ? 1 : rem
+	remwake = (remwake != 0) ? 1 : remwake
+
+	
+	
 	duplicate/o Wake hypno
 	variable t1,t2
 
 	artifact = (numtype(artifact[p]) == 2) ? 0 : artifact
 	artifact = (numtype(artifact[p]) == 1) ? 0 : artifact
-	hypno=remwake*0.5+nrem+rem*2-artifact
+	hypno=remwake*0.5+nrem+rem*2-artifact-M
 	variable ti=wavemax(hypno)
 	hypno=hypno/ti
 	variable new,nen,ner,nem,nerw
@@ -1938,6 +1945,17 @@ function reorder_waves() // Asign new sorted names after delting in kill_non_act
 end
 
 
+function remove_nans() // 
+	string	list=wavelist("wave*",",","")
+	list=SortList(list,",", 16)
+	variable 	k=itemsinlist(list, ","),i
+	for (i=0;i<k;i+=1)
+		wave temp=$stringfromlist(i,list,",")
+		WaveTransform zapNaNs temp
+	endfor
+end
+
+
 //=====================================================================
 //This get the inter-event interval for each cell
 function getiei(sf)
@@ -2318,6 +2336,83 @@ function seperate_C_raw_by_sleep_state()
 							
 	endfor
 	setdatafolder cdf
+end
+
+
+
+function seperate_S_by_sleep_state(zap)
+variable zap
+	string cdf=GetDataFolder(1)
+	duplicate/o :Data:Sleep:NREM :Data:S:NREM
+	duplicate/o :Data:Sleep:Wake :Data:S:WAKE
+	duplicate/o :Data:Sleep:REM :Data:S:REM
+	setdatafolder :Data:S:
+	wave NREM,REM,WAKE
+	string list=wavelist("wave"+"*",",","")
+	variable n=itemsinlist(list, ","),i
+	if (zap==1)
+	make/o/n=(sum(nrem)/wavemax(nrem),n) SN
+	make/o/n=(sum(wake)/wavemax(wake),n) SW
+	make/o/n=(sum(rem)/wavemax(rem),n) SR
+	else
+	make/o/n=(numpnts(nrem),n) SN
+	make/o/n=(numpnts(nrem),n) SW
+	make/o/n=(numpnts(nrem),n) SR
+	
+	
+	endif
+	
+	for (i=0;i<n;i+=1)
+		string trace1=stringfromlist(i,list,",")
+		duplicate/o $trace1 temp
+		temp = (NREM[p] ==0) ? nan : temp[p]
+		if (zap==1)
+			WaveTransform zapNaNs temp
+		endif
+		temp = (temp >0) ? 1 : temp[p]
+		SN[][i]=temp[p]
+		
+		duplicate/o $trace1 temp
+		temp = (WAKE[p] ==0) ? nan : temp[p]
+		if (zap==1)
+			WaveTransform zapNaNs temp
+		endif
+		temp = (temp >0) ? 1 : temp[p]
+		SW[][i]=temp[p]
+		
+		duplicate/o $trace1 temp
+		temp = (rem[p] ==0) ? nan : temp[p]
+		if (zap==1)
+			WaveTransform zapNaNs temp
+		endif
+		temp = (temp >0) ? 1 : temp[p]
+		SR[][i]=temp[p]
+							
+	endfor
+	setdatafolder cdf
+end
+
+
+function seprated_stats(w,ref,sf)
+	wave w,ref
+	variable sf
+	variable i,n=numpnts(ref),neu=dimsize(w,1)
+	variable ev=0
+	MatrixOP/o temp=sumrows(w)
+	wave temp
+	for (i=0;i<n;i+=1)
+		do
+			i+=1
+		while(ref[i]==0)
+		variable st=1
+	
+		do
+			i+=1
+		while (Ref[i]>0)
+		variable en=i-1
+		variable activity=sf*sum(temp,st,en)/(neu*(en-st))
+		print "Event "+num2str(ev)+": Time:"+num2str((st+en)/2)+" Activity:"+num2str(activity)
+	endfor
 end
 
 //bootstrap statistical power

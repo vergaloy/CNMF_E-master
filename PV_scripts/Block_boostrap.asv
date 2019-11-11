@@ -1,5 +1,5 @@
 function [P]=Block_boostrap(DataC,DataT,window,sims,tails)
-%[P]=Block_boostrap(neuron.S(:,1:600*5.01),neuron.S(:,5.01*981:5.01*1580),300,1000,1)
+%[P]=Block_boostrap(neuron.S(:,1:600*5.01),neuron.S(:,5.01*981:5.01*1580),300,1000)
 P(1:size(DataC,1))=0;
 for n=1:size(DataC,1)
     Data1=DataC(n,:);
@@ -33,27 +33,27 @@ for n=1:size(DataC,1)
     end
     means=sort(means,'descend');
     
-    
-    x=find(means<0,1);
-    if (isempty(x))
+ 
+   x=find(means<0,1);
+   if (isempty(x))
         x=1;
     end
-    
-    if (tails==2)
-        p=1-abs(x-1-sims/2)/(sims/2);
-        
-        if (p==0)
-            p=2/sims;
-        end
-        P(n)=p;
+   
+   if (tails==2)
+   p=1-abs(x-1-sims/2)/(sims/2);
+
+    if (p==0)
+        p=2/sims;
     end
-    
-    if (tails==1)
-        p=(x-1)/sims;
-        if (p==0)
-            p=1/sims;
-        end
-        P(n)=p;
-    end
+    P(n)=p;
+   end
+   
+   if (tails==1)
+   p=    
+       
+       
+       
+       
+       
     
 end

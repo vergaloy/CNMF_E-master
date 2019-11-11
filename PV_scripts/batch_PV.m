@@ -2,11 +2,11 @@
 
 
 % Specify the folder where the files live.
-<<<<<<< HEAD
-myFolder = 'C:\Users\SSG Lab\Desktop\20190614DK\D\mouse 2\circle-Objects';
-=======
+
+
+
 myFolder = 'C:\Users\Galoy\Documents\New folder\pablo-Objects';
->>>>>>> ff14bfc45fe9cc485fe9e03e650f0c557fe8aca3
+
 savefiles=1;
 % Check to make sure that folder actually exists.  Warn user if it doesn't.
 if ~isdir(myFolder)

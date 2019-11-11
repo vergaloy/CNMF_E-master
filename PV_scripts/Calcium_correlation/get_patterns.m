@@ -14,7 +14,7 @@ if q<1
     return
 end
 %Marchenko–Pastur
-lambda_max = prctile(circular_shift(SpikeCount,1000),95);
+lambda_max = prctile(circular_shift(zSpikeCount',500),99);
 NumberOfAssemblies = sum(eigenvalues>lambda_max);
 
 
