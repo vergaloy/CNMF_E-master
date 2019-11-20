@@ -24,10 +24,7 @@ for i=1:size(patterns,1)
     fprintf('.')
     temp=obj(patterns{i, 1},:);
     %Ordered=[Ordered;temp];
-    [Wt,Ht,~]=NMF(temp./std(temp,[],2),1);
-    norm=max(Wt,[],1);
-    Wt=Wt/norm;
-    Ht=Ht*norm;
+    [Wt,Ht,~]=NMF(temp,1);
     W(patterns{i, 1},i)=Wt;
     H(i,:)=Ht;
 end

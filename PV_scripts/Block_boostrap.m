@@ -29,14 +29,14 @@ for n=1:size(DataC,1)
             temp2(i0:f+i0)=Data2(s:s+f);
             i0=f+i0;
         end
-        means(i)=mean(temp1)-mean(temp2);
+        means(i)=mean(temp1)-mean(temp2)+rand(1)/100000000;
     end
     means=sort(means,'descend');
     
     
     x=find(means<0,1);
     if (isempty(x))
-        x=1;
+        x=sims;
     end
     
     if (tails==2)

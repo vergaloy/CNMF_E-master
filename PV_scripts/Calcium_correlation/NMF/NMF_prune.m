@@ -1,18 +1,6 @@
 function [W,H]=NMF_prune(X)
 
 
-N=size(X,1)*size(X,2);
-% Find intial W H
-
-F=X;
-F(F<0.001)=0;
-F(F==0)=nan;
-st=nanmean(F,2)+nanstd(F,1,2)*3;
-if (size(X,1)*0.5<size(X,2)*0.5)
-    max_order=size(X,1)*0.5;
-else
-    max_order=size(X,2)*0.5;
-end    
 
 for order=1:max_order 
 opt = statset('Maxiter',100,'TolFun', 1e-4,'TolX',1e-4);    

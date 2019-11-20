@@ -2,8 +2,8 @@
 
 function NumberOfAssemblies = get_patterns(SpikeCount)
 
-zSpikeCount = zscore(SpikeCount');
-
+%zSpikeCount = zscore(SpikeCount');
+zSpikeCount = SpikeCount';
 CorrMatrix = corr(zSpikeCount);
 CorrMatrix(isnan(CorrMatrix))=0;
 [~,d] = eig(CorrMatrix);
@@ -14,7 +14,7 @@ if q<1
     return
 end
 %Marchenko–Pastur
-lambda_max = prctile(circular_shift(zSpikeCount',500),99);
+lambda_max = prctile(circular_shift(zSpikeCount',500),95);
 NumberOfAssemblies = sum(eigenvalues>lambda_max);
 
 
