@@ -262,7 +262,7 @@ cnmfe_path = neuron.save_workspace();
  %neuron.viewNeurons([], neuron.C_raw);
 %ShowPNS
 %neuron.Coor=[]
-%neuron.show_contours(0.6, [], neuron.PNR, false)
+%neuron.show_contours(0.6, [], neuron.Cn, true)
 
 
 

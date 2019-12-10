@@ -8,7 +8,7 @@ for i=1:t
     h1=subplot(t*2,1,i*2-1);
     imagesc(temp)
     h1=subplot(t*2,1,i*2);
-    plot(H(i,:))
+    area(H(i,:))
     xlim([0 length(H)])
     ylim([0 1])
 end

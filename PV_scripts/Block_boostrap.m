@@ -30,6 +30,8 @@ for n=1:size(DataC,1)
             i0=f+i0;
         end
         means(i)=mean(temp1)-mean(temp2)+rand(1)/100000000;
+        temp1=[];
+        temp2=[];
     end
     means=sort(means,'descend');
     
