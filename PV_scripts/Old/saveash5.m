@@ -13,7 +13,7 @@ data_type = class(data);
 sizY = size(data);
 nd = ndims(data)-1;
 
-defoptions.groupname = '/images';
+defoptions.groupname = '/Object';
 defoptions.append = true;
 
 if ~exist('options','var'); options = defoptions; end
