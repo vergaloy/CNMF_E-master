@@ -3,8 +3,8 @@ tic  %Start timer
 %% Pre-Sets: These are the user-defined variables.  
 
 clear PSTH
-stimulus=120; %%in s
-stimulus_off=180;
+stimulus=10; %%in s
+stimulus_off=20;
 PSTH.bin_size=20;   %  Bin size in seconds
 PSTH.Fs=neuron.Fs;
 PSTH.frame_range=neuron.frame_range(2);

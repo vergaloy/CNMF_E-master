@@ -8,11 +8,11 @@
 function getall_batch()
 	// PARAMETERS************
 
-	variable ignoreM=0
-	variable ignoreRW=0
+	variable ignoreM=1
+	variable ignoreRW=1
 	variable getS=1
 	variable defSF=5.02
-	variable deftshift=10
+	variable deftshift=0
 	// *************
 
 	make/o/n=(1,17) Results=nan
@@ -50,7 +50,7 @@ function getall_batch()
 		if (numtype(sf) == 2)
 			sf=defSF
 		endif
-		getall(ts,sf,cdf2+"Results",ignoreM,ignoreRW,gets,i)	
+		getall(ts,sf,cdf2+"Results",ignoreM,ignoreRW,gets,i,20)	
 	endfor
 	
 	setdatafolder $cdf2
@@ -68,8 +68,8 @@ end
 
 // This is the code to run the complete analysis/ Tshift is the time shift between the Ca+2 recording
 //and the EEG recording. Usually is 10 seconds.  sf is the sampling frequency.ignore M and RW can be done.
-function getall(tshift,sf,results,ignoreM,ignoreRW,gets,mouse)
-	variable tshift,sf,ignoreM,ignoreRW,gets,mouse
+function getall(tshift,sf,results,ignoreM,ignoreRW,gets,mouse,offset)
+	variable tshift,sf,ignoreM,ignoreRW,gets,mouse,offset
 	string results
 	string folder=GetDataFolder(1)
 	variable plot=1 // set as 0 to avoid creating plots
@@ -79,7 +79,7 @@ function getall(tshift,sf,results,ignoreM,ignoreRW,gets,mouse)
 	endif
 	string list=wavelist("wave"+"*",",","")
 	variable k=itemsinlist(list, ",")
-	sleep_plot((k*2)+2,tshift,sf,folder)//  here is very important to look in the shift between EEG and Ca recording!!! 
+	sleep_plot((k*offset)+offset,tshift,sf,folder)//  here is very important to look in the shift between EEG and Ca recording!!! 
 	wave WAKE,REMWAKE,M
 	if (ignoreM==1)
 		WAKE=WAKE+M
@@ -92,9 +92,9 @@ function getall(tshift,sf,results,ignoreM,ignoreRW,gets,mouse)
 	if (plot==1)
 		Display /W=(405.75,291.5,1121.25,587)/K=1  ::Sleep:REM,::Sleep:WAKE,::Sleep:NREM,::Sleep:REMWAKE
 		setdatafolder folder+"data:C_raw:"
-		creategraphs("wave",0,sf)
+		creategraphs("wave",0,sf,offset)
 		setdatafolder folder+"data:S:"
-		creategraphs2("wave",0,sf)	
+		creategraphs2("wave",0,sf,offset)	
 		setdatafolder folder+"data:sleep:"
 		Legend/C/N=text0/J/F=0/A=MC/X=30.47/Y=-62.46 "\\s(REM) REM \\s(WAKE) WAKE \\s(NREM) NREM"
 		ModifyGraph mode(REM)=7,mode(WAKE)=7,mode(NREM)=7,mode(REMWAKE)=7
@@ -109,12 +109,12 @@ function getall(tshift,sf,results,ignoreM,ignoreRW,gets,mouse)
 	//print "hour 1"
 	get_stats2(sf,0,3600*3,folder,results,mouse) // homecage
 	//print "hour 2"
-	get_stats2(sf,980,1580,folder,results+"1",mouse) // CtxA
+	get_stats2(sf,0,3600*1,folder,results+"1",mouse) // CtxA
 	//print "hour 3"
-	get_stats2(sf,1580,1880,folder,results+"2",mouse)  // ?
-	get_stats2(sf,1903,10903,folder,results+"3",mouse)// sleep
-	get_stats2(sf,11109,11703,folder,results+"4",mouse)
-	get_stats2(sf,11738,12338,folder,results+"5",mouse)
+	get_stats2(sf,3600*1,3600*2,folder,results+"2",mouse)  // shock
+	get_stats2(sf,3600*2,3600*3,folder,results+"3",mouse)// sleep
+	get_stats2(sf,10500,11100,folder,results+"4",mouse)// retrivla
+	get_stats2(sf,11100,11700,folder,results+"5",mouse)// C
 	
 	
 	//concatenated_sleep(sf)
@@ -216,22 +216,21 @@ function find_peaks(folder)
 				P+=1		
 			endif
 		endfor
-		
+	
 		//control 3 If the average Sdev of the noise is more than 0.2 the whole signal is discarded to avoid underestimation of frequency.
 		// this threshold was determined using de data of 200 cells (4 mices) and finding the 0.1 % outlier. 
-		if (SDev[i]>0.1)
+		if (SDev[i]>5000) //0.1
 			control4=control4+1
 			temp=0
 			switch1=1
 					print "cell "+num2str(i)+" was discarded (too noisy)!"
-				endif
+		endif
 		
-				duplicate/o temp $folder+"data:S:"+stringfromlist(i,list,",")
-				if	(switch1==0)
+		duplicate/o temp $folder+"data:S:"+stringfromlist(i,list,",")
+		if	(switch1==0)
 					print "cell "+num2str(i)+" done!"
-				endif
-			endfor
-end
+		endif
+	endfor
 end
 
 //========================================
@@ -607,8 +606,8 @@ function remove_artifacts()
 	variable k,i
 
 	variable a=pcsr(A),b=pcsr(B)
-
-	setdatafolder root:data:C_raw:
+   string cdf=GetDataFolder(1)
+	setdatafolder $cdf+"Data:C_raw:"
 	list=wavelist("wave"+"*",",","")
 	list=SortList(list,",", 16)
 	k=itemsinlist(list, ",")
@@ -619,7 +618,7 @@ function remove_artifacts()
 	endfor
 	updategraphs("wave",0)
 
-	setdatafolder root:data:C:
+	setdatafolder $cdf+"Data:C:"
 	list=wavelist("wave"+"*",",","")
 	list=SortList(list,",", 16)
 	k=itemsinlist(list, ",")
@@ -630,7 +629,7 @@ function remove_artifacts()
 	endfor
 	updategraphs("wave",0)
 
-	setdatafolder root:data:S:
+	setdatafolder $cdf+"Data:S:"
 	list=wavelist("wave"+"*",",","")
 	list=SortList(list,",", 16)
 	k=itemsinlist(list, ",")
@@ -640,6 +639,7 @@ function remove_artifacts()
 		twave[a,b]=0		
 	endfor
 	updategraphs("wave",0)
+	setdatafolder $cdf
 end
 
 //========================================
@@ -676,7 +676,6 @@ function remove_artifacts2()
 
 	variable a=pcsr(A),b=pcsr(B)
 
-	setdatafolder root:data:C_raw:
 	list=wavelist("wave"+"*",",","")
 	list=SortList(list,",", 16)
 	k=itemsinlist(list, ",")
@@ -755,18 +754,18 @@ function append_traces(raster,sf) // plot everything inside a folder!!
 	copyScales $folder+"data:Sleep:WAKE", $folder+"data:S:artifact"
 	if (raster==0)
 		setdatafolder folder+"data:C_raw:"
-		creategraphs("wave",0,sf)
+		creategraphs("wave",0,sf,20)
 	endif
 	setdatafolder folder+"data:S:"
-	creategraphs2("wave",0,sf)	
+	creategraphs2("wave",0,sf,20)	
 	setdatafolder folder+"data:sleep:"	
 	setdatafolder folder
 end
 // This function is to graph the raw calcium signals
 
-function creategraphs(wavenames,disp,sf)
+function creategraphs(wavenames,disp,sf,sep)
 	string wavenames
-	variable disp,sf
+	variable disp,sf,sep
 	string list,trace,temp
 	variable k,i
 	if (disp==1)
@@ -781,16 +780,16 @@ function creategraphs(wavenames,disp,sf)
 		SetScale/P x 0,1/sf,"", twave
 		AppendToGraph twave	/TN=raw	
 		string traces = tracenamelist("",";", 1) 
-		ModifyGraph offset[itemsinlist(traces, ";")-1]={0,i*2}
+		ModifyGraph offset[itemsinlist(traces, ";")-1]={0,i*sep}
 	endfor	
 end
 		
 
 // This function is to graph the deconvolved calcium signals.
 
-function creategraphs2(wavenames,disp,sf)
+function creategraphs2(wavenames,disp,sf,sep)
 	string wavenames
-	variable disp,sf
+	variable disp,sf,sep
 	string list,trace,temp
 	variable k,i
 	if (disp==1)
@@ -807,7 +806,7 @@ function creategraphs2(wavenames,disp,sf)
 		SetScale/P x 0,1/sf,"", twave
 		AppendToGraph twave	/TN=S	
 		string traces = tracenamelist("",";", 1) 
-		ModifyGraph offset[itemsinlist(traces, ";")-1]={0,i*2}		
+		ModifyGraph offset[itemsinlist(traces, ";")-1]={0,i*sep}		
 	endfor
 end
 
@@ -1144,7 +1143,6 @@ function createCI2_groups(list1,list2,mc, constrained, normalize)
 	// the structure of the list is the following:
 	// WT1|NT1|RT1|WE1|NE1|RE1|WT2|NT2|RT2|WE2|NE2|RE2
 	variable wt,nt,rt,rwt,we,ne,re,rwe,wt2,nt2,rt2,rwt2,we2,ne2,re2,rwe2
-
 	
 	duplicate/o/RMD=[][1] temp1 test
 	integrate test
@@ -1263,12 +1261,11 @@ function createCI2_groups(list1,list2,mc, constrained, normalize)
 		rw2=REMwakeER2/REMwakeTR2
 		
 		if (normalize==1)
-			variable div=nr1
+			variable div=w1
 			nr1=nr1/div
 			r1=r1/div
 			rw1=rw1/div
 			w1=w1/div
-			div=nr2
 			nr2=nr2/div
 			r2=r2/div
 			rw2=rw2/div
@@ -1497,19 +1494,12 @@ function sleep_stats() // get sleep relevant data, used in sleep_stats_batch()
 	setdatafolder  $cdf+"data:Sleep"
 	variable MisW,RWisW
 	wave wake,nrem,rem,remwake,M,artifact
-	wake = (wake != 0) ? 1 : wake
-	nrem = (nrem != 0) ? 1 : nrem
-	rem = (rem != 0) ? 1 : rem
-	remwake = (remwake != 0) ? 1 : remwake
-
-	
-	
 	duplicate/o Wake hypno
 	variable t1,t2
 
 	artifact = (numtype(artifact[p]) == 2) ? 0 : artifact
 	artifact = (numtype(artifact[p]) == 1) ? 0 : artifact
-	hypno=remwake*0.5+nrem+rem*2-artifact-M
+	hypno=remwake*0.5+nrem+rem*2-artifact
 	variable ti=wavemax(hypno)
 	hypno=hypno/ti
 	variable new,nen,ner,nem,nerw
@@ -1945,17 +1935,6 @@ function reorder_waves() // Asign new sorted names after delting in kill_non_act
 end
 
 
-function remove_nans() // 
-	string	list=wavelist("wave*",",","")
-	list=SortList(list,",", 16)
-	variable 	k=itemsinlist(list, ","),i
-	for (i=0;i<k;i+=1)
-		wave temp=$stringfromlist(i,list,",")
-		WaveTransform zapNaNs temp
-	endfor
-end
-
-
 //=====================================================================
 //This get the inter-event interval for each cell
 function getiei(sf)
@@ -2336,83 +2315,6 @@ function seperate_C_raw_by_sleep_state()
 							
 	endfor
 	setdatafolder cdf
-end
-
-
-
-function seperate_S_by_sleep_state(zap)
-variable zap
-	string cdf=GetDataFolder(1)
-	duplicate/o :Data:Sleep:NREM :Data:S:NREM
-	duplicate/o :Data:Sleep:Wake :Data:S:WAKE
-	duplicate/o :Data:Sleep:REM :Data:S:REM
-	setdatafolder :Data:S:
-	wave NREM,REM,WAKE
-	string list=wavelist("wave"+"*",",","")
-	variable n=itemsinlist(list, ","),i
-	if (zap==1)
-	make/o/n=(sum(nrem)/wavemax(nrem),n) SN
-	make/o/n=(sum(wake)/wavemax(wake),n) SW
-	make/o/n=(sum(rem)/wavemax(rem),n) SR
-	else
-	make/o/n=(numpnts(nrem),n) SN
-	make/o/n=(numpnts(nrem),n) SW
-	make/o/n=(numpnts(nrem),n) SR
-	
-	
-	endif
-	
-	for (i=0;i<n;i+=1)
-		string trace1=stringfromlist(i,list,",")
-		duplicate/o $trace1 temp
-		temp = (NREM[p] ==0) ? nan : temp[p]
-		if (zap==1)
-			WaveTransform zapNaNs temp
-		endif
-		temp = (temp >0) ? 1 : temp[p]
-		SN[][i]=temp[p]
-		
-		duplicate/o $trace1 temp
-		temp = (WAKE[p] ==0) ? nan : temp[p]
-		if (zap==1)
-			WaveTransform zapNaNs temp
-		endif
-		temp = (temp >0) ? 1 : temp[p]
-		SW[][i]=temp[p]
-		
-		duplicate/o $trace1 temp
-		temp = (rem[p] ==0) ? nan : temp[p]
-		if (zap==1)
-			WaveTransform zapNaNs temp
-		endif
-		temp = (temp >0) ? 1 : temp[p]
-		SR[][i]=temp[p]
-							
-	endfor
-	setdatafolder cdf
-end
-
-
-function seprated_stats(w,ref,sf)
-	wave w,ref
-	variable sf
-	variable i,n=numpnts(ref),neu=dimsize(w,1)
-	variable ev=0
-	MatrixOP/o temp=sumrows(w)
-	wave temp
-	for (i=0;i<n;i+=1)
-		do
-			i+=1
-		while(ref[i]==0)
-		variable st=1
-	
-		do
-			i+=1
-		while (Ref[i]>0)
-		variable en=i-1
-		variable activity=sf*sum(temp,st,en)/(neu*(en-st))
-		print "Event "+num2str(ev)+": Time:"+num2str((st+en)/2)+" Activity:"+num2str(activity)
-	endfor
 end
 
 //bootstrap statistical power

@@ -2,9 +2,9 @@
 %% Pre-Sets: These are the user-defined variables.  
 clearvars -except neuron test
 
-stimulus_onset=30; %%in s
-stimulus_duration=30;
-Trial_duration=90;
+stimulus_onset=10; %%in s
+stimulus_duration=10;
+Trial_duration=30;
 discard=0;
 make_trials=1;
 path=neuron.C;
@@ -29,4 +29,4 @@ BL=PSTH.C;
 BL(:,trail_data>0)=[];  
 stim=PSTH.C;
 stim(:,trail_data==0)=[];  
-P=Block_boostrap(BL,stim,1000,10000);
+P=Block_boostrap(BL,stim,1000,10000,2);

@@ -3,19 +3,20 @@ function  PSTH=PSTH_C_PV(neuron,make_trials,stimulus_onset,stimulus_duration,Tri
 
 if nargin<2
  make_trials=0;
- stimulus_onset=1;
- stimulus_duration=1;
- Trial_duration=300;
- discard=0;    
+ stimulus_onset=10;
+ stimulus_duration=10;
+ Trial_duration=30;
+ discard=0;  
+ sort_by_P=0;
 end
 
 path=neuron.C;
 PSTH.Fs=neuron.Fs;
 PSTH.frame_range=size(neuron.C,2);
 PSTH.C=full(path);
-if(path==neuron.S)
-    PSTH.C(PSTH.C>0)=1;
-end
+% if(path==neuron.S)
+%     PSTH.C(PSTH.C>0)=1;
+% end
 m=max(PSTH.C(:));
 PSTH.C=PSTH.C/m;
 trials=floor((PSTH.frame_range/PSTH.Fs)/(Trial_duration));
@@ -54,13 +55,13 @@ end
 
 for n=1:size(PSTH.C,1)
     t1=PSTH.C(n,1:floor(stimulus_onset*PSTH.Fs));
-    t2=PSTH.C(n,floor((stimulus_onset+5)*PSTH.Fs):floor(Trial_duration*PSTH.Fs));
+    t2=PSTH.C(n,floor((stimulus_onset)*PSTH.Fs+1):floor((stimulus_onset+stimulus_duration)*PSTH.Fs));
     [~,p]=ttest2(t1,t2);
     PSTH.P(n)=p;
-    PSTH.activity(n)=(mean(t2)-mean(t1));
+    PSTH.activity(n)=(mean(t1)-mean(t2));
 end
-if (exist('P','var')==1)
-    [~,in]=sort(P,'ascend');
+if (sort_by_P==1)
+    [~,in]=sort(PSTH.P,'ascend');
 else
     [~,in]=sort(PSTH.activity,'ascend');
 end
