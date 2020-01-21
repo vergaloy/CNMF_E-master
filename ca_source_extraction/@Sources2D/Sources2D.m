@@ -253,34 +253,34 @@ classdef Sources2D < handle
             nams = unique(obj.file);
             obj.file = nams;
             % pre-allocate spaces for saving results of multiple patches
-            batches_ = cell(100, 1);
-            file_id_ = zeros(100,1, 'like', uint8(1));
-            numFrames = zeros(100,1);
+            batches_ = cell(200, 1);
+            file_id_ = zeros(200,1, 'like', uint8(1));
+            numFrames = zeros(200,1);
             
             k_batch = 0;
             for m=1:length(nams)
                 neuron = obj.copy();
                 neuron.file = nams{m};
                 neuron.getReady(pars_envs);
-                if m==1
+                if m==1 
                     obj.options = neuron.options;
                 end
                 T = neuron.P.numFrames;
                 if isempty(batch_frames)
                     batch_frames = T;
                 end
-                nbatches = round(T/batch_frames);
+                nbatches = 2*round(T/batch_frames)-1;
                 if nbatches<=1
                     frame_range_t = [1, T];
                 else
                     frame_range_t = round(linspace(1, T, nbatches+1));
                 end
-                nbatches = length(frame_range_t) -1;
+                nbatches = length(frame_range_t) -2;
                 
                 for n=1:nbatches
                     k_batch = k_batch +1;
                     tmp_neuron = neuron.copy();
-                    tmp_neuron.frame_range = frame_range_t(n:(n+1))-[0, 1*(n~=nbatches)];
+                    tmp_neuron.frame_range = [frame_range_t(n),frame_range_t(n+2)];
                     batch_i.neuron = tmp_neuron;
                     batch_i.shifts = [];  % shifts allowed
                     file_id_(k_batch) = m;
@@ -1901,7 +1901,7 @@ classdef Sources2D < handle
             end
             figure('papersize', [obj.options.d2, obj.options.d1]/40);
             init_fig;
-            plot_contours(obj.A(:, ind), img, thr,with_label, [], obj.Coor(ind), 2);
+            plot_contours(obj.A(:, ind), img, thr,with_label, [], obj.Coor(ind), .5);
             %colormap gray;
             try
                 file_path = [obj.P.log_folder,  'contours_neurons', strrep(get_date(), ' ', '_'), '.pdf'];

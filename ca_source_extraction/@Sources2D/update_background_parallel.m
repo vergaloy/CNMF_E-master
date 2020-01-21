@@ -238,7 +238,7 @@ else
         if strcmpi(bg_model, 'ring')
             % get the previous estimation
             W_old = W{mpatch};
-            Ypatch = reshape(Ypatch, [], T);
+            Ypatch = reshape(Ypatch, [], T); 
             
             % run regression to get A, C, and W, b0
             if bg_ssub==1

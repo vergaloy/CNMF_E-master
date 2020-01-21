@@ -202,7 +202,7 @@ end
 %neuron.Coor=[]
 %neuron.show_contours(0.3, [], neuron.PNR, 0)
 %neuron.show_contours(0.3, [], neuron.Cn, 0)
-%neuron.show_contours(0.3, [], neuron.PNR.*neuron.Cn, 0)
+%neuron.show_contours(0.6, [], neuron.PNR.*neuron.Cn, 0)
 
 %neuron.orderROIs('pnr');   % order neurons in different ways {'snr', 'decay_time', 'mean', 'circularity','sparsity_spatial','sparsity_temporal','pnr'}
 %neuron.viewNeurons([], neuron.C_raw);

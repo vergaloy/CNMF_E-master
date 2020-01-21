@@ -5,6 +5,7 @@ for i=1:size(neuron.batches,1)
     temp=neuron.batches{i, 1}.neuron.C_raw;
     for s=1:size(temp,1)
     %mt=medfilt1(temp(s,:),round(40*neuron.Fs),'truncate');
+    %temp(s,:)=temp(s,:)-mt;
     temp(s,:)=detrend(temp(s,:),1);   
     end
     

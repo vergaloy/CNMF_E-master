@@ -123,7 +123,7 @@ for tt=t_begin:kt:t_end
     %     box on; set(gca, 'xtick', []);
     %     set(gca, 'ytick', []);
     
-    drawnow();
+    %drawnow();
     if save_avi
         temp = getframe(gcf);
         temp = imresize(temp.cdata, [400, 600]);

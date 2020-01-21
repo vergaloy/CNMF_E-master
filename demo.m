@@ -16,8 +16,8 @@ pars_envs = struct('memory_size_to_use', 16, ...   % GB, memory space you allow 
     'patch_dims', [65, 65]);  %GB, patch size
 
 % -------------------------      SPATIAL      -------------------------  %
-gSig = 2;           % pixel, gaussian width of a gaussian kernel for filtering the data. 0 means no filtering
-gSiz = 8;          % pixel, neuron diameter
+gSig = 3;           % pixel, gaussian width of a gaussian kernel for filtering the data. 0 means no filtering
+gSiz = 9;          % pixel, neuron diameter
 ssub = 1;           % spatial downsampling factor
 with_dendrites = true;   % with dendrites or not
 if with_dendrites
@@ -35,7 +35,7 @@ spatial_constraints = struct('connected', true, 'circular', false);  % you can i
 spatial_algorithm = 'hals_thresh';
 
 % -------------------------      TEMPORAL     -------------------------  %
-Fs = 10;             % frame rate
+Fs = 5.02;             % frame rate
 tsub = 1;           % temporal downsampling factor
 deconv_options = struct('type', 'ar2', ... % model of the calcium traces. {'ar1', 'ar2'}
     'method', 'foopsi', ... % method for running deconvolution {'foopsi', 'constrained', 'thresholded'}
@@ -51,7 +51,7 @@ detrend_method = 'spline';  % compute the local minimum as an estimation of tren
 % -------------------------     BACKGROUND    -------------------------  %
 bg_model = 'ring';  % model of the background {'ring', 'svd'(default), 'nmf'}
 nb = 1;             % number of background sources for each patch (only be used in SVD and NMF model)
-ring_radius = 10;  % when the ring model used, it is the radius of the ring used in the background model.
+ring_radius = 18;  % when the ring model used, it is the radius of the ring used in the background model.
 %otherwise, it's just the width of the overlapping area
 num_neighbors = []; % number of neighbors for each neuron
 bg_ssub = 1;        % downsample background for a faster speed 
@@ -67,7 +67,7 @@ merge_thr_spatial = [0.8, 0.4, -inf];  % merge components with highly correlated
 % -------------------------  INITIALIZATION   -------------------------  %
 K = [];             % maximum number of neurons per patch. when K=[], take as many as possible.
 min_corr = 0.7;     % minimum local correlation for a seeding pixel
-min_pnr = 6;       % minimum peak-to-noise ratio for a seeding pixel
+min_pnr = 7.5;       % minimum peak-to-noise ratio for a seeding pixel
 min_pixel = gSig^2;      % minimum number of nonzero pixels for each neuron
 bd = 0;             % number of rows/columns to be ignored in the boundary (mainly for motion corrected data)
 frame_range = [];   % when [], uses all frames
@@ -122,14 +122,14 @@ neuron.Fs = Fs;
 
 %% *STEP2: LOAD VIDEO DATA*
 %%
-neuron.options.seed_method  ='manual';
+neuron.options.seed_method  ='auto';
 % distribute data  in blocks and be ready to run source extraction
 neuron.getReady(pars_envs);
 
 % change parameters for optimized initialization
     [gSig, gSiz, ring_radius, min_corr, min_pnr] = neuron.set_parameters();
 
-[center, Cn, PNR] = neuron.initComponents_parallel(K, frame_range, save_initialization, 0);
+[center, Cn, PNR] = neuron.initComponents_parallel(K, frame_range, 0, 0);
 neuron.compactSpatial();
 
 %show intialized seeds.
@@ -141,7 +141,7 @@ if show_init
     plot(center(:, 2), center(:, 1), '.r', 'markersize', 10);
 end
 neuron.PNR=PNR;
-neuron.show_contours(0.3, [], neuron.PNR, false)
+neuron.show_contours(0.6, [], neuron.PNR, false)
 %% *STEP3: Get Peak-to-noise ratio and correlation (can be skipped, but useful to estimate PNS and correlation initialization parameters)*
 %%
 ShowPNS

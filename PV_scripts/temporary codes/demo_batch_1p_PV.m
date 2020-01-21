@@ -1,6 +1,6 @@
 
 % Specify the folder where the files live.
-myFolder ='C:\Users\SSG Lab\Desktop\Pablo\191202\analisis\test2\test3\test4\test5\test6';
+myFolder ='C:\Users\SSG Lab\Desktop\Pablo\191202\analisis\test2\test3\test4\test5\test6\test7\test8';
 savefiles=1;
 % Check to make sure that folder actually exists.  Warn user if it doesn't.
 
@@ -8,7 +8,7 @@ savefiles=1;
 filePattern = fullfile(myFolder, '*.h5'); % Change to whatever pattern you need.
 theFiles = dir(filePattern);
 for k=1:length(theFiles)
-    try
+    
     tic
     clearvars -except filePattern theFiles k myFolder
     close all
@@ -21,24 +21,24 @@ for k=1:length(theFiles)
     
     warning('off','all') %add by Natsu
     
-        neuron = Sources2D();
-        nams = {fullFileName};          % this demo data is very small, here we just use it as an example
-        nams = {neuron.select_multiple_files(nams)};  %if nam is [], then select data interactively
+    neuron = Sources2D();
+    nams = {fullFileName};          % this demo data is very small, here we just use it as an example
+    nams = {neuron.select_multiple_files(nams)};  %if nam is [], then select data interactively
     
     %% parameters
     % -------------------------    COMPUTATION    -------------------------  %
     pars_envs = struct('memory_size_to_use', 300, ...   % GB, memory space you allow to use in MATLAB
         'memory_size_per_patch', 40, ...   % GB, space for loading data within one patch
         'patch_dims', [40, 40],...  %GB, patch size
-        'batch_frames', 3000);           % number of frames per batch
+        'batch_frames', 1000);           % number of frames per batch
     % -------------------------      SPATIAL      -------------------------  %
     gSig = 3;           % pixel, gaussian width of a gaussian kernel for filtering the data. 0 means no filtering. USE ODD numbers
     gSiz = 9;          % pixel, neuron diameter
     ssub = 1;           % spatial downsampling factor
-    with_dendrites = true;   % with dendrites or not
+    with_dendrites = false;   % with dendrites or not
     if with_dendrites
         % determine the search locations by dilating the current neuron shapes
-        updateA_search_method = 'dilate';  
+        updateA_search_method = 'dilate';
         updateA_bSiz = 5;
         updateA_dist = neuron.options.dist;
     else
@@ -51,7 +51,7 @@ for k=1:length(theFiles)
     spatial_algorithm = 'hals';
     
     % -------------------------      TEMPORAL     -------------------------  %
-    Fs = 5;             % frame rate
+    Fs = 5.02;             % frame rate
     tsub = 1;           % temporal downsampling factor
     deconv_options = struct('type', 'ar1', ... % model of the calcium traces. {'ar1', 'ar2'}
         'method', 'foopsi', ... % method for running deconvolution {'foopsi', 'constrained', 'thresholded'}
@@ -60,7 +60,7 @@ for k=1:length(theFiles)
         'optimize_b', true, ...% optimize the baseline);
         'max_tau', 100);    % maximum decay time (unit: frame);
     
-    nk = 2;             % detrending the slow fluctuation. usually 1 is fine (no detrending)
+    nk = 4;             % detrending the slow fluctuation. usually 1 is fine (no detrending)
     % when changed, try some integers smaller than total_frame/(Fs*30)
     detrend_method = 'spline';  % compute the local minimum as an estimation of trend.
     
@@ -71,7 +71,7 @@ for k=1:length(theFiles)
     ring_radius = round(bg_neuron_factor * gSiz);  % when the ring model used, it is the radius of the ring used in the background model.
     %otherwise, it's just the width of the overlapping area
     num_neighbors = []; % number of neighbors for each neuron
-    bg_ssub = 2;        % downsample background for a faster speed      
+    bg_ssub = 2;        % downsample background for a faster speed
     % -------------------------      MERGING      -------------------------  %
     show_merge = false;  % if true, manually verify the merging step
     merge_thr = 0.65;     % thresholds for merging neurons; [spatial overlap ratio, temporal correlation of calcium traces, spike correlation]
@@ -96,7 +96,7 @@ for k=1:length(theFiles)
     
     % -------------------------  Residual   -------------------------  %
     min_corr_res = 0.7;
-    min_pnr_res = 8; 
+    min_pnr_res = 8;
     seed_method_res = 'auto';  % method for initializing neurons from the residual
     update_sn = true;
     
@@ -148,37 +148,46 @@ for k=1:length(theFiles)
     neuron.update_temporal_batch(use_parallel);
     
     %% update background
-    neuron.update_background_batch(use_parallel);
-    
     normalize_C_raw(neuron)
     neuron.update_background_batch(use_parallel);
     neuron.update_temporal_batch(use_parallel);
-    normalize_C_raw(neuron)
-    
+    normalize_C_raw(neuron)  
     %% get the correlation image and PNR image for all neurons
     neuron.correlation_pnr_batch();
     [PNR_all,Cn_all]=create_PNR_batch(neuron);
     %% concatenate temporal components
-    neuron.concatenate_temporal_batch();
-    neuron.C_raw=neuron.C_raw./GetSn(neuron.C_raw);
-    neuron.C = deconvTemporal(neuron, use_parallel,1);
+    concatenate_shifted_batch(neuron);
     neuron.P=neuron.batches{1, 1}.neuron.P;
+    neuron.frame_range=[1,size(neuron.C_raw,2)];
+    
+    
+    neuron.C_raw=neuron.C_raw./GetSn(neuron.C_raw);
+    neuron=justdeconv(neuron);
+    
     neuron.remove_false_positives();
     neuron.merge_neurons_dist_corr(0);
     neuron.merge_high_corr(0, [0.8, 0.00001, -inf]);
-    neuron.merge_high_corr(0, [0.8, 0.00001, -inf]);
+
     
-    fix_Baseline(round(120*neuron.Fs),neuron);%% PV
-    neuron.C_raw=neuron.C_raw./GetSn(neuron.C_raw);
-    scale_to_noise(neuron);
+    for loop=1:3
+        neuron.update_background_parallel(use_parallel);
+        neuron.update_temporal_parallel(use_parallel);
+    end
+    
+    fix_Baseline(round(40*neuron.Fs),neuron)%% PV
     neuron.C_raw=neuron.C_raw./GetSn(neuron.C_raw);
     neuron=justdeconv(neuron);
+    
+    neuron.remove_false_positives();
+    neuron.merge_neurons_dist_corr(0);
+    neuron.merge_high_corr(0, [0.8, 0.00001, -inf]);
+    
+
     %% save workspace
     neuron.save_workspace_batch();
-    catch
-     dummy=1;   
-    end
+    
 end
+
 
 
 %neuron.Coor=[]
@@ -186,8 +195,8 @@ end
 %neuron.show_contours(0.6, [], neuron.Cn, 0)
 %neuron.show_contours(0.6, [], neuron.PNR.*neuron.Cn, 0)
 
-%neuron.orderROIs('snr');   % order neurons in different ways {'snr', 'decay_time', 'mean', 'circularity','sparsity_spatial','sparsity_temporal','pnr'}
-%neuron.viewNeurons([], neuron.C_raw);
+%neuron.orderROIs('pnr');   % order neurons in different ways {'snr', 'decay_time', 'mean', 'circularity','sparsity_spatial','sparsity_temporal','pnr'}
+%neuron.viewNeurons([], neuron.C_raw)
 
 
 %cnmfe_path = neuron.save_workspace();

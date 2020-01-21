@@ -144,12 +144,12 @@ Values = [
     % patches
     {[]}                  % size of non-overlapping regions (default: [d1,d2,d3])
     {[32,32,16]}          % size of overlapping region (default: [32,32,16])
-    {[32,32,16]}          % minimum size of patch (default: [32,32,16])    
+    {[16,16,8]}          % minimum size of patch (default: [32,32,16])    
     {50}                  % upsampling factor for subpixel registration (default: 50)
     {[4,4,1]}             % degree of patches upsampling (default: [4,4,1])
     {[3,3,1]}             % maximum deviation of patch shift from rigid shift (default: [3,3,1])
     {[32,32,16]}          % size of overlapping region after upsampling (default: [32,32,16])
-    {[15,15,5]}           % maximum rigid shift in each direction
+    {[32,32,5]}           % maximum rigid shift in each direction
     {false}               % use phase correlation (good for high SNR)
     {'FFT'}               % method for applying shifts ('FFT', 'linear', 'cubic')
     % template updating
@@ -158,7 +158,7 @@ Values = [
     {50}                  % width of each bin (default: 10)
     {50}                  % number of local means to keep in memory (default: 50)
     {{'median';'mean'}}   % method for averaging the template (default: {'median';'mean'}
-    {1}                   % number of data passes (default: 1)
+    {3}                   % number of data passes (default: 1)
     {'copy'}              % method of boundary treatment (default: 'copy')
     % misc
     {0}                   % add dc value to data (default: 0)
