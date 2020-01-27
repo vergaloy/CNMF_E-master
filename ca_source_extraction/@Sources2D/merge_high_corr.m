@@ -90,26 +90,26 @@ log_file =  obj.P.log_file;
 flog = fopen(log_file, 'a');
 log_data = matfile(obj.P.log_data, 'Writable', true); %#ok<NASGU>
 
-fprintf(flog, '[%s]\b', get_minute());
-fprintf(flog, 'Start Merging neurons based on temporal correlations:\n ');
-fprintf(flog, '\tThresholds:\n');
-fprintf(flog, '\t\tTemporal correlation of C: %.3f\n', C_thr);
-fprintf(flog, '\t\tSpatial overlaps: %.3f\n', A_thr);
-fprintf(flog, '\t\tSpike count correlation: %.3f\n', S_thr);
+fprintf( '[%s]\b', get_minute());
+fprintf( 'Start Merging neurons based on temporal correlations:\n ');
+fprintf('\tThresholds:\n');
+fprintf( '\t\tTemporal correlation of C: %.3f\n', C_thr);
+fprintf('\t\tSpatial overlaps: %.3f\n', A_thr);
+fprintf( '\t\tSpike count correlation: %.3f\n', S_thr);
 
 if isempty(MC)
     fprintf('All pairs of neurons are below the merging criterion!\n\n');
-    fprintf(flog, '\tAll pairs of neurons are below the merging criterion!\n\n ');
-    fclose(flog);
+    fprintf( '\tAll pairs of neurons are below the merging criterion!\n\n ');
+    %fclose(flog);
     try
         close(h_fig);
     end
     return;
 else
     fprintf('%d neurons will be merged into %d new neurons\n\n', sum(MC(:)), size(MC,2));
-    fprintf(flog, '\t%d neurons will be merged into %d new neurons.\n', sum(MC(:)), size(MC,2));
+    fprintf('\t%d neurons will be merged into %d new neurons.\n', sum(MC(:)), size(MC,2));
     if show_merge
-        fprintf(flog, '\tYou chose to manually verify each merge.\n');
+        fprintf( '\tYou chose to manually verify each merge.\n');
     end
 end
 
@@ -200,13 +200,13 @@ merged_ROIs = merged_ROIs(1:k_merged);
 %% write to the log file
 if isempty(newIDs)
     fprintf('\tYou manually eliminate all merges\n');
-    fprintf(flog,'[%s]\bYou have manually eliminate all merges\n', get_minute());
+    fprintf('[%s]\bYou have manually eliminate all merges\n', get_minute());
     return;
 elseif length(newIDs)==n2merge
-    fprintf(flog, '[%s]\bYou approved all merges.\n', get_minute());
+    fprintf( '[%s]\bYou approved all merges.\n', get_minute());
 else
     fprintf('After manual verification, %d neurons have ben merged into %d new neurons\n\n', k_neurons, k_merged);
-    fprintf(flog, '[%s]\bAfter manual verification, %d neurons have ben merged into %d new neurons\n\n', get_minute(), k_neurons, k_merged);
+    fprintf( '[%s]\bAfter manual verification, %d neurons have ben merged into %d new neurons\n\n', get_minute(), k_neurons, k_merged);
 end
 
 merge_results = cell(length(newIDs),1);
@@ -215,11 +215,11 @@ for m=1:length(newIDs)
     ids_merged = obj_bk.ids(ind_before);
     ind_after = ind_before(1);
     ids_new = obj.ids(ind_after);
-    fprintf(flog, '\t\t');
+    fprintf( '\t\t');
     for k=1:length(ids_merged)
-        fprintf(flog, '%d, ', ids_merged(k));
+        fprintf( '%d, ', ids_merged(k));
     end
-    fprintf(flog, '---> %d\n', ids_new);
+    fprintf( '---> %d\n', ids_new);
     merge_records.before = obj_bk.obj2struct(ind_before);
     merge_records.after = obj.obj2struct(ind_after);
     merge_results{m} = merge_records;
@@ -227,10 +227,10 @@ end
 % folders and files for saving the results
 tmp_str = get_date();
 tmp_str=strrep(tmp_str, '-', '_');
-eval(sprintf('log_data.merge_%s = merge_results;', tmp_str));
-fprintf(flog, '\tThe spatial and temporal components of the merged neurons were saved as intermediate_results.spatial_%s\n', tmp_str);
-fprintf(flog, '\tNow the old neurons will be deleted and the merged new ones will replace them.\n\n');
-fclose(flog);
+%eval(sprintf('log_data.merge_%s = merge_results;', tmp_str));
+fprintf( '\tThe spatial and temporal components of the merged neurons were saved as intermediate_results.spatial_%s\n', tmp_str);
+fprintf( '\tNow the old neurons will be deleted and the merged new ones will replace them.\n\n');
+%fclose(flog);
 
 % remove merged neurons and update obj
 obj.delete(ind_del);

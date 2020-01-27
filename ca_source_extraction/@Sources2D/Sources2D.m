@@ -1738,6 +1738,7 @@ classdef Sources2D < handle
         
         %% save results for all batches
         function file_paths = save_workspace_batch(obj, log_folder)
+            log_folder=obj.P.log_folder;
             if ~exist('log_folder', 'var')||isempty(log_folder)||(~exist(log_folder, 'dir'))
                 log_folder = [cd(), filesep];
             end

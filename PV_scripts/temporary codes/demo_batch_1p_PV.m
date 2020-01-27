@@ -1,6 +1,6 @@
 
 % Specify the folder where the files live.
-myFolder ='C:\Users\SSG Lab\Desktop\Pablo\191202\analisis\test2\test3\test4\test5\test6\test7\test8';
+myFolder ='C:\Users\SSG Lab\Desktop\Pablo\RemID\Cleaned\test';
 savefiles=1;
 % Check to make sure that folder actually exists.  Warn user if it doesn't.
 
@@ -32,8 +32,8 @@ for k=1:length(theFiles)
         'patch_dims', [40, 40],...  %GB, patch size
         'batch_frames', 1000);           % number of frames per batch
     % -------------------------      SPATIAL      -------------------------  %
-    gSig = 3;           % pixel, gaussian width of a gaussian kernel for filtering the data. 0 means no filtering. USE ODD numbers
-    gSiz = 9;          % pixel, neuron diameter
+    gSig = 5;           % pixel, gaussian width of a gaussian kernel for filtering the data. 0 means no filtering. USE ODD numbers
+    gSiz = 15;          % pixel, neuron diameter
     ssub = 1;           % spatial downsampling factor
     with_dendrites = false;   % with dendrites or not
     if with_dendrites
@@ -71,7 +71,7 @@ for k=1:length(theFiles)
     ring_radius = round(bg_neuron_factor * gSiz);  % when the ring model used, it is the radius of the ring used in the background model.
     %otherwise, it's just the width of the overlapping area
     num_neighbors = []; % number of neighbors for each neuron
-    bg_ssub = 2;        % downsample background for a faster speed
+    bg_ssub = 1;        % downsample background for a faster speed
     % -------------------------      MERGING      -------------------------  %
     show_merge = false;  % if true, manually verify the merging step
     merge_thr = 0.65;     % thresholds for merging neurons; [spatial overlap ratio, temporal correlation of calcium traces, spike correlation]
@@ -82,7 +82,7 @@ for k=1:length(theFiles)
     
     % -------------------------  INITIALIZATION   -------------------------  %
     K = [];             % maximum number of neurons per patch. when K=[], take as many as possible.
-    min_corr = 0.7;     % minimum local correlation for a seeding pixel
+    min_corr = 0.9;     % minimum local correlation for a seeding pixel
     min_pnr = 7.5;       % minimum peak-to-noise ratio for a seeding pixel
     min_pixel = gSig^2;      % minimum number of nonzero pixels for each neuron
     bd = 0;             % number of rows/columns to be ignored in the boundary (mainly for motion corrected data)
@@ -95,8 +95,8 @@ for k=1:length(theFiles)
     % set the value as false when the background fluctuation is small (2p)
     
     % -------------------------  Residual   -------------------------  %
-    min_corr_res = 0.7;
-    min_pnr_res = 8;
+    min_corr_res = 0.9;
+    min_pnr_res = 7.5;
     seed_method_res = 'auto';  % method for initializing neurons from the residual
     update_sn = true;
     
@@ -124,7 +124,8 @@ for k=1:length(theFiles)
         'background_model', bg_model, ...       % -------- background --------
         'nb', nb, ...
         'ring_radius', ring_radius, ...
-        'num_neighbors', num_neighbors, ...        %'bg_ssub', bg_ssub, ...%
+        'num_neighbors', num_neighbors, ...       
+        'bg_ssub', bg_ssub, ...%
         'merge_thr', merge_thr, ...             % -------- merging ---------
         'dmin', dmin, ...
         'method_dist', method_dist, ...
@@ -148,7 +149,7 @@ for k=1:length(theFiles)
     neuron.update_temporal_batch(use_parallel);
     
     %% update background
-    normalize_C_raw(neuron)
+    %normalize_C_raw(neuron)
     neuron.update_background_batch(use_parallel);
     neuron.update_temporal_batch(use_parallel);
     normalize_C_raw(neuron)  
@@ -160,8 +161,7 @@ for k=1:length(theFiles)
     neuron.P=neuron.batches{1, 1}.neuron.P;
     neuron.frame_range=[1,size(neuron.C_raw,2)];
     
-    
-    neuron.C_raw=neuron.C_raw./GetSn(neuron.C_raw);
+
     neuron=justdeconv(neuron);
     
     neuron.remove_false_positives();
@@ -169,34 +169,42 @@ for k=1:length(theFiles)
     neuron.merge_high_corr(0, [0.8, 0.00001, -inf]);
 
     
-    for loop=1:3
-        neuron.update_background_parallel(use_parallel);
-        neuron.update_temporal_parallel(use_parallel);
-    end
+    %for loop=1:3
+     %   neuron.update_background_parallel(use_parallel);
+     %  neuron.update_temporal_parallel(use_parallel);
+    %end
     
     fix_Baseline(round(40*neuron.Fs),neuron)%% PV
     neuron.C_raw=neuron.C_raw./GetSn(neuron.C_raw);
     neuron=justdeconv(neuron);
-    
+ 
     neuron.remove_false_positives();
     neuron.merge_neurons_dist_corr(0);
-    neuron.merge_high_corr(0, [0.8, 0.00001, -inf]);
+    neuron.merge_high_corr(0, [0.8, 0.01, -inf]);
+
+    
     
 
     %% save workspace
+    neuron.P.log_folder=strcat(neuron.P.folder_analysis,filesep);
     neuron.save_workspace_batch();
-    
+    fclose('all')
+  
 end
 
-
-
+%neuron.P.log_file=strcat(uigetdir,filesep,'log_',date,'.txt');
+%neuron.P.log_folder=strcat(uigetdir,'\'); %update the folder
 %neuron.Coor=[]
 %neuron.show_contours(0.6, [], neuron.PNR, 0)
 %neuron.show_contours(0.6, [], neuron.Cn, 0)
 %neuron.show_contours(0.6, [], neuron.PNR.*neuron.Cn, 0)
 
-%neuron.orderROIs('pnr');   % order neurons in different ways {'snr', 'decay_time', 'mean', 'circularity','sparsity_spatial','sparsity_temporal','pnr'}
-%neuron.viewNeurons([], neuron.C_raw)
+%neuron.orderROIs('snr');   % order neurons in different ways {'snr', 'decay_time', 'mean', 'circularity','sparsity_spatial','sparsity_temporal','pnr'}
+%neuron.viewNeurons([], neuron.C_raw);
 
-
+%neuron.batches=0;  %kill batch data, it is not necessary to save
 %cnmfe_path = neuron.save_workspace();
+
+%mat2clip(neuron.C_raw');
+
+%show_demixed_video_PV(neuron,[],2);

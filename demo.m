@@ -11,15 +11,15 @@ nam = neuron.select_data(nam);  %if nam is [], then select data interactively
 % -------------------------    COMPUTATION    -------------------------  %
 %% parameters
 % -------------------------    COMPUTATION    -------------------------  %
-pars_envs = struct('memory_size_to_use', 16, ...   % GB, memory space you allow to use in MATLAB
-    'memory_size_per_patch', 16, ...   % GB, space for loading data within one patch
-    'patch_dims', [65, 65]);  %GB, patch size
+pars_envs = struct('memory_size_to_use', 128, ...   % GB, memory space you allow to use in MATLAB
+    'memory_size_per_patch', 54, ...   % GB, space for loading data within one patch
+    'patch_dims', [64, 64]);  %GB, patch size
 
 % -------------------------      SPATIAL      -------------------------  %
-gSig = 3;           % pixel, gaussian width of a gaussian kernel for filtering the data. 0 means no filtering
-gSiz = 9;          % pixel, neuron diameter
+gSig = 5;           % pixel, gaussian width of a gaussian kernel for filtering the data. 0 means no filtering
+gSiz = 15;          % pixel, neuron diameter
 ssub = 1;           % spatial downsampling factor
-with_dendrites = true;   % with dendrites or not
+with_dendrites = false;   % with dendrites or not
 if with_dendrites
     % determine the search locations by dilating the current neuron shapes
     updateA_search_method = 'dilate';  %#ok<UNRCH>
@@ -51,10 +51,11 @@ detrend_method = 'spline';  % compute the local minimum as an estimation of tren
 % -------------------------     BACKGROUND    -------------------------  %
 bg_model = 'ring';  % model of the background {'ring', 'svd'(default), 'nmf'}
 nb = 1;             % number of background sources for each patch (only be used in SVD and NMF model)
-ring_radius = 18;  % when the ring model used, it is the radius of the ring used in the background model.
+bg_neuron_factor = 1.4;
+ring_radius = round(bg_neuron_factor * gSiz);
 %otherwise, it's just the width of the overlapping area
 num_neighbors = []; % number of neighbors for each neuron
-bg_ssub = 1;        % downsample background for a faster speed 
+bg_ssub = 4;        % downsample background for a faster speed 
 
 % -------------------------      MERGING      -------------------------  %
 show_merge = false;  % if true, manually verify the merging step
@@ -66,11 +67,11 @@ merge_thr_spatial = [0.8, 0.4, -inf];  % merge components with highly correlated
 
 % -------------------------  INITIALIZATION   -------------------------  %
 K = [];             % maximum number of neurons per patch. when K=[], take as many as possible.
-min_corr = 0.7;     % minimum local correlation for a seeding pixel
-min_pnr = 7.5;       % minimum peak-to-noise ratio for a seeding pixel
+min_corr = 0.9;     % minimum local correlation for a seeding pixel
+min_pnr = 7;       % minimum peak-to-noise ratio for a seeding pixel
 min_pixel = gSig^2;      % minimum number of nonzero pixels for each neuron
 bd = 0;             % number of rows/columns to be ignored in the boundary (mainly for motion corrected data)
-frame_range = [];   % when [], uses all frames
+frame_range = [1 1000];   % when [], uses all frames
 save_initialization = false;    % save the initialization procedure as a video.
 use_parallel = true;    % use parallel computation for parallel computing
 show_init = true;   % show initialization results
@@ -141,7 +142,7 @@ if show_init
     plot(center(:, 2), center(:, 1), '.r', 'markersize', 10);
 end
 neuron.PNR=PNR;
-neuron.show_contours(0.6, [], neuron.PNR, false)
+neuron.show_contours(0.9, [], neuron.PNR, false)
 %% *STEP3: Get Peak-to-noise ratio and correlation (can be skipped, but useful to estimate PNS and correlation initialization parameters)*
 %%
 ShowPNS

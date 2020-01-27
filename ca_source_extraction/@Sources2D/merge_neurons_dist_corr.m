@@ -87,31 +87,57 @@ MC(:, sum(MC,1)==1) = [];
 
 %% write log file
 % folders and files for saving the results
-log_file =  obj.P.log_file;
-flog = fopen(log_file, 'a');
-log_data = matfile(obj.P.log_data, 'Writable', true); %#ok<NASGU>
-
-fprintf(flog, '[%s]\b', get_minute());
-fprintf(flog, 'Start Merging neurons based on temporal correlations and neuron distances:\n ');
-fprintf(flog, '\tThresholds:\n');
-fprintf(flog, '\t\tTemporal correlation of C: %.3f\n', merge_thr);
-fprintf(flog, '\t\tMinimum distance: %.3f\n', dmin);
-
+try
+    log_file =  obj.P.log_file;
+    flog = fopen(log_file, 'a');
+    log_data = matfile(obj.P.log_data, 'Writable', true); %#ok<NASGU>
+    
+    fprintf(flog, '[%s]\b', get_minute());
+    fprintf(flog, 'Start Merging neurons based on temporal correlations and neuron distances:\n ');
+    fprintf(flog, '\tThresholds:\n');
+    fprintf(flog, '\t\tTemporal correlation of C: %.3f\n', merge_thr);
+    fprintf(flog, '\t\tMinimum distance: %.3f\n', dmin);
+    
+    
+    if isempty(MC)
+        fprintf('All pairs of neurons are below the merging criterion!\n\n');
+        fprintf(flog, '\tAll pairs of neurons are below the merging criterion!\n\n ');
+        fclose(flog);
+        try
+            close(h_fig);
+        end
+        return;
+    else
+        fprintf('%d neurons will be merged into %d new neurons\n\n', sum(MC(:)), size(MC,2));
+        fprintf(flog, '\t%d neurons will be merged into %d new neurons.\n', sum(MC(:)), size(MC,2));
+        if show_merge
+            fprintf(flog, '\tYou chose to manually verify each merge.\n');
+        end
+    end
+catch
+    fprintf('[%s]\b', get_minute());
+    fprintf( 'Start Merging neurons based on temporal correlations and neuron distances:\n ');
+    fprintf( '\tThresholds:\n');
+    fprintf( '\t\tTemporal correlation of C: %.3f\n', merge_thr);
+    fprintf( '\t\tMinimum distance: %.3f\n', dmin);
+    
+    
+end
 if isempty(MC)
     fprintf('All pairs of neurons are below the merging criterion!\n\n');
-    fprintf(flog, '\tAll pairs of neurons are below the merging criterion!\n\n ');
-    fclose(flog);
+    fprintf( '\tAll pairs of neurons are below the merging criterion!\n\n ');
     try
         close(h_fig);
     end
     return;
 else
     fprintf('%d neurons will be merged into %d new neurons\n\n', sum(MC(:)), size(MC,2));
-    fprintf(flog, '\t%d neurons will be merged into %d new neurons.\n', sum(MC(:)), size(MC,2));
+    fprintf( '\t%d neurons will be merged into %d new neurons.\n', sum(MC(:)), size(MC,2));
     if show_merge
-        fprintf(flog, '\tYou chose to manually verify each merge.\n');
+        fprintf( '\tYou chose to manually verify each merge.\n');
     end
 end
+
 
 %% start merging
 obj_bk = obj.copy();
@@ -207,13 +233,21 @@ merged_ROIs = merged_ROIs(1:k_merged);
 %% write to the log file
 if isempty(newIDs)
     fprintf('\tYou manually eliminate all merges\n');
-    fprintf(flog,'[%s]\bYou have manually eliminate all merges\n', get_minute());
+    fprintf('[%s]\bYou have manually eliminate all merges\n', get_minute());
     return;
 elseif length(newIDs)==n2merge
+    try
     fprintf(flog, '[%s]\bYou approved all merges.\n', get_minute());
+    catch
+    fprintf( '[%s]\bYou approved all merges.\n', get_minute());    
+    end
 else
     fprintf('After manual verification, %d neurons have ben merged into %d new neurons\n\n', k_neurons, k_merged);
+    try
     fprintf(flog, '[%s]\bAfter manual verification, %d neurons have ben merged into %d new neurons\n\n', get_minute(), k_neurons, k_merged);
+    catch
+      fprintf( '[%s]\bAfter manual verification, %d neurons have ben merged into %d new neurons\n\n', get_minute(), k_neurons, k_merged);   
+    end
 end
 
 merge_results = cell(length(newIDs),1);
@@ -222,7 +256,11 @@ for m=1:length(newIDs)
     ids_merged = obj_bk.ids(ind_before);
     ind_after = ind_before(1);
     ids_new = obj.ids(ind_after);
+    try
     fprintf(flog, '\t\t');
+    catch
+     fprintf('\t\t');   
+    end
     for k=1:length(ids_merged)
         fprintf(flog, '%d, ', ids_merged(k));
     end
