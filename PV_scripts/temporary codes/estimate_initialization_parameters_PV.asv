@@ -37,7 +37,7 @@ for i=1:10
 subplot(2,5,i);
 imagesc(PNR(:,:,i).*Cn(:,:,i));
 title(strcat('gSig=',num2str(i+2)))
-caxis([2 prctile(PNR(:,:,i),99.9,'all')])
+caxis([2 prctile(PNR(:,:,i),0.99,'all')])
 end
 
 export_fig(strcat(file,'.pdf'), '-append');
