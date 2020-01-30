@@ -1,6 +1,6 @@
-function [Cn,PNR]=estimate_initialization_parameters_PV()
+function [Cn,PNR]=estimate_initialization_parameters_PV(tmp_range)
 [file,path] = uigetfile('*.h5');
-Y=h5read(strcat(path,file),'/Object');
+Y=h5read(strcat(path,file),'/Object',[1 1 tmp_range(1) 1],[inf inf tmp_range(2)-tmp_range(1)+1 1]);
 
 cd(path)
 parfor i=1:10 

@@ -1,6 +1,6 @@
 
 % Specify the folder where the files live.
-myFolder ='C:\Users\SSG Lab\Desktop\Pablo\RemID\Cleaned\test';
+myFolder ='C:\Users\SSG Lab\Desktop\Pablo\New folder\Test';
 savefiles=1;
 % Check to make sure that folder actually exists.  Warn user if it doesn't.
 
@@ -30,10 +30,10 @@ for k=1:length(theFiles)
     pars_envs = struct('memory_size_to_use', 300, ...   % GB, memory space you allow to use in MATLAB
         'memory_size_per_patch', 40, ...   % GB, space for loading data within one patch
         'patch_dims', [40, 40],...  %GB, patch size
-        'batch_frames', 1000);           % number of frames per batch
+        'batch_frames', 3000);           % number of frames per batch
     % -------------------------      SPATIAL      -------------------------  %
-    gSig = 5;           % pixel, gaussian width of a gaussian kernel for filtering the data. 0 means no filtering. USE ODD numbers
-    gSiz = 15;          % pixel, neuron diameter
+    gSig = 3;           % pixel, gaussian width of a gaussian kernel for filtering the data. 0 means no filtering. USE ODD numbers
+    gSiz = 9;          % pixel, neuron diameter
     ssub = 1;           % spatial downsampling factor
     with_dendrites = false;   % with dendrites or not
     if with_dendrites
@@ -82,7 +82,7 @@ for k=1:length(theFiles)
     
     % -------------------------  INITIALIZATION   -------------------------  %
     K = [];             % maximum number of neurons per patch. when K=[], take as many as possible.
-    min_corr = 0.9;     % minimum local correlation for a seeding pixel
+    min_corr = 0.7;     % minimum local correlation for a seeding pixel
     min_pnr = 7.5;       % minimum peak-to-noise ratio for a seeding pixel
     min_pixel = gSig^2;      % minimum number of nonzero pixels for each neuron
     bd = 0;             % number of rows/columns to be ignored in the boundary (mainly for motion corrected data)
@@ -95,7 +95,7 @@ for k=1:length(theFiles)
     % set the value as false when the background fluctuation is small (2p)
     
     % -------------------------  Residual   -------------------------  %
-    min_corr_res = 0.9;
+    min_corr_res = 0.7;
     min_pnr_res = 7.5;
     seed_method_res = 'auto';  % method for initializing neurons from the residual
     update_sn = true;

@@ -2762,3 +2762,83 @@ function T_test_power(w1,w2)
 		P_value[po][4]=M_WaveStats[25]				
 	endfor
 end
+
+function createCI_Results_geometric(list1)  //creae ci auto from 2d wave results
+	string list1
+	wave temp=$list1
+	variable wt,nt,rt,we,ne,re,rwt,rwe
+	wave WakeT
+
+	wave WakeT,NREMT,REMT,WakeE,NREME,REME
+	
+	duplicate/o/RMD=[][1] temp test
+	integrate test
+	wt=test(inf)
+	duplicate/o/RMD=[][5] temp test
+	integrate test
+	nt=test(inf)
+	duplicate/o/RMD=[][9] temp test
+	integrate test
+	rt=test(inf)
+	duplicate/o/RMD=[][13] temp test
+	integrate test
+	rwt=test(inf)
+	
+	duplicate/o/RMD=[][0] temp test
+	integrate test
+	we=test(inf)
+	duplicate/o/RMD=[][4] temp test
+	integrate test
+	ne=test(inf)
+	duplicate/o/RMD=[][8] temp test
+	integrate test
+	re=test(inf)
+	duplicate/o/RMD=[][12] temp test
+	integrate test
+	rwe=test(inf)
+	
+	
+	variable sim=10000
+
+	variable i,n=dimsize(temp,0),randnum,s
+	make/o/n=(sim) wakeP,NREMP,REMP,REMwakeP
+
+	for (s=0;s<sim;s+=1)
+		variable WakeTR=0,NREMTR=0,REMTR=0,WakeER=0,NREMER=0,REMER=0,REMWAKETR=0,REMwakeER=0
+		for (i=0;i<n;i+=1)
+			randnum=ceil((enoise(0.5)+0.5)*(n))-1
+			WakeTR=WakeTR+temp[randnum][1]
+			NREMTR=NREMTR+temp[randnum][5]
+			REMTR=REMTR+temp[randnum][9]
+			REMWAKETR=REMWAKETR+temp[randnum][13]
+			WakeER=WakeER*temp[randnum][0]
+			NREMER=NREMER*temp[randnum][4]
+			REMER=REMER*temp[randnum][8]
+			REMwakeER=REMwakeER*temp[randnum][12]
+		endfor
+		wakeP[s]=10^(WakeER/WakeTR)
+		NREMP[s]=10^(NREMER/NREMTR)
+		REMP[s]=10^(REMER/REMTR)
+		REMwakeP[s]=10^(REMwakeER/REMwakeTR)
+	endfor
+	sort wakeP wakeP
+	sort NREMP NREMP
+	sort REMP REMP
+	sort REMwakeP REMwakeP
+
+	variable CI95=(0.05/2)*sim
+	print "wake CI is: "
+	print "NREM CI is: "
+	print "NREM CI is: "
+	print num2str(we/wt)+" "+num2str(wakep(sim-CI95))+" "+num2str(wakep(CI95))
+	print num2str(ne/nt)+" "+num2str(NREMp(sim-CI95))+" "+num2str(NREMp(CI95))
+	print num2str(re/rt)+" "+num2str(REMp(sim-CI95))+" "+num2str(REMp(CI95))
+	print num2str(rwe/rwt)+" "+num2str(REMwakep(sim-CI95))+" "+num2str(REMwakep(CI95))
+	
+	print " ''WARNING! use createCI2_****() for hypothesis testing''"
+	print " ''Use to CreateCI2_groups(list1,list2,mc) to compare between groups (eg DS vs IMS)"
+	print " ''Use to CreateCI2_sleep(list1) to compare between sleep stages (BL wake vs BL REM)"
+	
+	killwaves wakeP,NREMP,REMP,test,REMwakeP
+
+end

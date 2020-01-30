@@ -1,5 +1,5 @@
 function show_demixed_video_PV(obj,tmp_range,mult)
-%show_demixed_video_PV(neuron,[],2);
+%show_demixed_video_PV(neuron,neuron.batches{78, 1}.neuron.frame_range,2);  
 amp_ac=3;
 
 if ~exist('tmp_range', 'var') || isempty(tmp_range)
