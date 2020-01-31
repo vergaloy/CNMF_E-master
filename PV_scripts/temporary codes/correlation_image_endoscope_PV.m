@@ -90,3 +90,4 @@ for mr = 1:nr_patch
         Cn(r0:r1, c0:c1) = max(Cn(r0:r1, c0:c1), tmp_Cn);
     end
 end
+dummy=1;
