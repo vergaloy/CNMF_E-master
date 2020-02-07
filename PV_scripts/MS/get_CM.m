@@ -8,6 +8,6 @@ for i=1:size(Wmatrix,2)
             temp(:,:,k)=t*t';
         end
     end
-    CM(:,:,i)=max(temp,[],3);
+    CM(:,:,i)=mean(temp,3);
 end
 end

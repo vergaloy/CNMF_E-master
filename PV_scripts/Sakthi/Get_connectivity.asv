@@ -1,0 +1,25 @@
+function Get_connectivity(obj)
+min_pat=3;
+NumberOfAssemblies= get_patterns(obj);
+
+if (NumberOfAssemblies~=0)
+    [W,~,~,~]=NMF(obj,NumberOfAssemblies,min_pat);
+else
+    W=zeros(size(obj,1),1);
+end
+
+if (isempty(W))
+    H=zeros(1,size(obj,2));
+else
+    H=get_H(obj,W,min_pat);
+end
+
+kill_inactive=logical(sum(H,2)==0);
+H(kill_inactive,:)=[];
+W(:,kill_inactive)=[];
+
+
+
+
+
+dummy=1;

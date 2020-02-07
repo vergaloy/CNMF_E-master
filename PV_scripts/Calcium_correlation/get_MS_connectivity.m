@@ -39,7 +39,7 @@ B
 %Map_distance=squareform(pdist2(Y(:,1:dims),Y(:,1:dims)),'tovector')';
 %maxrelerr = 100*(max(abs(Dtriu-Map_distance))./max(Dtriu))
 
-conditions={'HC','A','Post Shock','Low Theta','High Theta','REM','NREM','Retrival','C'};
+conditions={'A','Post Shock','Retrival','C'};
 figure
 plot(Y(:,1),Y(:,2),'ro', 'MarkerSize',10);
 text(Y(:,1)+0.02,Y(:,2)+0.005,conditions);

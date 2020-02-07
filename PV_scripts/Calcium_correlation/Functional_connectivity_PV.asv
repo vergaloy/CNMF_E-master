@@ -1,0 +1,24 @@
+function [W,H]=Functional_connectivity_PV(neuron);
+
+HC=neuron.S(:,1:3000);
+HC=moving_mean(HC,5,2,1/5,0);
+[W{1},H{1}]=Get_connectivity(HC);
+
+A=neuron.S(:,3003:3000);
+A=moving_mean(A,5,2,1/5,0);
+[W{2},H{2}]=Get_connectivity(A);
+
+
+S=neuron.S(:,6001:7500);
+S=moving_mean(S,5,2,1/5,0);
+[W{2},H{2}]=Get_connectivity(S);
+
+R=neuron.S(:,52501:53500);
+R=moving_mean(R,5,2,1/5,0);
+[W{3},H{3}]=Get_connectivity(R);
+
+C=neuron.S(:,53501:58500);
+C=moving_mean(C,5,2,1/5,0);
+[W{4},H{4}]=Get_connectivity(C);
+
+dummy=1;

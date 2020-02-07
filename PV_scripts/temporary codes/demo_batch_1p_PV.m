@@ -1,6 +1,6 @@
 
 % Specify the folder where the files live.
-myFolder ='C:\Users\SSG Lab\Desktop\Pablo\New folder\Test\test2';
+myFolder ='C:\Users\SSG Lab\Desktop\Pablo\New folder\Test\test2\test3\test4';
 savefiles=1;
 % Check to make sure that folder actually exists.  Warn user if it doesn't.
 
@@ -32,7 +32,7 @@ for k=1:length(theFiles)
         'patch_dims', [40, 40],...  %GB, patch size
         'batch_frames', 3000);           % number of frames per batch
     % -------------------------      SPATIAL      -------------------------  %
-    gSig = 4;           % pixel, gaussian width of a gaussian kernel for filtering the data. 0 means no filtering. USE ODD numbers
+    gSig = 5;           % pixel, gaussian width of a gaussian kernel for filtering the data. 0 means no filtering. USE ODD numbers
     gSiz = 15;          % pixel, neuron diameter
     ssub = 1;           % spatial downsampling factor
     with_dendrites = false;   % with dendrites or not
@@ -51,7 +51,7 @@ for k=1:length(theFiles)
     spatial_algorithm = 'hals';
     
     % -------------------------      TEMPORAL     -------------------------  %
-    Fs = 5.02;             % frame rate
+    Fs = 5;             % frame rate
     tsub = 1;           % temporal downsampling factor
     deconv_options = struct('type', 'ar1', ... % model of the calcium traces. {'ar1', 'ar2'}
         'method', 'foopsi', ... % method for running deconvolution {'foopsi', 'constrained', 'thresholded'}
@@ -83,7 +83,7 @@ for k=1:length(theFiles)
     % -------------------------  INITIALIZATION   -------------------------  %
     K = [];             % maximum number of neurons per patch. when K=[], take as many as possible.
     min_corr = 0.8;     % minimum local correlation for a seeding pixel
-    min_pnr = 6;       % minimum peak-to-noise ratio for a seeding pixel
+    min_pnr = 9;       % minimum peak-to-noise ratio for a seeding pixel
     min_pixel = gSig^2;      % minimum number of nonzero pixels for each neuron
     bd = 0;             % number of rows/columns to be ignored in the boundary (mainly for motion corrected data)
     frame_range = [];   % when [], uses all frames
@@ -95,8 +95,8 @@ for k=1:length(theFiles)
     % set the value as false when the background fluctuation is small (2p)
     
     % -------------------------  Residual   -------------------------  %
-    min_corr_res = 0.7;
-    min_pnr_res = 6;
+    min_corr_res = 0.8;
+    min_pnr_res = 7.5;
     seed_method_res = 'auto';  % method for initializing neurons from the residual
     update_sn = true;
     
@@ -155,14 +155,14 @@ for k=1:length(theFiles)
     normalize_C_raw(neuron)  
     %% get the correlation image and PNR image for all neurons
     neuron.correlation_pnr_batch();
-    [PNR_all,Cn_all]=create_PNR_batch(neuron);
+    [neuron.PNR_all,neuron.Cn_all]=create_PNR_batch(neuron);
     %% concatenate temporal components
     concatenate_shifted_batch(neuron);
     neuron.P=neuron.batches{1, 1}.neuron.P;
     neuron.frame_range=[1,size(neuron.C_raw,2)];
     
 
-    neuron=justdeconv(neuron);
+    neuron=justdeconv(neuron,'foopsi','ar1');
     
     neuron.remove_false_positives();
     neuron.merge_neurons_dist_corr(0);
@@ -176,7 +176,7 @@ for k=1:length(theFiles)
     
     fix_Baseline(round(40*neuron.Fs),neuron)%% PV
     neuron.C_raw=neuron.C_raw./GetSn(neuron.C_raw);
-    neuron=justdeconv(neuron);
+    neuron=justdeconv(neuron,'foopsi','ar1');
  
     neuron.remove_false_positives();
     neuron.merge_neurons_dist_corr(0);
@@ -188,7 +188,7 @@ for k=1:length(theFiles)
     %% save workspace
     neuron.P.log_folder=strcat(neuron.P.folder_analysis,filesep);
     neuron.save_workspace_batch();
-    fclose('all')
+    fclose('all');
   
 end
 
@@ -206,5 +206,7 @@ end
 %cnmfe_path = neuron.save_workspace();
 
 %mat2clip(neuron.C_raw');
+%mat2clip(neuron.C_raw(:,7501:52500)');
 
+%scale_to_noise(neuron,500);
 %show_demixed_video_PV(neuron,[],2);

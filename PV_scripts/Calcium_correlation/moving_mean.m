@@ -1,5 +1,5 @@
 function M=moving_mean(A,sf,binsize,shift,remove_small_transients)
-%sleepdata.mean.wake=moving_mean(sleepdata.wake,5,1,0.25,0);
+%sleepdata.mean.wake=moving_mean(sleepdata.wake,5,10,0.5,0);
 
 if remove_small_transients==1
     thr=std(A,[],2)*1;

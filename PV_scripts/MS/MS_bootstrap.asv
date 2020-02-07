@@ -5,7 +5,6 @@ CM=get_CM(Wmatrix);
 MS=CM2MS(CM);
 X=cmdscale(MS,2);
 X=X(:,1:2);
-X=X-mean(X);
 
 
 for s=1:sim
@@ -20,7 +19,7 @@ figure
 set(gca,'Color','k')
 hold on
 colors = distinguishable_colors(size(Y,1),'k');
-conditions={'Hc','training','A','C','B'};
+conditions={'A','Post Shock','Retrieval','C'};
 for i=1:size(Y,1)
     a=ErrorEllipse(squeeze(Y(i,:,:)));
     h1=patch(a(1,:),a(2,:),colors(i,:));

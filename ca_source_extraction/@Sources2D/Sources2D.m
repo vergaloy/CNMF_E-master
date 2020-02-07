@@ -51,6 +51,8 @@ classdef Sources2D < handle
         S_df;       % spike counts of neurons normalized by Df
         batches = cell(0);  % results for each small batch data
         file_id = [];    % file id for each batch.
+        PNR_all;
+        Cn_all;
     end
     
     %% methods

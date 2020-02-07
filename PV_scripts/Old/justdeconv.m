@@ -1,7 +1,9 @@
-function neuron=justdeconv(neuron)
+function neuron=justdeconv(neuron,deconv_method,type)
+%neuron=justdeconv(neuron,'thresholded','ar2');
+
 %'foopsi', 'constrained', 'thresholded'
-neuron.options.deconv_method='foopsi';
-neuron.options.deconv_options.type  ='ar1';
+neuron.options.deconv_method=deconv_method;
+neuron.options.deconv_options.type  =type;
 neuron.options.smin=-3;
 
 neuron.C = deconvTemporal(neuron, 1,1);

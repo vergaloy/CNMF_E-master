@@ -13,7 +13,7 @@ figure
 imagesc(MS);
 
 Y=cmdscale(1-MS);
-conditions={'HC','A','Post Shock','Low Theta','High Theta','REM','NREM','Retrival','C'};
+conditions={'A','Post Shock','Retrival','C'};
 figure
 plot(Y(:,1),Y(:,2),'ro', 'MarkerSize',10);
 text(Y(:,1),Y(:,2),conditions);
