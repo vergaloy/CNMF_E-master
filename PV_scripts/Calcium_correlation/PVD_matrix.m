@@ -1,59 +1,13 @@
-function [PV,t]=PVD_matrix(obj,hypno)
-%[PV,t]=PVD_matrix(neuron.S,hypno);
-sf=5.01;
-obj=full(obj);
-obj(obj>0)=1;
-bin=2;
-shift=0.5;
+function [PVM]=PVD_matrix(obj)
 
-t{1,1}=moving_mean(obj(:,1:600*sf),5.01,bin,shift,0);      %HC time
-t{2,1}=moving_mean(obj(:,600*sf+1:1200*sf),5.01,bin,shift,0);    %Ctx A pre shock
-t{3,1}=moving_mean(obj(:,1200*sf+1:1500*sf),5.01,bin,shift,0);   %Ctx A post shock
-sleepdat=separate_by_sleep(obj(:,1500*sf+1:10500*sf),hypno(1500*sf+1:10500*sf));%Consolidation
-t{4,1}=moving_mean(sleepdat.wake,5.01,bin,shift,0);  %Consolidation wake LT
-t{5,1}=moving_mean(sleepdat.rw,5.01,bin,shift,0);  %Consolidation wake HT
-t{6,1}=moving_mean(sleepdat.rem,5.01,bin,shift,0);  %Consolidation REM
-t{7,1}=moving_mean(sleepdat.nrem,5.01,bin,shift,0);  %Consolidation NREM
-t{8,1}=moving_mean(obj(:,10500*sf+1:11100*sf),5.01,bin,shift,0); %Retrival Ctx A
-t{9,1}=moving_mean(obj(:,11100*sf+1:11700*sf),5.01,bin,shift,0); %New context C
-
-
-
-
-r=size(t,1);
-PV(1:r,1:r)=0;
-comb=nchoosek(1:9,2);
-
-for i=1:size(comb,1)
-    PV(comb(i,1),comb(i,2))=PVD_Bhattacharyya(t{comb(i,1)},t{comb(i,2)});   %replase 5 with sizesize(A{comb(i,1)},1)
+b = nchoosek(1:size(obj,2),2);
+PVM(1:size(obj,2),1:size(obj,2))=0;
+for i=1:size(b,1)
+   PVM(b(i,1),b(i,2))= MRPP(obj{b(i,1)},obj{b(i,2)},1000);
 end
-PV=PV+PV';
-
-figure
-imagesc(PV);
-[Y,eigvals]=cmdscale(PV(1:3,1:3));
-B = cumsum(eigvals);
-B=B/max(B)*100;
-B
-conditions={'HC','A','Post Shock'};
-figure
-plot(Y(:,1),Y(:,2),'ro', 'MarkerSize',10);
-text(Y(:,1),Y(:,2),conditions);
-
-[Y,eigvals]=cmdscale(PV([3,4,5,6,8,9],[3,4,5,6,8,9]));
-B = cumsum(eigvals);
-B=B/max(B)*100;
-B
-conditions={'Post Shock','Low Theta','High Theta','REM','Retrival','C'};
-figure
-plot(Y(:,1),Y(:,2),'ro', 'MarkerSize',10);
-text(Y(:,1),Y(:,2),conditions);
-
-%conditions={'HC','A','Post Shock','Low Theta','High Theta','REM','NREM','Retrival','C'};
-%figure
-%plot(Y(:,1),Y(:,2),'ro', 'MarkerSize',10);
-%scatter3(Y(:,1),Y(:,2),Y(:,3))
-%text(Y(:,1),Y(:,2),Y(:,3),conditions);
+PVM=PVM+PVM';
+end
 
 
-%colormap(jet)
+
+

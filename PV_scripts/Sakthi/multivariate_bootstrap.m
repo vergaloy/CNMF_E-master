@@ -1,8 +1,8 @@
-function out=multivariate_bootstrap(in,replicates)
-out(1:size(in,1),1:replicates)=0;
+function out=multivariate_bootstrap(obj,replicates)
+out(1:size(obj,1),1:replicates)=0;
 for i=1:replicates
-    y = datasample(1:size(in,2),size(in,2));
-   out(:,i)=mean(in(:,y),2)+randn(size(in,1),1)/100;
+    y = datasample(obj,size(obj,2),2);
+   out(:,i)=mean(y,2);%+randn(size(obj,1),1)/1000;
 end
 m=mean(out,2);
-out=((out-m).*sqrt(size(in,2)-1))+m;
+out=((out-m).*sqrt(size(obj,2)-1))+m;

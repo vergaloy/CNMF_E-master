@@ -1,16 +1,24 @@
-function [MS]=MS_bootstrap(Wmatrix,sim)
-%[MS]=MS_bootstrap(W,1000)
+function [Y]=PVD_bootstrap(C,sim)
+%    [PVD]=PVD_bootstrap(C,1000);
 
-CM=get_CM(Wmatrix);
-MS=CM2MS(CM);
+MS=PVD_matrix(C);
 X=cmdscale(MS,2);
 X=X(:,1:2);
+X=X-mean(X);
 
 
 for s=1:sim
-r=datasample(1:size(CM,1),size(CM,1));
-bootstrap_sample=CM2MS(CM(r,r,:));
+r=datasample(1:size(C{1, 1},1),size(C{1, 1},1));
+for i=1:size(C,2)
+    sur{i}=C{1, i}(r,:);
+end
+bootstrap_sample=PVD_matrix(sur);
+try
 temp=cmdscale(bootstrap_sample,2);
+catch
+    
+    dummy=1
+end
 Y(:,:,s)=align_matrix(X,temp(:,1:2));
 end
 
@@ -19,7 +27,7 @@ figure
 set(gca,'Color','k')
 hold on
 colors = distinguishable_colors(size(Y,1),'k');
-conditions={'A','Post Shock','Retrieval','C'};
+conditions={'HC','Pre-Shock','Post-Shock','REM','A','C'};
 for i=1:size(Y,1)
     a=ErrorEllipse(squeeze(Y(i,:,:)));
     h1=patch(a(1,:),a(2,:),colors(i,:));

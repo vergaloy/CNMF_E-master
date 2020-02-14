@@ -1,13 +1,9 @@
-function CM=get_CM(Wmatrix)
-for i=1:size(Wmatrix,2)
-    W=Wmatrix{1,i};
-    temp=zeros(size(W,1));
-    if(~isempty(W))
-        for k=1:size(W,2)
-            t=W(:,k);
-            temp(:,:,k)=t*t';
-        end
-    end
-    CM(:,:,i)=mean(temp,3);
+function CM=get_CM(W)
+
+b = nchoosek(1:size(W,2),2);
+CM(1:size(W,2),1:size(W,2))=0;
+for i=1:b
+   CM(b(i,1),b(i,2))= mean(pdist2(W{b(i,1)},W{b(i,2)},'mahalanobis'),'all');  
 end
+CM=CM+CM';
 end

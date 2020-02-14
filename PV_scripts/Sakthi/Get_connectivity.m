@@ -2,9 +2,9 @@ function [W,H]=Get_connectivity(obj)
 %Get_connectivity(C2);
 min_pat=5;
 %NumberOfAssemblies= get_patterns(obj);
-NumberOfAssemblies=20;
+NumberOfAssemblies=5;
 if (NumberOfAssemblies~=0)
-    [W,~,~,~]=NMF(obj,NumberOfAssemblies,3);
+    [~,W,~,~]=NMF(obj,NumberOfAssemblies,3);
 else
     W=zeros(size(obj,1),1);
 end

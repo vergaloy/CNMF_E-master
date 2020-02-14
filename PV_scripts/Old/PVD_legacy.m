@@ -1,14 +1,12 @@
 
-function distance=PVD(X1,X2,dim)
-
-%rng('default') % For reproducibility
-%X1 = transpose(mvnrnd([3;7;5],[1 0.7 0.3;0.7 1 0.7;0.3 0.7 1],1000)); %create random multivariate data;
-%X2 = transpose(mvnrnd([0;0;5],[1 0.7 0.3;0.7 1 0.7;0.3 0.7 1],1000)); %create random multivariate data;
+function distance=MRPP(X1,X2,dim)  
+%Multiple Response Permutation Procedures
+%   rng('default') % For reproducibility
+%   X1 = transpose(mvnrnd([0,0],[1 0;0 1],1000)); %create random multivariate data;
+%   X2 = transpose(mvnrnd([0;0],[1 0;0 1],1000)); %create random multivariate data;
 
 X1(isnan(X1))=0;
-X2(isnan(X2))=0;
-X1(isinf(X1))=0;
-X2(isinf(X2))=0;
+
 
 f=[X1,X2];
 f(f>0)=1;

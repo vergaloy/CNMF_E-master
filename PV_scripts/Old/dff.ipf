@@ -11,7 +11,7 @@ function getall_batch()
 	variable ignoreM=1
 	variable ignoreRW=1
 	variable getS=1
-	variable defSF=5.02
+	variable defSF=5.018
 	variable deftshift=0
 	// *************
 
@@ -50,7 +50,7 @@ function getall_batch()
 		if (numtype(sf) == 2)
 			sf=defSF
 		endif
-		getall(ts,sf,cdf2+"Results",ignoreM,ignoreRW,gets,i,2)	
+		getall(ts,sf,cdf2+"Results",ignoreM,ignoreRW,gets,i,20)	
 	endfor
 	
 	setdatafolder $cdf2
@@ -696,8 +696,8 @@ end
 //***** THIS FUNCTIOnS ARE FOR showing traces*****
 
 // main function for ploting (Set raster to 0 to plot the traces and to 1 to plot the raster)
-function plot_data_from_all_subfolders(raster,sf)
-	variable raster,sf
+function plot_data_from_all_subfolders(raster)
+	variable raster
 	display/k=1
 	Variable numDataFolders = CountObjects(":", 4), l
 	string cdf,list
@@ -707,16 +707,25 @@ function plot_data_from_all_subfolders(raster,sf)
 		String nextPath =GetIndexedObjNameDFR($cdf, 4, l )
 		nextPath="'"+nextpath+"'"
 		setdatafolder $cdf+nextPath
+		
+		variable fr
+		NVAR t1 = sf
+		if(numtype(t1)==2)
+			fr=5.018
+		else
+			fr=t1
+		endif
+		
 		list = tracenamelist("",";", 1)
 		b=itemsinlist(list)
 		String w=stringfromlist(b-1,list,";")
-		offset=GetTraceOffset("",w, 0, 1)+4
+		offset=GetTraceOffset("",w, 0, 1)+40
 		
 		if (offset==4)
 			offset=0
 		endif
 		
-		append_traces(raster,sf)
+		append_traces(raster,fr)
 		offset_traces(b,offset)
 	
 	endfor
@@ -1016,8 +1025,8 @@ end
 // create confindence interval of the mean difference of several data sets.
 //this will compare all datasets named "wave" inside the current folder.
 
-function bootstrap_allwaves(mc)  // create CI for all the waves named "wave*" in the folder
-	variable mc
+function bootstrap_allwaves(mc,del0)  // create CI for all the waves named "wave*" in the folder
+	variable mc,del0
 	string list=wavelist("wave*",",","")
 	list=SortList(list,",", 16)
 	variable k=itemsinlist(list, ","),i
@@ -1032,7 +1041,7 @@ function bootstrap_allwaves(mc)  // create CI for all the waves named "wave*" in
 		string swave2=stringfromlist(M_combinations[i][1],list,",")
 		
 		print "   Comp"+num2str(M_combinations[i][1]+1)+"-"+num2str(M_combinations[i][0]+1)
-		print bootstrap2(swave1,swave2,10000,1,mc)
+		print bootstrap2(swave1,swave2,10000,del0,mc)
 	endfor
 end
 
@@ -2714,8 +2723,6 @@ function shuffle2d(inwave,n)
 end
 	
 	
-	
-	
 function T_test_power(w1,w2)
 	wave w1,w2
 
@@ -2762,5 +2769,38 @@ function T_test_power(w1,w2)
 		P_value[po][3]=M_WaveStats[24]
 		P_value[po][4]=M_WaveStats[25]				
 	endfor
+end
+
+function biniomial_probability_above_chance(wave0,wave1,sim,alpha)
+	wave wave0,wave1
+	variable sim,alpha
+	variable s,n=numpnts(wave1),i
+	duplicate/o wave0 mult
+	mult=mult*wave1
+	variable aver=(sum(mult)*n)/(sum(wave1)*sum(wave0))
+	
+	
+	make/o/n=(sim) bootstrapdist
+	variable randnum,sw1,sw2,m
+
+	for (s=0;s<sim;s+=1)
+			sw1=0
+			sw2=0
+			m=0
+		for (i=0;i<n;i+=1)
+			randnum=ceil((enoise(0.5)+0.5)*(n))-1
+			sw1=sw1+wave0[randnum]
+			sw2=sw2+wave1[randnum]
+			m=m+wave0[randnum]*wave1[randnum]
+		endfor
+		
+		bootstrapdist[s]=(m*n)/(sw1*sw2)
+	endfor
+	sort bootstrapdist bootstrapdist
+
+
+	variable CI95=(alpha/2)*sim
+	print "CI is: "
+	print num2str(aver)+" "+num2str(bootstrapdist(sim-CI95))+" "+num2str(bootstrapdist(CI95))
 end
 
