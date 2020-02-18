@@ -2,7 +2,7 @@ function [Y,stress]=PVD_bootstrap(C,sim)
 %    [PVD,s]=PVD_bootstrap(C,100);
 
 MS=PVD_matrix(C);
-X=mdscale(MS,3);
+X=mdscale(MS,2);
 
 
 
@@ -34,7 +34,7 @@ figure
 set(gca,'Color','k')
 hold on
 colors = distinguishable_colors(size(Y,1),'k');
-conditions={'HC','pre-shock','post-shock','rem','A','C'};
+conditions={'HC','pre-shock','post-shock','A','C'};
 for i=1:size(Y,1)
     a=ErrorEllipse(squeeze(Y(i,:,:)));
     h1=patch(a(1,:),a(2,:),colors(i,:));

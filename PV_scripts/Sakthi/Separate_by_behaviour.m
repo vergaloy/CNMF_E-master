@@ -1,7 +1,7 @@
 function [C]=Separate_by_behaviour(neuron);
 sf=5;
 binz=2;
-ts=2;
+ts=1;
 
 
 C{1}=neuron.S(:,1:3000);
