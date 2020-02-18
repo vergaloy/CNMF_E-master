@@ -57,8 +57,13 @@ if nargin<3 % failing to provide speed/accuracy tradeoff
 end
 % end preprocessing
 % algorithm initialization
-del=.1/n^(d/(d+4));perm=randperm(n);mu=X(perm(1:gam),:);w=rand(1,gam);
-w=w/sum(w);Sig=bsxfun(@times,rand(d,d,gam),eye(d)*del);ent=-Inf;
+del=0.1/n^(d/(d+4));
+perm=randperm(n);
+mu=X(perm(1:gam),:);
+w=rand(1,gam);
+w=w/sum(w);
+Sig=bsxfun(@times,rand(d,d,gam),eye(d)*del);
+ent=-Inf;
 for iter=1:1500 % begin algorithm
     Eold=ent;
     [w,mu,Sig,del,ent]=regEM(w,mu,Sig,del,X); % update parameters

@@ -1,4 +1,4 @@
-function [C]=Separate_by_behaviour(neuron);
+function [C]=Separate_by_behaviour(neuron,hypno);
 sf=5;
 binz=2;
 ts=2;

@@ -200,7 +200,7 @@ end
 %neuron.show_contours(0.6, [], neuron.PNR.*neuron.Cn, 0)
 
 %neuron.orderROIs('snr');   % order neurons in different ways {'snr', 'decay_time', 'mean', 'circularity','sparsity_spatial','sparsity_temporal','pnr'}
-%neuron.viewNeurons([], neuron.C_raw);
+%  
 
 %neuron.batches=0;  %kill batch data, it is not necessary to save
 %cnmfe_path = neuron.save_workspace();

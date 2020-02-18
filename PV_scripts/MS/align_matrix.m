@@ -1,6 +1,7 @@
 function out=align_matrix(X,Y)
 
 n=size(X,2);
+
 X=X-mean(X,1);
 Y=Y-mean(Y,1);
 [A,phi,C] = svd(X'*Y);
