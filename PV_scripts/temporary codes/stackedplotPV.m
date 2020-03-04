@@ -1,9 +1,11 @@
 function stackedplotPV(obj)
 
-figure
+mouse_figure;
 hold on
-offset=std(mean(obj,1))*20;
+offset=1;
 for i=1:size(obj,1)
     of=offset*(i-1);
-    plot(obj(i,:)+of)
+    t=obj(i,:);
+    t=t./max(t);
+    plot(t+of)
 end

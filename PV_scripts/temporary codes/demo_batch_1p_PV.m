@@ -1,6 +1,6 @@
 
 % Specify the folder where the files live.
-myFolder ='C:\Users\SSG Lab\Desktop\Pablo\New folder\Test\test2\test3\test4';
+myFolder ='C:\Users\SSG Lab\Desktop\Pablo\GCdev\DM298-Objects';
 savefiles=1;
 % Check to make sure that folder actually exists.  Warn user if it doesn't.
 
@@ -199,8 +199,8 @@ end
 %neuron.show_contours(0.6, [], neuron.Cn, 0)
 %neuron.show_contours(0.6, [], neuron.PNR.*neuron.Cn, 0)
 
-%neuron.orderROIs('snr');   % order neurons in different ways {'snr', 'decay_time', 'mean', 'circularity','sparsity_spatial','sparsity_temporal','pnr'}
-%  
+%neuron.orderROIs('pnr');   % order neurons in different ways {'snr', 'decay_time', 'mean', 'circularity','sparsity_spatial','sparsity_temporal','pnr'}
+% neuron.viewNeurons([], neuron.C_raw); 
 
 %neuron.batches=0;  %kill batch data, it is not necessary to save
 %cnmfe_path = neuron.save_workspace();

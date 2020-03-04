@@ -52,7 +52,7 @@ fprintf('Correcting motion...');
     'grid_size',[64,64]*2,'mot_uf',4,'correct_bidir',treu, ...
     'overlap_pre',32,'overlap_post',32,'max_shift',20);
 
-    tic; [~,shifts2,template2] = normcorre_batch(vid2(bound/2+1:end-bound/2,bound/2+1:end-bound/2,:),options_nr); toc % register filtered data
+    tic; [~,shifts2,template2] = normcorre_batch(vid(bound/2+1:end-bound/2,bound/2+1:end-bound/2,:),options_nr); toc % register filtered data
     tic; vid = apply_shifts(vid,shifts2,options_nr,bound/2,bound/2); toc % apply the shifts to the removed percentile
 clear vid2
 

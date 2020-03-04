@@ -11,7 +11,7 @@ function getall_batch()
 	variable ignoreM=1
 	variable ignoreRW=1
 	variable getS=1
-	variable defSF=5.018
+	variable defSF=5.005
 	variable deftshift=0
 	// *************
 
@@ -187,7 +187,7 @@ function find_peaks(folder)
 				control1=control1+1
 				not_event=1
 			endif
-			// control 2 amplitude must be 3 times the Sdev of the local noise.
+			// control 2 amplitude must be 5 times the Sdev of the local noise.
 			wavestats/q/r=[V_PeakLoc-100,V_PeakLoc+100] noise //150
 			if (w[V_PeakLoc]<5*V_sdev)
 				control2=control2+1
@@ -199,7 +199,13 @@ function find_peaks(folder)
 				peakPositionsY[peaksFound]=V_PeakVal
 				peaksFound += 1
 			endif
-			startP= V_TrailingEdgeLoc+5 // control 3
+			if (numtype(V_TrailingEdgeLoc)==2)
+			
+				break
+			else
+			
+				startP= V_TrailingEdgeLoc+5 // control 3
+			endif
 		while( peaksFound < maxPeaks )
 
 		if( peaksFound )
@@ -224,13 +230,13 @@ function find_peaks(folder)
 			temp=0
 			switch1=1
 					print "cell "+num2str(i)+" was discarded (too noisy)!"
-		endif
+				endif
 		
-		duplicate/o temp $folder+"data:S:"+stringfromlist(i,list,",")
-		if	(switch1==0)
+				duplicate/o temp $folder+"data:S:"+stringfromlist(i,list,",")
+				if	(switch1==0)
 					print "cell "+num2str(i)+" done!"
-		endif
-	endfor
+				endif
+			endfor
 end
 
 //========================================
@@ -719,7 +725,7 @@ function plot_data_from_all_subfolders(raster)
 		list = tracenamelist("",";", 1)
 		b=itemsinlist(list)
 		String w=stringfromlist(b-1,list,";")
-		offset=GetTraceOffset("",w, 0, 1)+40
+		offset=GetTraceOffset("",w, 0, 1)+2
 		
 		if (offset==4)
 			offset=0
@@ -764,10 +770,10 @@ function append_traces(raster,sf) // plot everything inside a folder!!
 	copyScales $folder+"data:Sleep:WAKE", $folder+"data:S:artifact"
 	if (raster==0)
 		setdatafolder folder+"data:C_raw:"
-		creategraphs("wave",0,sf,20)
+		creategraphs("wave",0,sf,2)
 	endif
 	setdatafolder folder+"data:S:"
-	creategraphs2("wave",0,sf,20)	
+	creategraphs2("wave",0,sf,2)	
 	setdatafolder folder+"data:sleep:"	
 	setdatafolder folder
 end

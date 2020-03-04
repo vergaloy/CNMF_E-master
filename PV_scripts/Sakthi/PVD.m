@@ -1,5 +1,5 @@
 
-function distance=PVD(X1,X2,sim)
+function [distance,F]=PVD(X1,X2,sim)
 
 %rng('default') % For reproducibility
 
@@ -8,7 +8,6 @@ function distance=PVD(X1,X2,sim)
 
 X1=multivariate_bootstrap(X1',sim);
 X2=multivariate_bootstrap(X2',sim);
-
 %distance=double(MRPP(X1',X2',sim));
 
 Xp1(1:sim)=0;

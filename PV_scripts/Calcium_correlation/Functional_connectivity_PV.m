@@ -1,9 +1,10 @@
-function [W,H,Y,stress]=Functional_connectivity_PV(C);
+function [W,H,E]=Functional_connectivity_PV(C);
+clear textprogressbar
+warning('off','all')
 
+textprogressbar('Finding patterns: ');
 for i=1:length(C)
-[W{i},H{i}]=Get_connectivity(C{i});
+textprogressbar((i/length(C))*100)
+[W{i},H{i},E(i)]=Get_connectivity(C{i});
 end
-
-[Y,stress]=PVD_bootstrap(W,25);
-
-dummy=1;
+textprogressbar('Done: ');

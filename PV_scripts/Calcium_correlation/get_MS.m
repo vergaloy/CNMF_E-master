@@ -1,23 +1,23 @@
-function [MS]=get_MS(V1,V2)
-
-if(size(V1,2)>size(V2,2))
-new = zeros(size(V1));
-new(1:size(V2,1),1:size(V2,2)) = V2;
-V2=new;
+function [MS]=get_MS(A,B)
+sur(1:1000)=0;
+for i=1:size(A,2)
+    v1=A(:,i);
+    v2=B(:,i);
+    MS=MSget(v1,v2);
+    for s=1:1000
+        v1s=v1(randperm(size(v1,1)));
+        v2s=v2(randperm(size(v2,1)));
+        sur(s)=MSget(v1s,v2s);
+    end
+    try
+    P(i)=get_P(MS,sur);
+    catch
+        dummy=1;
+    end
 end
-
-if(size(V1,2)<size(V2,2))
-new = zeros(size(V2));
-new(1:size(V1,1),1:size(V1,2)) = V1;
-V1=new;
+[ind,thr] = FDR(P,0.05);
+MS=length(ind)/size(A,2);
 end
-
-
-p=perms(1:size(V1,2));
-MSs(1:size(p,1))=0;
-for i=1:size(p,1)
-        Vt2=V2(:,p(i,:));
-        MSs(i)=nanmean(dot(V1,Vt2)./(sqrt(sum((V1).^2,1)).*sqrt(sum((Vt2).^2,1))));
-end
-MS=max(MSs,[],2);
+function MS=MSget(v1,v2)
+MS=nanmean(dot(v1,v2)./(sqrt(sum((v1).^2,1)).*sqrt(sum((v2).^2,1))));
 end
