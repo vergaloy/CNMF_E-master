@@ -8,7 +8,6 @@ clear textprogressbar
 [MS]=MS_matrix(W,0);
 opts = statset('MaxIter',1000);
 [X,stress,disparities]=mdscale(F,2,'Criterion','stress','Options',opts);
-
 Shepard_Plot(F,X,disparities,0)
 X=X(:,1:2);
 X=X-mean(X);

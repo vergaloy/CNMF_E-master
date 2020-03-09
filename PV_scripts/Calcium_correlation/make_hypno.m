@@ -1,5 +1,5 @@
 function hypno=make_hypno(hyp,neu,sf,t0,ts)  %ts is the time shift between eeg and ca imaging
-%    hypno=make_hypno(hyp,neuron.S,5.005679513,7501,0);
+%    hypno=make_hypno(hyp,neuron.S,5.005202568,7501,0);
 
 
 %% remember to run neuron=justdeconv(neuron,'thresholded','ar2');
