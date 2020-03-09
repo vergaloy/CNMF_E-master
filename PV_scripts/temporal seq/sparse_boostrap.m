@@ -1,4 +1,4 @@
-function [A,B,h,P]=sparse_boostrap(A,B,mc);
+function [A,B,h,P]=sparse_boostrap(A,B,correct_mc,divide_plot);
 %[A,B,h,P]=sparse_boostrap(C{1,1},C{1,2},1);
 sim=10000;
 n=size(A,1);
@@ -32,7 +32,7 @@ textprogressbar('done');
 
 P(z)=1;
 
-if (mc==1)
+if (correct_mc==1)
  [ind,~] = FDR(P,0.05,0);
 else
     ind=find(P<0.05);
@@ -47,7 +47,7 @@ A=A(I,:);
 B=B(I,:);
 % P=P(I);
 
-
+if (divide_plot==0)
 imagesc([A,B]);
 hold on
 x1=0;
@@ -57,6 +57,18 @@ y2=find(h==0,1,'last');
 x = [x1, x2, x2, x1, x1];
 y = [y1, y1, y2, y2, y1];
 plot(x, y, 'r-', 'LineWidth', 1);
+else
+imagesc([A(:,1:size(A,2)/2),B,A(:,size(A,2)/2+1:size(A,2))]);
+hold on
+x1=0;
+x2=size(A,2)+size(B,2)+1;
+y1=find(h==0,1);
+y2=find(h==0,1,'last');
+x = [x1, x2, x2, x1, x1];
+y = [y1, y1, y2, y2, y1];
+plot(x, y, 'r-', 'LineWidth', 1);   
+ 
+end
 
 
 

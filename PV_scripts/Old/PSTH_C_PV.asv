@@ -1,8 +1,8 @@
-function  PSTH=PSTH_C_PV(neuron,make_trials,stimulus_onset,stimulus_duration,Trial_duration,discard)
+function  PSTH=PSTH_C_PV(obj,make_trials,stimulus_onset,stimulus_duration,Trial_duration,discard)
 %eg. PSTH=PSTH_C_PV(neuron);
 
 if nargin<2
- make_trials=0;
+ make_trials=1;
  stimulus_onset=10;
  stimulus_duration=10;
  Trial_duration=30;
@@ -10,9 +10,8 @@ if nargin<2
  sort_by_P=0;
 end
 
-path=neuron.C;
-PSTH.Fs=neuron.Fs;
-PSTH.frame_range=size(neuron.C,2);
+path=obj;
+PSTH.frame_range=size(obj,2);
 PSTH.C=full(path);
 % if(path==neuron.S)
 %     PSTH.C(PSTH.C>0)=1;
@@ -21,7 +20,7 @@ m=max(PSTH.C(:));
 PSTH.C=PSTH.C/m;
 trials=floor((PSTH.frame_range/PSTH.Fs)/(Trial_duration));
 if(make_trials==1)
-    temp(1:size(neuron.C,1),1:floor(PSTH.Fs*(Trial_duration)))=0;
+    temp(1:size(obj.C,1),1:floor(PSTH.Fs*(Trial_duration)))=0;
     trail_data=0;
     PSTH.C=PSTH.C(:,1:floor(trials*Trial_duration*PSTH.Fs));
     PSTH.frame_range=size(PSTH.C,2);
@@ -37,7 +36,7 @@ end
 
 if (discard==1)
     
-    for n=1:size(neuron.S,1)
+    for n=1:size(obj.S,1)
         t1=PSTH.C(n,1:stimulus_onset*PSTH.Fs);
         PSTH.activity(n)=(mean(t1));
     end
@@ -85,7 +84,7 @@ hold on
 x1=0;
 x2=stimulus_duration;
 y1=0;
-y2=size(neuron.C,1)+1;
+y2=size(obj.C,1)+1;
 x = [x1, x2, x2, x1, x1];
 y = [y1, y1, y2, y2, y1];
 plot(x, y, 'b-', 'LineWidth', 3);
