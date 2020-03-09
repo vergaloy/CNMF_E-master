@@ -1,90 +1,47 @@
-function  PSTH=PSTH_C_PV(obj,make_trials,stimulus_onset,stimulus_duration,Trial_duration,discard)
-%eg. PSTH=PSTH_C_PV(neuron.S);
+function  PSTH_C_PV(obj,sf,bin,stimulus_onset,stimulus_duration,Trial_duration)
+%eg. PSTH_C_PV(data);
 
 if nargin<2
- make_trials=1;
- stimulus_onset=10;
- stimulus_duration=10;
- Trial_duration=30;
- discard=0;  
+ sf=10;
+  bin=1;
+ stimulus_onset=10/bin;
+ stimulus_duration=10/bin;
+ Trial_duration=30/bin;
 end
 
-path=obj;
-PSTH.frame_range=size(obj,2);
-PSTH.Fs=1;
-PSTH.C=full(path);
-% if(path==neuron.S)
-%     PSTH.C(PSTH.C>0)=1;
-% end
-m=max(PSTH.C(:));
-PSTH.C=PSTH.C/m;
-trials=floor((PSTH.frame_range/PSTH.Fs)/(Trial_duration));
-if(make_trials==1)
-     temp(1:size(patch,1),1:floor(PSTH.Fs*(Trial_duration)))=0;
-    trail_data=0;
-    PSTH.C=PSTH.C(:,1:floor(trials*Trial_duration*PSTH.Fs));
-    PSTH.frame_range=size(PSTH.C,2);
-    for t=1:trials
-        start_x=floor((t-1)*PSTH.Fs*(Trial_duration)+1);
-        end_x=start_x+floor(PSTH.Fs*(Trial_duration)-1);
-        temp=temp+PSTH.C(1:size(PSTH.C,1),start_x:end_x);
-        trail_data((t-1)*Trial_duration+stimulus_onset:(t-1)*Trial_duration+stimulus_onset+stimulus_duration)=1;
-    end
-    PSTH.C=temp;
-    PSTH.frame_range=size(PSTH.C,2);
+data=bin_data(obj,sf,bin);
+b_range=size(data,2);
+trials=floor((b_range)/(Trial_duration));
+temp(1:size(data,1),1:floor((Trial_duration)))=0;
+trail_data=0;
+for t=1:trials
+    start_x=floor((t-1)*(Trial_duration)+1);
+    end_x=start_x+floor((Trial_duration)-1);
+    temp=temp+data(1:size(data,1),start_x:end_x);
 end
+C=temp./trials;
+A=[C(:,1:stimulus_onset),C(:,stimulus_onset+stimulus_duration+1:Trial_duration)];
+B=C(:,stimulus_onset+1:stimulus_onset+stimulus_duration);
 
-if (discard==1)
-    
-    for n=1:size(obj,1)
-        t1=PSTH.C(n,1:stimulus_onset*PSTH.Fs);
-        PSTH.activity(n)=(mean(t1));
-    end
-    [h,in]=sort(PSTH.activity,'descend');
-    
-    for n=1:size(PSTH.C,1)
-        PSTH.C2(n,1:size(PSTH.C,2))=PSTH.C(in(n),:);
-    end
-    PSTH.C=PSTH.C2;
-    clear PSTH.C2
-    PSTH.C(h<0.01,:)=[];
-    PSTH.activity=[];
-end
-
-
-for n=1:size(PSTH.C,1)
-    t1=PSTH.C(n,1:floor(stimulus_onset*PSTH.Fs));
-    t2=PSTH.C(n,floor((stimulus_onset)*PSTH.Fs+1):floor((stimulus_onset+stimulus_duration)*PSTH.Fs));
-    [~,p]=ttest2(t1,t2);
-    PSTH.P(n)=p;
-    PSTH.activity(n)=(mean(t1)-mean(t2));
-end
-
-PSTH.C_sorted=PSTH.C/trials;
-
-x=(-stimulus_onset:1/PSTH.Fs:(PSTH.frame_range/PSTH.Fs)-stimulus_onset-1/PSTH.Fs);
-y=(1:size(PSTH.C,1));
-PSTH.CTotal=sum(PSTH.C,1)/size(PSTH.C,1);
-
-
-h=imagesc(x,y,PSTH.C_sorted);
-%%set(h, 'XData', [-120 60]);
-colormap('hot')
-xticks(-120:30:(PSTH.frame_range/PSTH.Fs)-stimulus_onset-1/PSTH.Fs);
-
-hold on
-x1=0;
-x2=stimulus_duration;
-y1=0;
-y2=size(obj,1)+1;
-x = [x1, x2, x2, x1, x1];
-y = [y1, y1, y2, y2, y1];
-plot(x, y, 'b-', 'LineWidth', 3);
-
+[A,B,h,P]=sparse_boostrap(A,B,0,0,0,1);
 figure
-x=(-stimulus_onset:1/PSTH.Fs:(PSTH.frame_range/PSTH.Fs)-stimulus_onset-1/PSTH.Fs);
-b=bar(x,PSTH.CTotal,'histc','EdgeColor','black','FaceColor','black');
+C=[A(:,1:size(A,2)/2),B,A(:,size(A,2)/2+1:size(A,2))];
+b=bar(1:Trial_duration,sum(C,1),'histc','EdgeColor','black','FaceColor','black');
 set(b,'EdgeColor','k')
+xlim([1 Trial_duration])
+
+figure;bar(bin_data(sum(data,1),1,5),'histc','EdgeColor','black','FaceColor','black');
+[R,P] = corr((1:size(sum(data,1),2))',sum(data,1)');
+
+cprintf('*blue','Correlation and P-value of trials in time  R=%1.3g P=%1.3g\n',R,P)
+if (P<0.05)
+cprintf([1,0.5,0],'Trails are correlated in time!! resulst may not be accurate.\n')
+end
+cprintf('*blue','Neurons increasing their activity= %1.3g/%1.3g \n',find(h==0,1),size(h,2))
+cprintf('*blue','Neurons decreasing their activity= %1.3g/%1.3g\n',(size(h,2)-find(h==0,1,'last')),size(h,2))
+
+
+
 
 
 
