@@ -2,7 +2,7 @@ function  PSTH=PSTH_C_PV(neuron,make_trials,stimulus_onset,stimulus_duration,Tri
 %eg. PSTH=PSTH_C_PV(neuron);
 
 if nargin<2
- make_trials=1;
+ make_trials=0;
  stimulus_onset=10;
  stimulus_duration=10;
  Trial_duration=30;
