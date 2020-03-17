@@ -1,0 +1,19 @@
+function separate_by_inactivity(num,obj,hyp);
+
+
+if nargin<2
+obj=neuron.S
+hyp=hypno
+end
+
+
+[C]=Separate_by_behaviour(neuron,hypno);
+
+
+[W,~,~]=Get_seqNMF(C,setdiff(1:size(C,2),num));
+
+
+ind=(sum(W,2))>0;
+
+active=neuron.S(ind,:);
+inactive=neuron.S(~ind,:);

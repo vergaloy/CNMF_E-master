@@ -2,7 +2,7 @@ function  PSTH_C_PV(obj,sf,bin,stimulus_onset,stimulus_duration,Trial_duration)
 %eg. PSTH_C_PV(data);
 
 if nargin<2
- sf=10;
+ sf=5;
   bin=1;
  stimulus_onset=10/bin;
  stimulus_duration=10/bin;
