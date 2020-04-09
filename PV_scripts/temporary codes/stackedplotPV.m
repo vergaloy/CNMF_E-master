@@ -9,3 +9,5 @@ for i=1:size(obj,1)
     t=t./max(t);
     plot(t+of)
 end
+
+axdrag

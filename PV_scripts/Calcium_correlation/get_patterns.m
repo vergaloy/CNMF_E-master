@@ -4,9 +4,12 @@ function NumberOfAssemblies = get_patterns(SpikeCount)
 
 %zSpikeCount = zscore(SpikeCount');
 zSpikeCount = SpikeCount';
+
+zSpikeCount(:,sum(zSpikeCount,1)==0)=[];
 CorrMatrix = corr(zSpikeCount);
 CorrMatrix(isnan(CorrMatrix))=0;
 [~,d] = eig(CorrMatrix);
+d=real(d);
 eigenvalues=diag(d);
 q = size(zSpikeCount,1)/size(zSpikeCount,2);
 %if q<1

@@ -1,6 +1,7 @@
 function [imageData, alpha] = export_fig(varargin) %#ok<*STRCL1>
 %EXPORT_FIG  Exports figures in a publication-quality format
-%
+%  EJ PV  export_fig('activity_distance.pdf', '-append');
+
 % Examples:
 %   imageData = export_fig
 %   [imageData, alpha] = export_fig

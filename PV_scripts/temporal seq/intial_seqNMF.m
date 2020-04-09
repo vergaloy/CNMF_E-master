@@ -2,7 +2,7 @@ function [W0,H0]=intial_seqNMF(X,k)
 
 
 parfor i=1:100   
-    [W,H,c,~,po(i)] = seqNMF(X,'K',k, 'L', 1,'lambda', 0,'maxiter',10,'showplot',0,'lambdaOrthoW',1); 
+    [W,H,c,~,po(i)] = seqNMF(X,'K',k, 'L', 1,'lambda',0 ,'maxiter',100,'showplot',0,'lambdaOrthoW',1); 
     Ws{i}=W;
     Hs{i}=H;
     cost(i)=c(11);   
