@@ -18,7 +18,7 @@ function [M_final,shifts,template,options,col_shift] = normcorre(Y,options,templ
 
 %% first determine filetype
 
-nd = 2 + (options.d3 > 1); %max(length(sizY)-1,2);                    % determine whether imaging is 2d or 3d
+nd = 2; %max(length(sizY)-1,2);                    % determine whether imaging is 2d or 3d
 
 if isa(Y,'char')
     [~,~,ext] = fileparts(Y);

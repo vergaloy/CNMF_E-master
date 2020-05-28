@@ -1,4 +1,4 @@
-function get_pattern_activity(Y,H,le)
+function hm=get_pattern_activity(Y,H,le)
 
 le=[0 le];
 for i=1:size(le,2)-1
@@ -9,6 +9,4 @@ for i=1:size(le,2)-1
     
     
 end
-
-hm
-hm./m
+% hm=hm./m;

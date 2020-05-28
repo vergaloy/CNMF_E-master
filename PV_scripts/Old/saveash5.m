@@ -2,7 +2,7 @@ function saveash5(data, path_to_file, options)
 
 % save the variable stored in data in a h5 file named path_to_file (includes the
 % path to the directory). The file is saved with the same class as data.
-% options.groupname: the name of the group (default: /DS1)
+% options.groupname: the name of the group (default: /Object)
 % options.append: append to existing file if it exists (default: True)
 
 if ~exist('path_to_file','var'); path_to_file = 'data.h5'; end

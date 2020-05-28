@@ -1,4 +1,4 @@
-function MS=single_pattern_MS(Y,frob);
+function MS=single_pattern_MS(Y,frob)
 
 dim=size(Y,2);
 b=nchoosek(1:dim,2);

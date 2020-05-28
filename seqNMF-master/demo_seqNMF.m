@@ -25,7 +25,7 @@ X=full(CtoT(C));
  X(X>0)=1;
 %X=[zeros(size(X,1),50),X];
 K = 8;
-L = 1;
+L = 5;
 lambda =0.6;
 shg; clf
 display('Running seqNMF on simulated data (2 simulated sequences + noise)')

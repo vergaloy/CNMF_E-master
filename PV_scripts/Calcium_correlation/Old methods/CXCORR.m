@@ -3,7 +3,7 @@
 % which is assumed to be a common period of two corresponded periodic signals. 
 % a and b are supposed to be length M row vectors, either real or complex.
 % 
-% [x,c]=CXCORR(a,b) returns the length M-1 circular cross correlation sequence c
+% [c,x]=CXCORR(a,b) returns the length M-1 circular cross correlation sequence c
 % with corresponded lags x.
 %   
 % The circular cross correlation is:
@@ -20,7 +20,7 @@
 % Upper Saddler River, NJ : Prentice Hall, 1999.
 %
 % Author: G. Levin, Apr. 26, 2004.
-function [x,c]=CXCORR(a,b)
+function [c,x]=CXCORR(a,b)
 na=norm(a);
 nb=norm(b);
 a=a/na; %normalization

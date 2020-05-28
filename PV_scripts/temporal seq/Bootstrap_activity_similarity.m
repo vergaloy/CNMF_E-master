@@ -1,7 +1,7 @@
 function [Y,stress,diff]=Bootstrap_activity_similarity(obj,frob,criteria)
 
 
-% [Y,stress,diff]=Bootstrap_activity_similarity(a,0,'stress');
+% [Y,stress,diff]=Bootstrap_activity_similarity(y,0,'stress');
 % export_fig('patterns_act_with_NREM_norm.pdf', '-append');
  obj=zscore(obj,1);
 
@@ -19,10 +19,10 @@ X=X-mean(X);
 
 sim=100;
 stress(1:sim)=0;
-textprogressbar('Bootstraping: ');
+upd = textprogressbar(sim); 
 er=0;
 for s=1:sim
-    textprogressbar((s/sim)*100);
+    upd(s);
     isok=0;
   while (isok==0)
     
@@ -41,7 +41,7 @@ for s=1:sim
 end
 Y=align_to_mean(Y);
 er
-textprogressbar('done');
+
 [M,lc,uc]=MSs_CI(MSs);
 
 

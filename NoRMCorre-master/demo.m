@@ -18,7 +18,7 @@ T = size(Y,ndims(Y));
 %Y = Y - min(Y(:));
 %% set parameters (first try out rigid motion correction)
 
-options_rigid = NoRMCorreSetParms('d1',size(Y,1),'d2',size(Y,2),'bin_width',200,'max_shift',15,'us_fac',50,'init_batch',200);
+options_rigid = NoRMCorreSetParms('d1',size(Y,1),'d2',size(Y,2),'max_shift',30,'init_batch',1);
 
 %% perform motion correction
 tic; [M1,shifts1,template1,options_rigid] = normcorre(Y,options_rigid); toc

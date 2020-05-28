@@ -30,7 +30,12 @@ else
 end
 
 %% estimate the noise
+try
+    Y(isnan(Y))=0;
 [psdx, ff] = pwelch(double(Y), [],[],[], 1);
+catch
+    dummy=1;
+end
 indf = and(ff>=range_ff(1), ff<=range_ff(2));
 switch method
     case 'mean'

@@ -1,7 +1,9 @@
 function [Cn,PNR]=estimate_initialization_parameters_PV(tmp_range)
-%[Cn,PNR]=estimate_initialization_parameters_PV([1 1000]);
+%[Cn,PNR]=estimate_initialization_parameters_PV([1,3000]);
 [file,path] = uigetfile('*.h5');
-Y=h5read(strcat(path,file),'/Object',[1 1 tmp_range(1) 1],[inf inf tmp_range(2)-tmp_range(1)+1 1]);
+in=h5info(strcat(path,file));
+si=in.Datasets.Dataspace.Size;  
+Y=h5read(strcat(path,file),'/Object',[1 1 tmp_range(1)],[si(1) si(2) tmp_range(2)-tmp_range(1)+1]);
 cd(path)
 
 r=6;

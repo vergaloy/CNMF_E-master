@@ -31,7 +31,7 @@ function [W,H] = get_most_likely_pattern(W1,H1,k,numfits)
     
     
     idx = kmeans(W1',k);
-    
+
     
     T=[];
     for i=1:k
@@ -41,18 +41,18 @@ function [W,H] = get_most_likely_pattern(W1,H1,k,numfits)
         W(:,i)=median(W1(:,idx==i),2);
         H(i,:)=median(H1(idx==i,:),1);
     end
-    
-    
-    
-    t_pat=max(P(co>=0.5));
-    P(co<0.5)=0;
-    P=P./numfits;
-    
-    W(:,P<0.5)=[];
-    H(P<0.5,:)=[];
-    
-    Wt=W./max(W,1);
-    s=sum(Wt>0.01,1);
+      
+%     t_pat=max(P(co>=0.5));
+%     P(co<0.5)=0;
+%     P=P./numfits;
+%     
+%     W(:,P<0.5)=[];
+%     H(P<0.5,:)=[];
+
+
+     
+%     Wt=W./max(W,[],1);
+    s=sum(W>0.01,1);
     W(:,s<=3)=[];
     H(s<=3,:)=[];    
     

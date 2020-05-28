@@ -38,7 +38,7 @@ if show_merge
     h_fig = figure('position', [1,1, 1200, 600]);
     stop_show = false;
 end
-if ~exist('merge_thr', 'var') || isempty(merge_thr) || numel(merge_thr)~=3
+if ~exist('merge_thr', 'var') || isempty(merge_thr) %|| numel(merge_thr)~=3
     merge_thr = obj.options.merge_thr;
 end
 

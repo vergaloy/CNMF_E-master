@@ -1,6 +1,6 @@
 
 % Specify the folder where the files live.
-myFolder ='C:\Users\SSG Lab\Desktop\Pablo\GCdev\DM298-Objects';
+myFolder ='C:\Users\BigBrain\Desktop\Tracking neuron\Pre and Post shock\A and B';
 savefiles=1;
 % Check to make sure that folder actually exists.  Warn user if it doesn't.
 
@@ -29,8 +29,8 @@ for k=1:length(theFiles)
     % -------------------------    COMPUTATION    -------------------------  %
     pars_envs = struct('memory_size_to_use', 300, ...   % GB, memory space you allow to use in MATLAB
         'memory_size_per_patch', 40, ...   % GB, space for loading data within one patch
-        'patch_dims', [40, 40],...  %GB, patch size
-        'batch_frames', 3000);           % number of frames per batch
+        'patch_dims', [64, 64],...  %GB, patch size
+        'batch_frames', 1000);           % number of frames per batch
     % -------------------------      SPATIAL      -------------------------  %
     gSig = 5;           % pixel, gaussian width of a gaussian kernel for filtering the data. 0 means no filtering. USE ODD numbers
     gSiz = 15;          % pixel, neuron diameter
@@ -82,8 +82,8 @@ for k=1:length(theFiles)
     
     % -------------------------  INITIALIZATION   -------------------------  %
     K = [];             % maximum number of neurons per patch. when K=[], take as many as possible.
-    min_corr = 0.8;     % minimum local correlation for a seeding pixel
-    min_pnr = 9;       % minimum peak-to-noise ratio for a seeding pixel
+    min_corr = 0.7;     % minimum local correlation for a seeding pixel
+    min_pnr = 7;       % minimum peak-to-noise ratio for a seeding pixel
     min_pixel = gSig^2;      % minimum number of nonzero pixels for each neuron
     bd = 0;             % number of rows/columns to be ignored in the boundary (mainly for motion corrected data)
     frame_range = [];   % when [], uses all frames
@@ -95,8 +95,8 @@ for k=1:length(theFiles)
     % set the value as false when the background fluctuation is small (2p)
     
     % -------------------------  Residual   -------------------------  %
-    min_corr_res = 0.8;
-    min_pnr_res = 7.5;
+    min_corr_res = 0.7;
+    min_pnr_res = 6;
     seed_method_res = 'auto';  % method for initializing neurons from the residual
     update_sn = true;
     
@@ -140,7 +140,7 @@ for k=1:length(theFiles)
     neuron.getReady_batch(pars_envs);
     
     %% initialize neurons in batch mode
-    neuron.initComponents_batch(K, save_initialization, use_parallel);
+    neuron.initComponents_batch(K, save_initialization, 1);
     
     %% udpate spatial components for all batches
     neuron.update_spatial_batch(use_parallel);
@@ -164,7 +164,7 @@ for k=1:length(theFiles)
 
     neuron=justdeconv(neuron,'foopsi','ar1');
     
-    neuron.remove_false_positives();
+%     neuron.remove_false_positives();
     neuron.merge_neurons_dist_corr(0);
     neuron.merge_high_corr(0, [0.8, 0.00001, -inf]);
 
@@ -178,8 +178,9 @@ for k=1:length(theFiles)
     neuron.C_raw=neuron.C_raw./GetSn(neuron.C_raw);
     neuron=justdeconv(neuron,'foopsi','ar1');
  
-    neuron.remove_false_positives();
+%     neuron.remove_false_positives();
     neuron.merge_neurons_dist_corr(0);
+%     merge_neurons_dist_corr(neuron,1,-1,8,'mean');
     neuron.merge_high_corr(0, [0.6, -1, -inf]);
 
     
@@ -197,9 +198,9 @@ end
 %neuron.Coor=[]
 %neuron.show_contours(0.6, [], neuron.PNR, 1)
 %neuron.show_contours(0.6, [], neuron.Cn, 0)
-%neuron.show_contours(0.6, [], neuron.PNR.*neuron.Cn, 0)
+%neuron.show_contours(0.6, [], neuron.PNR.*neuron.Cn, 1)
 
-%neuron.orderROIs('pnr');   % order neurons in different ways {'snr', 'decay_time', 'mean', 'circularity','sparsity_spatial','sparsity_temporal','pnr'}
+%neuron.orderROIs('PNR');   % order neurons in different ways {'snr', 'decay_time', 'mean', 'circularity','sparsity_spatial','sparsity_temporal','pnr'}
 % neuron.viewNeurons([], neuron.C_raw); 
 
 %neuron.batches=0;  %kill batch data, it is not necessary to save
@@ -209,4 +210,6 @@ end
 %mat2clip(neuron.C_raw(:,7501:52500)');
 
 %scale_to_noise(neuron,500);
-%show_demixed_video_PV(neuron,[],2);
+%show_demixed_video_PV(neuron,[3000 6000],2);
+
+% neuron.change_path('/data/home/zhoupc/', '/Users/zhoupc/');  %change path info when we switch computers and want to reuse previous results
