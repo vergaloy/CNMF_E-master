@@ -23,10 +23,9 @@ end
 [d,r]=size(data);  % dimensions (neurons) and range (temoral length); 
 trials=floor((r)/(trial_duration));
 if (r-trials*trial_duration>0)
-cprintf([1,0.5,0],'WARNING: Is not posible to divide the data in the amount of trails specified.\n')
-cprintf([1,0.5,0],'Data was cutted to fit with the number of trails.\n')
-data=data(:,1:trials*trial_duration);
-end
+cprintf([1,0.5,0],'Trails are correlated in time!! resulst may not be accurate ASK PABLO.\n')
+
+
 temp(1:d,1:floor((trial_duration)))=0;
 I=zeros(1,size(data,2));
 for t=1:trials

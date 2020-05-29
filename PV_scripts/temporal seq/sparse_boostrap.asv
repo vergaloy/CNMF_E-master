@@ -46,16 +46,20 @@ z=z>0.05;
  warning('off','all')
  fprintf('Getting density kernel of boostrap samples: \n');
 % upd = textprogressbar(n);
-parfor i=1:n
+for i=1:n
 %     upd(i);
     temp=bootstrap(i,:);
     if (z(i)~=1)% consider only if data has less that 5% 0 inflation
         [density,xmesh] = ksdensity(temp,linspace(-6,6,10000));
         density=density./sum(density);
-        x1=find(xmesh>-abs(df(i)),1);
-        x2=find(xmesh>abs(df(i)),1);
-        int=sum(density(x1:x2));
-        P(i)=1-int;
+        find(xmesh>-abs(df(i)),1)
+        
+        
+        try
+            P(i)=interp1(xmesh,density,df(i));
+        catch
+            dummy=1
+        end
     else
         P(i)=1;
     end
@@ -65,7 +69,6 @@ P(z)=1;
 
 if (correct_mc==1)
  [ind, crit_p, adj_ci_cvrg, P]=fdr_bh(P,0.05,'pdep',0);
- ind=logical(ind);
 else
     ind=find(P<0.05);
 end
