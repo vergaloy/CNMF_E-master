@@ -19,21 +19,20 @@ for k=1:length(theFiles)
     %% Constrained Nonnegative Matrix Factorization for microEndoscopic data  * *
     %% *STEP*0: select data
     
-    warning('off','all') %add by Natsu
-    
+    warning('off','all') 
     neuron = Sources2D();
     nams = {fullFileName};          % this demo data is very small, here we just use it as an example
     nams = {neuron.select_multiple_files(nams)};  %if nam is [], then select data interactively
     
     %% parameters
     % -------------------------    COMPUTATION    -------------------------  %
-    pars_envs = struct('memory_size_to_use', 300, ...   % GB, memory space you allow to use in MATLAB
+    pars_envs = struct('memory_size_to_use', 256, ...   % GB, memory space you allow to use in MATLAB
         'memory_size_per_patch', 40, ...   % GB, space for loading data within one patch
         'patch_dims', [64, 64],...  %GB, patch size
         'batch_frames', 1000);           % number of frames per batch
     % -------------------------      SPATIAL      -------------------------  %
-    gSig = 5;           % pixel, gaussian width of a gaussian kernel for filtering the data. 0 means no filtering. USE ODD numbers
-    gSiz = 15;          % pixel, neuron diameter
+    gSig = 4;           % pixel, gaussian width of a gaussian kernel for filtering the data. 0 means no filtering. USE ODD numbers
+    gSiz = 12;          % pixel, neuron diameter
     ssub = 1;           % spatial downsampling factor
     with_dendrites = false;   % with dendrites or not
     if with_dendrites
@@ -101,12 +100,7 @@ for k=1:length(theFiles)
     update_sn = true;
     
     % ----------------------  WITH MANUAL INTERVENTION  --------------------  %
-    with_manual_intervention = false;
-    
-    % -------------------------  FINAL RESULTS   -------------------------  %
-    save_demixed = false;    % save the demixed file or not
-    kt = 3;                 % frame intervals
-    
+    with_manual_intervention = false;   
     % -------------------------    UPDATE ALL    -------------------------  %
     neuron.updateParams('gSig', gSig, ...       % -------- spatial --------
         'gSiz', gSiz, ...
@@ -149,7 +143,6 @@ for k=1:length(theFiles)
     neuron.update_temporal_batch(use_parallel);
     
     %% update background
-    %normalize_C_raw(neuron)
     neuron.update_background_batch(use_parallel);
     neuron.update_temporal_batch(use_parallel);
     normalize_C_raw(neuron)  
@@ -164,27 +157,17 @@ for k=1:length(theFiles)
 
     neuron=justdeconv(neuron,'foopsi','ar1');
     
-%     neuron.remove_false_positives();
     neuron.merge_neurons_dist_corr(0);
     neuron.merge_high_corr(0, [0.8, 0.00001, -inf]);
 
-    
-    %for loop=1:3
-     %   neuron.update_background_parallel(use_parallel);
-     %  neuron.update_temporal_parallel(use_parallel);
-    %end
-    
+ 
     fix_Baseline(round(40*neuron.Fs),neuron)%% PV
-    neuron.C_raw=neuron.C_raw./GetSn(neuron.C_raw);
+    scale_to_noise(neuron,500);
     neuron=justdeconv(neuron,'foopsi','ar1');
  
-%     neuron.remove_false_positives();
-    neuron.merge_neurons_dist_corr(0);
-%     merge_neurons_dist_corr(neuron,1,-1,8,'mean');
-    neuron.merge_high_corr(0, [0.6, -1, -inf]);
 
-    
-    
+    neuron.merge_neurons_dist_corr(0);
+    neuron.merge_high_corr(0, [0.6, -1, -inf]);
 
     %% save workspace
     neuron.P.log_folder=strcat(neuron.P.folder_analysis,filesep);
@@ -209,7 +192,6 @@ end
 %mat2clip(neuron.C_raw');
 %mat2clip(neuron.C_raw(:,7501:52500)');
 
-%scale_to_noise(neuron,500);
 %show_demixed_video_PV(neuron,[3000 6000],2);
 
 % neuron.change_path('/data/home/zhoupc/', '/Users/zhoupc/');  %change path info when we switch computers and want to reuse previous results

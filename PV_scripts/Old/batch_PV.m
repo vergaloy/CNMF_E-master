@@ -5,7 +5,7 @@
 
 
 
-myFolder = 'C:\Users\Galoy\Documents\New folder\pablo-Objects';
+myFolder = 'C:\Users\BigBrain\Desktop\CNMF_E-master\PV_scripts';
 
 savefiles=1;
 % Check to make sure that folder actually exists.  Warn user if it doesn't.
@@ -37,9 +37,9 @@ nam = neuron.select_data(nam);  %if nam is [], then select data interactively
 
 %% parameters
 % -------------------------    COMPUTATION    -------------------------  %
-pars_envs = struct('memory_size_to_use', 120, ...   % GB, memory space you allow to use in MATLAB
-    'memory_size_per_patch', 8, ...   % GB, space for loading data within one patch
-    'patch_dims', [60, 60]);  %GB, patch size
+pars_envs = struct('memory_size_to_use', 256, ...   % GB, memory space you allow to use in MATLAB
+    'memory_size_per_patch', 120, ...   % GB, space for loading data within one patch
+    'patch_dims', [32, 32]);  %GB, patch size
 
 % -------------------------      SPATIAL      -------------------------  %
 gSig = 4;           % pixel, gaussian width of a gaussian kernel for filtering the data. 0 means no filtering   def4 //PV= diameter of average neuron
@@ -61,7 +61,7 @@ spatial_constraints = struct('connected', true, 'circular', false);  % you can i
 spatial_algorithm = 'hals_thresh';
 
 % -------------------------      TEMPORAL     -------------------------  %
-Fs = 10;             % frame rate  /PV
+Fs = 5;             % frame rate  /PV
 tsub = 1;           % temporal downsampling factor
 deconv_options = struct('type', 'ar1', ... % model of the calcium traces. {'ar1', 'ar2'}
     'method', 'foopsi', ... % method for running deconvolution {'foopsi', 'constrained', 'thresholded'}
@@ -92,7 +92,7 @@ merge_thr_spatial = [0.8, 0.1, -inf];  % merge components with highly correlated
 % -------------------------  INITIALIZATION   -------------------------  %
 K = [];             % maximum number of neurons per patch. when K=[], take as many as possible.
 min_corr = 0.7;     % minimum local correlation for a seeding pixel  pv=0.7
-min_pnr = 5;       % minimum peak-to-noise ratio for a seeding pixel   PV=6  /PV  to see type ShowPNS()
+min_pnr = 6;       % minimum peak-to-noise ratio for a seeding pixel   PV=6  /PV  to see type ShowPNS()
 min_pixel = (gSig-2)^2;      % minimum number of nonzero pixels for each neuron
 bd = 0;             % number of rows/columns to be ignored in the boundary (mainly for motion corrected data)
 frame_range = [];   % when [], uses all frames

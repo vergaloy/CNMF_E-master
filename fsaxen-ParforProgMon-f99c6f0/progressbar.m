@@ -119,7 +119,9 @@ function progressbar(varargin)
 % 2006-Sep-11   Width is a multiple of height (don't stretch on widescreens)
 % 2010-Sep-21   Major overhaul to support multiple bars and add labels
 %
+
 persistent progfig progdata lastupdate
+
 % Get inputs
 if nargin > 0
     input = varargin;
@@ -129,6 +131,7 @@ else
     input = {0};
     ninput = 1;
 end
+
 % If task completed, close figure and clear vars, then exit
 if input{1} == 1
     if ishandle(progfig)
@@ -138,12 +141,15 @@ if input{1} == 1
     drawnow
     return
 end
+
 % Init reset flag 
 resetflag = false;
+
 % Set reset flag if first input is a string
 if ischar(input{1})
     resetflag = true;
 end
+
 % Set reset flag if all inputs are zero
 if input{1} == 0
     % If the quick check above passes, need to check all inputs
@@ -151,10 +157,12 @@ if input{1} == 0
         resetflag = true;
     end
 end
+
 % Set reset flag if more inputs than bars
 if ninput > length(progdata)
     resetflag = true;
 end
+
 % If reset needed, close figure and forget old data
 if resetflag
     if ishandle(progfig)
@@ -163,12 +171,13 @@ if resetflag
     progfig = [];
     progdata = []; % Forget obsolete data
 end
+
 % Create new progress bar if needed
 if ishandle(progfig)
 else % This strange if-else works when progfig is empty (~ishandle() does not)
     
     % Define figure size and axes padding for the single bar case
-    height = 0.025;
+    height = 0.03;
     width = height * 8;
     hpad = 0.02;
     vpad = 0.25;
@@ -241,6 +250,7 @@ else % This strange if-else works when progfig is empty (~ishandle() does not)
     lastupdate = clock - 1;
     
 end
+
 % Process inputs and update state of progdata
 for ndx = 1:ninput
     if ~isempty(input{ndx})
@@ -248,16 +258,19 @@ for ndx = 1:ninput
         progdata(ndx).clock = clock;
     end
 end
+
 % Enforce a minimum time interval between graphics updates
 myclock = clock;
 if abs(myclock(6) - lastupdate(6)) < 0.01 % Could use etime() but this is faster
     return
 end
+
 % Update progress patch
 for ndx = 1:length(progdata)
     set(progdata(ndx).progpatch, 'XData', ...
         [0, progdata(ndx).fractiondone, progdata(ndx).fractiondone, 0])
 end
+
 % Update progress text if there is more than one bar
 if length(progdata) > 1
     for ndx = 1:length(progdata)
@@ -265,6 +278,7 @@ if length(progdata) > 1
             sprintf('%1d%%', floor(100*progdata(ndx).fractiondone)))
     end
 end
+
 % Update progress figure title bar
 if progdata(1).fractiondone > 0
     runtime = etime(progdata(1).clock, progdata(1).starttime);
@@ -276,24 +290,34 @@ else
     titlebarstr = ' 0%';
 end
 set(progfig, 'Name', titlebarstr)
+
 % Force redraw to show changes
 drawnow
+
 % Record time of this update
 lastupdate = clock;
+
+
 % ------------------------------------------------------------------------------
 function changecolor(h, e, progpatch) %#ok<INUSL>
 % Change the color of the progress bar patch
+
 % Prevent color from being too dark or too light
 colormin = 1.5;
 colormax = 2.8;
+
 thiscolor = rand(1, 3);
 while (sum(thiscolor) < colormin) || (sum(thiscolor) > colormax)
     thiscolor = rand(1, 3);
 end
+
 set(progpatch, 'FaceColor', thiscolor)
+
+
 % ------------------------------------------------------------------------------
 function timestr = sec2timestr(sec)
 % Convert a time measurement from seconds into a human readable string.
+
 % Convert seconds to other units
 w = floor(sec/604800); % Weeks
 sec = sec - w*604800;
@@ -304,6 +328,7 @@ sec = sec - h*3600;
 m = floor(sec/60); % Minutes
 sec = sec - m*60;
 s = floor(sec); % Seconds
+
 % Create time string
 if w > 0
     if w > 9

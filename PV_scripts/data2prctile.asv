@@ -1,0 +1,7 @@
+function p=data2prctile(X)
+% lf=data2prctile(late_fast);
+
+for i=1:100
+    p(i)=prctile(X,i)  
+end
+p

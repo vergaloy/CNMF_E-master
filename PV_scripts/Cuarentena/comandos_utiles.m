@@ -1,6 +1,6 @@
-data=load_mice_data()
+data=load_mice_data();
 [mice_sleep,hyp]=group_mice_data(data);
- [D,a]=bin_mice_sleep(mice_sleep,[1,2,3,4,5,6,7,8,9],2);
+[D,a]=bin_mice_sleep(mice_sleep,[1,2,3,4,5,6,7,8,9],2);
 E=extrac_sleep_episodes(mice_sleep,hyp,300);
 CI=bootstrap(a);
 

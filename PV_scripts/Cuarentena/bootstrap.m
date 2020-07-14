@@ -1,5 +1,6 @@
-function CI=bootstrap(obj)
-% CI=bootstrap(p);
+function CI=bootstrap(obj,c)
+% CI=bootstrap(pro,0);
+
 col=size(obj,2);
 for s=1:1000
    sim(s,:)= nanmean(datasample(obj,size(obj,1),1),1);
@@ -11,11 +12,15 @@ if (size(obj)>1)
 b=nchoosek(1:col,2);
 CI=zeros(col);
 comp=size(b,1);
-alpha=5/comp/2; 
+if (c==0)
+    c=comp;
+end
+alpha=5/c/2; 
 for i=1:comp
     t1=sim(:,b(i,1));
     t2=sim(:,b(i,2));
     CI(b(i,1),b(i,2))=(prctile(t1-t2,alpha)*prctile(t1-t2,100-alpha))>0;  
 end
+CI=CI+CI'
 
 end
