@@ -1,4 +1,4 @@
-function [Train,Train_per,Train_shift,Train_rand,Train_rand_inside]=prepare_train_Data(C,include)
+function [Train,Train_per,Train_rand,Train_rand_inside,Train_shift]=prepare_train_Data(C,include)
 % [Train,Train_per,Train_shift,Train_rand,Train_rand_inside]=prepare_train_Data(D,[1,2]);
 
 if nargin<2
@@ -30,6 +30,6 @@ neuron_rand=reshape(datasample(neuron(:),numel(neuron),'Replace',false),n,size(n
 
 Train = table(neuron,context,'VariableNames',{'neuron','context'});
 Train_per = table(neuron_per,context,'VariableNames',{'neuron','context'});
-Train_shift = table(neuron_shift,context,'VariableNames',{'neuron','context'});
 Train_rand = table(neuron_rand,context,'VariableNames',{'neuron','context'});
 Train_rand_inside = table( neuron_rand_inside,context,'VariableNames',{'neuron','context'});
+Train_shift = table(neuron_shift,context,'VariableNames',{'neuron','context'});

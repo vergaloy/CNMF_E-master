@@ -1,5 +1,5 @@
 function D=SVM_matrix2distance(T,R,dup)
-% D0=SVM_matrix2distance(out{1, 1},out{1, 4},1);
+% D0=SVM_matrix2distance(out{1, 1},out{1, 2},1);
 % D0=SVM_matrix2distance(out{1, 2}(:,:,1:500),out{1, 2}(:,:,501:1000));
 
 %% Groups:
@@ -85,10 +85,10 @@ yline(thr,'--')
 ylabel('Linkage');
 
 figure
-[~,T,outperm]=dendrogram(Z,9,'ColorThreshold',thr);
+[~,T]=dendrogram(Z,9,'ColorThreshold',thr);
 yline(thr,'--')
 ylabel('Linkage');
-label=get_labels(outperm,T,values);
+label=get_labels(T,values);
 set (gca,'XTickLabel',label);
 
 
@@ -145,12 +145,11 @@ M(isnan(M))=[];
 M=reshape(M,sqrt(numel(M)),sqrt(numel(M)));
 end
 
-function label=get_labels(outperm,T,values)
+function label=get_labels(T,values)
 label=cell(max(T),1);
 
 for i=1:max(T)
-    ti=outperm(i);
-    n=find(T==ti,1);
+    n=find(T==i,1);
     label{i}=values{n};
 end
 end

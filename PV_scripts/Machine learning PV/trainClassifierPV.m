@@ -54,6 +54,6 @@ True_values=response;
 
 W=classificationSVM.Beta;  %classification weights
 if (showplot)
-hold off
+figure
 confusionchart(categorical(categorical(True_values)),categorical(Predictions),'RowSummary','row-normalized','ColumnSummary','column-normalized');
 end

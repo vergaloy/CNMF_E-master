@@ -47,17 +47,13 @@ trainedClassifier.About = 'This struct is a trained model exported from Classifi
 trainedClassifier.HowToPredict = sprintf('To make predictions on a new table, T, use: \n  yfit = c.predictFcn(T) \nreplacing ''c'' with the name of the variable that is this struct, e.g. ''trainedModel''. \n \nThe table, T, must contain the variables returned by: \n  c.RequiredVariables \nVariable formats (e.g. matrix/vector, datatype) must match the original training data. \nAdditional variables are ignored. \n \nFor more information, see <a href="matlab:helpview(fullfile(docroot, ''stats'', ''stats.map''), ''appclassification_exportmodeltoworkspace'')">How to predict using an exported model</a>.');
 
 % Perform cross-validation
-TVP={};
-TR={};
-for i=1:1
 partitionedModel = crossval(trainedClassifier.ClassificationSVM, 'KFold', 5);
-[validationPredictions, ~] = kfoldPredict(partitionedModel);
-TVP=[TVP;validationPredictions];
-TR=[TR;response];
-validationAccuracy(i) = 1 - kfoldLoss(partitionedModel, 'LossFun', 'ClassifError');
-end
+[validationPredictions, validationScores] = kfoldPredict(partitionedModel);
+validationAccuracy = 1 - kfoldLoss(partitionedModel, 'LossFun', 'ClassifError');
+Predictions=validationPredictions;
+True_values=response;
 
 if (showplot)
-hold off
-confusionchart(categorical(categorical(TR)),categorical(TVP),'RowSummary','row-normalized','ColumnSummary','column-normalized');
+figure
+confusionchart(categorical(categorical(True_values)),categorical(Predictions),'RowSummary','row-normalized','ColumnSummary','column-normalized');
 end

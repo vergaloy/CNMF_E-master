@@ -976,16 +976,13 @@ function get_parameter_rise_thr(parameter,thr,thr2)//parameter= "amplitude","ris
 		cut=floor(V_LevelX)
 		duplicate/o/r=[cut,numpnts(temp)] temp temp4
 		
+		temp3=temp3-mean(temp1)
+		temp4=temp4-mean(temp2)
 		
-		bootstrap_mini("temp1",1000,0.05)
-		bootstrap_mini("temp2",1000,0.05)
 		bootstrap_mini("temp3",1000,0.05)
 		bootstrap_mini("temp4",1000,0.05)
 		
-		bootstrap_dif("temp1","temp3",1000,0,2)
-		bootstrap_dif("temp2","temp4",1000,0,2)
-		
-		
+		bootstrap_dif("temp3","temp4",1000,0,2)			
 	killwaves temp2,temp1,temp3,temp4
 end
 
@@ -1060,7 +1057,7 @@ end
 
 
 
-function lazy2()
+function get_amp_rise_sorted()
 loop_rise()
 loop_amplitude()
 loop_decay()

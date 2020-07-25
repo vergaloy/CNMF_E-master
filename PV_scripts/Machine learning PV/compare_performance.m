@@ -1,9 +1,19 @@
 function compare_performance(T,R)
 % compare_performance(out{1, 5},out{1, 1});
+% compare_performance(out{1, 1},out{1, 2});
+%% Groups:
+
+% 1)  test data
+% 2)  permutation control, destroy differences between behaviourla states, keep correlations. 
+% 3)  Completly random 
+% 4)  Shuffle points inside a condition, destroy correlation and mean differneces between neurons.  
+% 5)  Shift rows, destroy correlation but preserve mean differneces between neurons. 
+
+%%
 C=T-R;
 C=mean(C,3);
 C=C+C';
-values = {'HC1','HC2','PreS','PreS2','PostS','REM','HT','LT','NREM','A','A2','C','C2'};
+values = {'HC','HC2','BS','BS2','AS','R','H','L','L2','N','N2','A','A2','C','C2'};
 
 [B,~]=Bhattacharyya_coefficient_matrix(T,R);
 plot_heatmap_PV(C,B,values,'Change in accuracy','money')
