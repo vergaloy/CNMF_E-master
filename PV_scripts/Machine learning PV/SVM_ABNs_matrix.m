@@ -22,7 +22,7 @@ wS=zeros(size(D,2),size(D,2),size(D{1, 1},1));
 for i=1:size(b,1)
     c1=b(i,1);
     c2=b(i,2);
-    [tT,tP,tC,tR,tS]=prepare_train_Data(D,[c1,c2]);
+    [tT,tP,tS,tR,tC]=prepare_train_Data(D,1,[c1,c2]);
     [~, T(c1,c2),wT(c1,c2,:)] = trainClassifierPV(tT,0);
     [~, P(c1,c2),wP(c1,c2,:)] = trainClassifierPV(tP,0);
     [~, C(c1,c2),wC(c1,c2,:)] = trainClassifierPV(tC,0);
@@ -30,7 +30,7 @@ for i=1:size(b,1)
     [~, S(c1,c2),wS(c1,c2,:)] = trainClassifierPV(tS,0);
 end
 
-out={T,P,C,R,S;wT,wP,wC,wR,wS};
+out={T,P,S,R,C;wT,wP,wS,wR,wC};
 
 
     

@@ -6,14 +6,13 @@ sim=1000;
 out=cell(2,5);
 
 ppm = ParforProgressbar(sim,'showWorkerProgress', true);
-D=divide_date_for_SVM(mice_sleep);
 
 parfor i=1:sim
-    temp=SVM_ABNs_matrix(divide_date_for_SVM(mice_sleep,D));
+    temp=SVM_ABNs_matrix(divide_date_for_SVM(mice_sleep,'max_win',100,'kill_zero',1,'random_shifts',[1,2,3,4,5,6,7,8,9]));
     out=arrange_matrix(out,temp);
     ppm.increment();
 end    
-    
+save(strcat('SVM_',datestr(now,'yymmddHHMMSS'),'.mat'),'out')    
 delete(ppm); 
 
 end

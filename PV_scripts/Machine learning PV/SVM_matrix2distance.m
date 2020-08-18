@@ -1,14 +1,14 @@
 function D=SVM_matrix2distance(T,R,dup)
-% D0=SVM_matrix2distance(out{1, 1},out{1, 4},1);
+% D0=SVM_matrix2distance(out{1, 1},out{1, 2},1);
 % D0=SVM_matrix2distance(out{1, 2}(:,:,1:500),out{1, 2}(:,:,501:1000));
 
 %% Groups:
 
 % 1)  test data
 % 2)  permutation control, destroy differences between behaviourla states, keep correlations. 
-% 3)  Completly random 
+% 3)  Shift rows, destroy correlation but preserve mean differences between neurons.
 % 4)  Shuffle points inside a condition, destroy correlation and mean differneces between neurons.  
-% 5)  Shift rows, destroy correlation but preserve mean differneces between neurons. 
+% 5)  Completly random. 
 
 %%
  if ~exist('dup','var')
@@ -26,7 +26,7 @@ M=M+M';
 
 
  if (logical(dup))
-     values = {'HC','HC','preS','preS','postS','REM','HT','LT','LT','N','N','A','A','C','C'};
+     values = {'HC','preS','postS','REM','HT','LT','N','A','C'};
  else
      pairs=[1,2;3,4;8,9;10,11;12,13;14,15];
      M=average_duplicates(M,pairs);
@@ -35,7 +35,7 @@ M=M+M';
  end
 
 
-plot_heatmap_PV(M,B,values,'Performance above chance','cool')
+plot_heatmap_PV(M,B,values,'Performance above chance','gray')
 
 
 %% distribute array in column vectors

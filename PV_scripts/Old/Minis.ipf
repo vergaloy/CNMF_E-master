@@ -824,8 +824,8 @@ function bootstrap_mini(wavenom1,sim,alpha)
 		bootstrapdist[s]=mean(bootstrapsample)
 	endfor
 	sort bootstrapdist bootstrapdist
-	variable CI95=(alpha/2)*sim,CI_MC95=(alpha/6)*sim
-	print num2str(aver)+" "+num2str(sqrt(variance(bootstrapdist)))
+	variable CI95=(alpha/2)*sim
+	print num2str(aver)+" "+num2str(sqrt(variance(bootstrapdist)))+" "+num2str(bootstrapdist(sim-CI95))+" "+num2str(bootstrapdist(CI95))
 	killwaves bootstrapdist,bootstrapsample
 end
 
@@ -874,6 +874,7 @@ function bootstrap_dif(wavenom1,wavenom2,sim,del0,comparisons)  //del0==1 delete
 	print num2str(mean(bootstrapdist))+" "+num2str(sqrt(variance(bootstrapdist)))+" "+num2str(bootstrapdist(sim-CI_MC95))+" "+num2str(bootstrapdist(CI_MC95))+"  "+num2str(n)+"  "+num2str(n2)
 killwaves bootstrapdist,bootstrapsample
 end
+
 
 
 function get_parameter_rise_thr_by_cell(parameter,thr,thr2)//parameter= "amplitude","rise","frequecny",etc...
@@ -946,7 +947,7 @@ function get_parameter_interval(parameter,thr,thr2)//parameter= "amplitude","ris
 end
 
 
-
+// THIS 2 following codes are to compare grouping by rise
 
 function get_parameter_rise_thr(parameter,thr,thr2)//parameter= "amplitude","rise","frequecny",etc...
 	string parameter
@@ -962,29 +963,106 @@ function get_parameter_rise_thr(parameter,thr,thr2)//parameter= "amplitude","ris
 		wave rise_temp=$cdf+"Early:rise_sorted"
 		findlevel/q rise_temp, thr
 		variable cut=floor(V_LevelX)
-		duplicate/o/r=[0,cut] temp temp1
+		duplicate/o/r=[0,cut] temp Er_fast
 		findlevel/q rise_temp, thr2
 		cut=floor(V_LevelX)
-		duplicate/o/r=[cut,numpnts(temp)] temp temp2
+		duplicate/o/r=[cut,numpnts(temp)] temp Er_slow
 		
 		wave temp=$cdf+"late:"+parameter
 		wave rise_temp=$cdf+"late:rise_sorted"
 		findlevel/q rise_temp, thr
 		cut=floor(V_LevelX)
-		duplicate/o/r=[0,cut] temp temp3
+		duplicate/o/r=[0,cut] temp late_fast
 		findlevel/q rise_temp, thr2
 		cut=floor(V_LevelX)
-		duplicate/o/r=[cut,numpnts(temp)] temp temp4
+		duplicate/o/r=[cut,numpnts(temp)] temp late_slow
 		
-		temp3=temp3-mean(temp1)
-		temp4=temp4-mean(temp2)
+	//	temp3=temp3-mean(temp1)
+	//	temp4=temp4-mean(temp2)
 		
-		bootstrap_mini("temp3",1000,0.05)
-		bootstrap_mini("temp4",1000,0.05)
+	//	bootstrap_mini("temp3",1000,0.05)
+	//	bootstrap_mini("temp4",1000,0.05)
 		
-		bootstrap_dif("temp3","temp4",1000,0,2)			
-	killwaves temp2,temp1,temp3,temp4
+	//	bootstrap_dif("temp1","temp3",1000,0,comp)		
+	//	bootstrap_dif("temp2","temp4",1000,0,comp)		
+	//	print mean(temp1)-mean(temp3)
 end
+
+
+
+
+function bootstrap_dif_rise(wavenom1,wavenom2,wavenom3,wavenom4,sim,comparisons)  //del0==1 delete 0 from wave
+	string wavenom1,wavenom2,wavenom3,wavenom4
+	variable sim,comparisons
+	
+	wave tt=$wavenom1,tt2=$wavenom2,tt3=$wavenom3,tt4=$wavenom4
+	WaveTransform zapNaNs tt
+	WaveTransform zapNaNs tt2
+	WaveTransform zapNaNs tt3
+	WaveTransform zapNaNs tt4
+	
+	bootstrap_dif(wavenom1,wavenom2,1000,0,1)
+	bootstrap_dif(wavenom3,wavenom4,1000,0,1)
+	
+
+	variable ms1=mean($wavenom1),ms2=mean($wavenom2),ms3=mean($wavenom3),ms4=mean($wavenom4)
+	variable aver1=ms3-ms1,aver2=ms4-ms2
+	duplicate/o $wavenom1 bootstrapsample
+	duplicate/o $wavenom2 bootstrapsample2
+	duplicate/o $wavenom3 bootstrapsample3
+	duplicate/o $wavenom4 bootstrapsample4
+
+	variable s,i,n=numpnts($wavenom1),n2=numpnts($wavenom2),n3=numpnts($wavenom3),n4=numpnts($wavenom2)
+	make/o/n=(sim) bootstrapdist
+	variable randnum
+
+	for (s=0;s<sim;s+=1)
+	
+		for (i=0;i<n;i+=1)
+			randnum=ceil((enoise(0.5)+0.5)*(n))-1
+			bootstrapsample[i]=tt[randnum]
+		endfor
+		for (i=0;i<n2;i+=1)
+			randnum=ceil((enoise(0.5)+0.5)*(n2))-1
+			bootstrapsample2[i]=tt2[randnum]
+		endfor
+		
+		for (i=0;i<n3;i+=1)
+			randnum=ceil((enoise(0.5)+0.5)*(n3))-1
+			bootstrapsample3[i]=tt3[randnum]
+		endfor
+		
+		for (i=0;i<n4;i+=1)
+			randnum=ceil((enoise(0.5)+0.5)*(n4))-1
+			bootstrapsample4[i]=tt4[randnum]
+		endfor
+		
+		
+		
+		variable m1=	mean(bootstrapsample)
+		variable m2=	mean(bootstrapsample2)
+		variable m3=	mean(bootstrapsample3)
+		variable m4=	mean(bootstrapsample4)
+		
+		bootstrapdist[s]=(m2-m1)-(m4-m3);
+	endfor
+	sort bootstrapdist bootstrapdist
+	variable CI95=(0.05/2)*sim,CI_MC95=(0.05/(2*comparisons))*sim
+	print num2str(mean(bootstrapdist))+" "+num2str(sqrt(variance(bootstrapdist)))+" "+num2str(bootstrapdist(sim-CI_MC95))+" "+num2str(bootstrapdist(CI_MC95))+"  "+num2str(n)+"  "+num2str(n2)
+killwaves bootstrapdist,bootstrapsample,bootstrapsample2,bootstrapsample3,bootstrapsample4
+end
+
+
+
+function Bhattacharyya_coefficient_matrix(m1,m2,v1,v2)
+variable m1,m2,v1,v2
+variable DB=0.25*ln(0.25*(v1/v2+v2/v1+2))+0.25*(((m1-m2)^2)/(v1+v2))
+variable Bv=exp(-DB)
+
+print DB
+end
+
+
 
 
 function get_parameter_rise_thr_interval(parameter,thr1,thr2,thr3,thr4)//parameter= "amplitude","rise","frequecny",etc...
