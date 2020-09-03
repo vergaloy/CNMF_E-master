@@ -5,6 +5,7 @@ if ~exist('include','var')
     include=1:size(C,2);
 end
 
+C=C(include);
 neuron=[];
 neuron_shift=[];
 neuron_rand_inside=[];
@@ -12,14 +13,18 @@ neuron_per_inside=[];
 context=[];
 s = char(97:122);
 %% balance data with SMOTE
+smote=true;
 if (balance==1)
-C=balance_data(C);
+    if (smote)
+        C=balance_data(C);
+    else
+        C=cut_data(C);
+    end
 end
 
 %%
 
 for i=1:size(C,2)
-    if (ismember(i,include))
         temp=C{1,i}./max(C{1,i},[],2);
         temp(isnan(temp))=0;
         neuron=[neuron;temp'];
@@ -30,7 +35,6 @@ for i=1:size(C,2)
         temp=cell(size(C{1,i},2),1);
         temp(:)={s(i)};
         context=[context;temp];
-    end
 end
 
 
@@ -45,6 +49,7 @@ Train_per_inside = table(neuron_per_inside,context,'VariableNames',{'neuron','co
 Train_rand_inside = table( neuron_rand_inside,context,'VariableNames',{'neuron','context'});
 Train_rand = table(neuron_rand,context,'VariableNames',{'neuron','context'});
 
+end
 
 function out=balance_data(in)
 n=size(in,2);
@@ -58,6 +63,14 @@ temp=temp./max(temp,[],1);
 temp(isnan(temp))=0;
 for i=1:n
     out{i}=temp(L==i,:)';
+end
+end
+
+function out=cut_data(in)
+m=min(cellfun('size',in,2));
+for i=1:size(in,2)
+    out{1,i}=in{i}(:,1:m);
+end
 end
 
 

@@ -1185,3 +1185,89 @@ function rise_time_sorted_analysis_diff_per_cell(reference)
 	endfor
 	setdatafolder $cdf2
 end
+
+
+function plot_event_rise(x1,x2)
+	variable x1,x2
+	Variable numDataFolders = CountObjects(":", 4), i,r,ma,mi
+	string cdf2
+	cdf2=GetDataFolder(1)
+	String dfList = SortedDataFolderList(cdf2, 16)
+	display
+	for(i=0; i<(numDataFolders); i+=1)
+		String nextPath =stringfromlist(i,dflist,";")
+		nextPath="'"+nextpath+"'"
+		wave temp=$cdf2+nextPath+":events:rise"
+		
+		for (r=0;r<numpnts(temp);r+=1)
+			variable dummy=temp[r]>x1 && temp[r]<x2
+			if (temp[r]>x1 && temp[r]<x2)
+				wave temp2=$cdf2+nextPath+":events:fit:ev_"+num2str(r)
+				duplicate/o temp2 diff
+				differentiate diff
+				wavestats/q diff
+				SetScale/P x -V_maxRowLoc*deltax(temp2),deltax(temp2),"",temp2;DelayUpdate
+				mi=wavemin(temp2)
+				temp2=temp2-mi
+				AppendToGraph temp2
+			endif
+			
+			
+			
+		endfor	
+	endfor
+end
+	
+	
+function events2table(x1,x2,s)
+	variable x1,x2,s
+	Variable numDataFolders = CountObjects(":", 4), i,r,ma,mi
+	string cdf2
+	cdf2=GetDataFolder(1)
+	String dfList = SortedDataFolderList(cdf2, 16)
+	for(i=0; i<(numDataFolders); i+=1)
+		String nextPath =stringfromlist(i,dflist,";")
+		nextPath="'"+nextpath+"'"
+		wave temp=$cdf2+nextPath+":events:rise"
+		
+		for (r=0;r<numpnts(temp);r+=1)
+			variable dummy=temp[r]>x1 && temp[r]<x2
+			if (temp[r]>x1 && temp[r]<x2)
+				wave temp2=$cdf2+nextPath+":events:fit:ev_"+num2str(r)
+				duplicate/o temp2 diff
+				differentiate diff
+				wavestats/q diff
+				duplicate/o/R=[V_maxRowLoc,V_maxRowLoc+750] temp2 temp3
+				mi=wavemin(temp3)
+				temp3=temp3-mi
+				if (s==1)
+				mi=wavemax(temp3)
+				temp3=temp3/mi
+				endif
+				
+				Interpolate2/T=1/N=1000/Y=temp3_L temp3;DelayUpdate
+				concatenate {temp3_L},out				
+
+			endif
+		endfor	
+	endfor
+end
+
+
+Function PlotMatrixColumn(matrix)
+    wave matrix
+
+ 
+    Variable nCols = DimSize(matrix, 1)
+    Variable i
+    for (i = 0; i < nCols; i += 1)
+       
+        DoWindow MatrixGraph
+        if (!V_flag)
+            Display/K=1 /W=(454.5,315.5,849,524)/N=MatrixGraph  matrix[][i]
+        else
+            AppendToGraph   /W= MatrixGraph matrix[][i]
+        endif
+       
+    endfor  
+End

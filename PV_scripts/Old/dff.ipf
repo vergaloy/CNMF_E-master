@@ -762,6 +762,7 @@ end
 function append_traces(raster,sf) // plot everything inside a folder!!
 	variable raster,sf
 	string folder=GetDataFolder(1)
+	print folder
 	wave t=$folder+"data:S:artifact",w=$folder+"data:Sleep:WAKE"
 	
 	variable j=wavemax(w),k=wavemax(t)

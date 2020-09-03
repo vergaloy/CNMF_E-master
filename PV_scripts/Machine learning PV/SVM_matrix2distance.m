@@ -1,5 +1,5 @@
 function D=SVM_matrix2distance(T,R,dup)
-% D0=SVM_matrix2distance(out{1, 1},out{1, 2},1);
+% D0=SVM_matrix2distance(out{1, 1}(1:3,1:3,:),out{1, 2}(1:3,1:3,:),1);
 % D0=SVM_matrix2distance(out{1, 2}(:,:,1:500),out{1, 2}(:,:,501:1000));
 
 %% Groups:
@@ -26,7 +26,7 @@ M=M+M';
 
 
  if (logical(dup))
-     values = {'HC','preS','postS','REM','HT','LT','N','A','C'};
+     values = {'HC','preS','postS'};   %,'REM','HT','LT','N','A','C'
  else
      pairs=[1,2;3,4;8,9;10,11;12,13;14,15];
      M=average_duplicates(M,pairs);
@@ -35,7 +35,7 @@ M=M+M';
  end
 
 
-plot_heatmap_PV(M,B,values,'Performance above chance','gray')
+plot_heatmap_PV(M,B,values,'Performance above chance','cool')
 
 
 %% distribute array in column vectors
