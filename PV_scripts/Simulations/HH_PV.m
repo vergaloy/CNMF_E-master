@@ -5,7 +5,7 @@ cm= 1;  % membrane capacitance uF
 
 Iext = 10; % current uA
 totaltime= 100;
-dt = 0.001; % time step s
+dt = 0.0001; % time step s
 
 vm = -60; % intial membrane voltage
 ENa = 55.17; 
@@ -13,7 +13,7 @@ EK = -72.14;
 El =-49.42;
 
 gNamax = 120; %max conductances m.mho/cm^2
-gKmax = 36;
+gKmax = 56;
 glmax = 0.3;
 
 
@@ -69,7 +69,8 @@ for i = 1:niter,
     Il = gl*(vm-El);
     INat(i+1)=INa;
     IKt(i+1)=IK;
-    Ilt(i+1)=Il;
+    Ilt(i+1)=(INa-IK);
+%      Ilt(i+1)=Il;
     GNat(i+1)=gNa;
     GKt(i+1)=gK;
     Glt(i+1)=gl;
@@ -131,15 +132,15 @@ figure
 IT=INat+IKt+Ilt-Iext;
 tim = dt*(1:niter+1);
 hold all
-plot(tim,V);
+plot(tim,V,'black','LineWidth',2);
 xlabel('time in ms');
 ylabel('Membrane potential mV');
 axis([0 inf -100 100])
 yyaxis right
 ylabel('Current in uA*cm^2');
-plot(tim,GNat,'red');
-plot(tim,GKt,'blue');
-plot(tim,Glt,'green');
+plot(tim,GNat,'red','LineWidth',2);
+plot(tim,GKt,'blue','LineWidth',2);
+plot(tim,Glt,'green','LineWidth',2);
 
 legend('Membrane potential','Na+ G','K+ G','Leak G ')
 hold off

@@ -24,7 +24,8 @@ if ~exist(path_to_file,'file') || ~options.append
     if ~options.append && exist('path_to_file','file')
         warning('Rewriting existing file')
     end
-    h5create(path_to_file,options.groupname,[sizY(1:nd),Inf],'Chunksize',[sizY(1:nd),100],'Datatype',data_type);
+%     h5create(path_to_file,options.groupname,[sizY(1:nd),Inf],'Chunksize',[sizY(1:nd),100],'Datatype',data_type);
+    h5create(path_to_file,options.groupname,sizY,'Datatype',data_type);
     start_point = ones(1,nd+1);
 else
     fprintf('Appending to existing file \n')

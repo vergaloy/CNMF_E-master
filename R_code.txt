@@ -1,0 +1,10 @@
+library(pvclust) 
+
+x <- read.table(file = "clipboard", sep = "\t", header=FALSE)
+
+res.pv <- pvclust(x, method.dist="correlation", 
+                  method.hclust="complete", nboot = 1000)
+
+plot(res.pv, hang = -1, cex = 0.5)
+pvrect(res.pv)
+

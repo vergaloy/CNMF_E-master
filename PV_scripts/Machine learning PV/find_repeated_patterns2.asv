@@ -1,0 +1,74 @@
+function [Rep,Pat,Pid]=find_repeated_patterns2(Wall)
+% [Rep,Pat,Pid]=find_repeated_patterns2(Wall);
+
+Cmethod='complete';
+
+S=get_distance_patterns(Wall);
+Rt=linkage(S,Cmethod);
+
+
+sim=10000;
+parfor s=1:sim
+    ranper=datasample(1:size(Wall{1, 1},1),size(Wall{1, 1},1));
+    temp=get_distance_patterns(Wall,ranper);
+    per(:,s)=get_linkage(temp,Cmethod);
+end
+
+L=find_leaf_length(Rt);
+Rt=Rt(:,3);
+thr=prctile(per,5,2);
+for i=1:size(Rt,1) 
+    P(i)=Rt(i)<thr(L(i));
+end
+end
+
+function S=get_distance_patterns(Wall,ranper)
+if (~exist('ranper','var'))
+   ranper=1:size(Wall{1, 1},1);   
+end
+b=nchoosek(1:size(Wall,2),2);
+for i=1:size(b,1)
+    w1=Wall{b(i,1)};
+    w2=Wall{b(i,2)};
+    w1=w1(ranper,:);
+    w2=w2(ranper,:);
+    % complete with 0s
+    w=catpad(1,w1,w2);
+    w(isnan(w))=0;
+    w1=w(1:size(w1,1),:);
+    w2=w(size(w1,1)+1:size(w,1),:); 
+    D = pdist2(w1',w2','cosine');
+    D(isnan(D))=1;
+    M = matchpairs(D,10000);
+    w1=w1(:,M(:,1));
+    w2=w2(:,M(:,2));
+    S(i)=1-get_cosine(w1(:),w2(:));    
+end
+end
+
+function O=get_linkage(temp,Cmethod)
+Z=linkage(temp,Cmethod);
+L=find_leaf_length(Z);
+O(1:size(L,2)+1)=nan;
+u=unique(L);
+for i=1:size(u,2)
+    O(u(i))=min(Z(L==u(i),3));
+end
+end
+
+function out=find_leaf_length(Z)
+M=size(Z,1)+1;
+Z = num2cell(Z(:,1:2),2);
+for i=1:size(Z,1)
+    temp=Z{i, 1};
+    while (ismember(1,temp>M))
+        f=find(temp>M,1);
+        k=temp(f);
+        temp(f)=[];
+        temp=[temp,Z{k-M, 1}];
+    end
+    out(i)=length(temp);
+end
+end
+
+

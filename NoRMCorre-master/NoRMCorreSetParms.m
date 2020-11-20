@@ -158,7 +158,7 @@ Values = [
     {50}                  % width of each bin (default: 10)
     {50}                  % number of local means to keep in memory (default: 50)
     {{'median';'mean'}}   % method for averaging the template (default: {'median';'mean'}
-    {3}                   % number of data passes (default: 1)
+    {1}                   % number of data passes (default: 1)
     {'copy'}              % method of boundary treatment (default: 'copy')
     % misc
     {0}                   % add dc value to data (default: 0)

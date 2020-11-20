@@ -59,7 +59,7 @@ imagesc(WsToPlot, clims);
 cmap = flipud(gray); 
 colormap(cmap)
 plot(XsToPlot,YsToPlot);
-xlim([1 K*(L+sep)]);ylim([0 N+.1]+.5)
+% xlim([1 K*(L+sep)]);ylim([0 N+.1]+.5)
 set(gca, 'ydir', 'reverse')
 axis off
 
@@ -76,18 +76,19 @@ end
 set(gca,'ydir','reverse')
 hold on; plot([0 0 length(indplot)+1], [N 0 0]+.5, 'k')
 xlim([0 length(indplot)+1]);ylim([0 N+.1]+.5)
+caxis([0 0.5]);
 axis off
-%% plot Wflat (collapse out L dimension of W)
-axWflat = subplot('Position', [m+ww+wdata m wwflat hdata]);
-hold on
-set(gca, 'ColorOrder', kColors); 
-plot(squeeze(sum(W,3)), 1:N,'>', 'markersize', 2.5);
-ylim([0 N+.1]+.5)
-axis tight
-xlims = xlim; 
-xlim([xlims(2)*.1 xlims(2)])
-set(gca, 'ydir', 'reverse')
-axis off
+% %% plot Wflat (collapse out L dimension of W)
+% axWflat = subplot('Position', [m+ww+wdata m wwflat hdata]);
+% hold on
+% set(gca, 'ColorOrder', kColors); 
+% plot(squeeze(sum(W,3)), 1:N,'>', 'markersize', 2.5);
+% ylim([0 N+.1]+.5)
+% axis tight
+% xlims = xlim; 
+% xlim([xlims(2)*.1 xlims(2)])
+% set(gca, 'ydir', 'reverse')
+% axis off
 %% plot H's
 axH = subplot('Position', [m+ww m+hdata wdata hh]);
 Hrescaled = repmat(squeeze(sum(sum(W,1),3))',1,T).*H; % rescale by approximate loading
@@ -102,5 +103,5 @@ ylim([0 dn*K+dn*3]);xlim([0 length(indplot)+1])
 axis off
 %%
 if plotAll
-      linkaxes([axIm axW axWflat], 'y'); linkaxes([axIm axH], 'x');
+      linkaxes([axIm axW], 'y'); linkaxes([axIm axH], 'x');
 end

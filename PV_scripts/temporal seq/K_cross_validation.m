@@ -3,8 +3,8 @@ function K_cross_validation(X)
 
 %% K sweep with masked cross-validation
 nReps = 20; % increase if patient
-Ks = 1:15; % increase if patient
-L = 2;
+Ks = 1:10; % increase if patient
+L = 1;
 % X = NEURAL; 
 [N,T] = size(X);
 RmseTrain = zeros(length(Ks), nReps);

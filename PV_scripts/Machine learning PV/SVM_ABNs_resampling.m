@@ -1,21 +1,22 @@
 function out=SVM_ABNs_resampling(mice_sleep)
-% out=SVM_ABNs_resampling(mice_sleep);
+% SVM=SVM_ABNs_resampling(mice_sleep);
 
 sim=1000;
-
+ref=[1,2];
 out=cell(2,5);
-len=1450;
-to_svm=kill_inactive_neurons(mice_sleep,len,[8,9]);
-to_svm=to_svm(:,[8,9]);
-ppm = ParforProgressbar(sim,'showWorkerProgress', true);
+% len=1450;
+% to_svm=kill_inactive_neurons(mice_sleep,len,ref);
+% to_svm=to_svm(:,ref);
+to_svm=mice_sleep(:,ref);
+ ppm = ParforProgressbar(sim,'showWorkerProgress', true);
 
 parfor i=1:sim
-    samplei=random_sample_GCs(to_svm,[24,7,14]); 
-    temp=SVM_ABNs_matrix(divide_date_for_SVM(samplei,'random_shifts',[1,2,3],'bin',2,'max_win',295));
+%     samplei=random_sample_GCs(to_svm,[37,14,14]); 'max_win',295
+    temp=SVM_ABNs_matrix(divide_date_for_SVM(to_svm,'random_shifts',[1,2,3,4,5,6,7,8,9],'bin',1,'max_win',295));
     out=arrange_matrix(out,temp);
     ppm.increment();
 end    
-save(strcat('SVM_sleep_ret',datestr(now,'yymmddHHMMSS'),'.mat'),'out')    
+save(strcat('SVM_all_reduced',datestr(now,'yymmddHHMMSS'),'.mat'),'out')    
 delete(ppm); 
 
 end

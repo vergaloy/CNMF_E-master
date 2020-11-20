@@ -1,4 +1,4 @@
-function [pvals,is_significant] = test_significance(TestData,W,p,po,nnull)
+function [pvals,is_significant] = test_significance(TestData,W,p,nnull)
 %
 % USAGE: 
 %
@@ -38,7 +38,7 @@ function [pvals,is_significant] = test_significance(TestData,W,p,po,nnull)
 
 indempty = sum(sum(W>0,1),3)==0; % W is literally empty
 Wflat = sum(W,3); 
-indempty = indempty | (max(Wflat,[],1).^2> po*sum(Wflat.^2,1)); % or one neuron has >99.9% of the power
+indempty = indempty | (max(Wflat,[],1).^2> .999*sum(Wflat.^2,1)); % or one neuron has >99.9% of the power
 W(:,indempty,:) = []; % Delete factors that meet the above critera
 
 [N,K,L] = size(W);
@@ -48,7 +48,7 @@ if nargin < 3
     p = 0.05;
 end
 
-if nargin < 5
+if nargin < 4
     nnull = ceil(K/p)*2;
 end
 

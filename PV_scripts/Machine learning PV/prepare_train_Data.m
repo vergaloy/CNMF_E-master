@@ -21,20 +21,25 @@ if (balance==1)
         C=cut_data(C);
     end
 end
-
+balance_z=false;
+if (balance_z==1)
+    
+ C=balance_zero(C);   
+    
+end
 %%
 
 for i=1:size(C,2)
-        temp=C{1,i}./max(C{1,i},[],2);
-        temp(isnan(temp))=0;
-        neuron=[neuron;temp'];
-        neuron_shift=[neuron_shift;circshift_columns(C{1,i}')];
-        nrand=C{1,i}';
-        neuron_rand_inside=[neuron_rand_inside;reshape(datasample(nrand(:),numel(nrand),'Replace',false),size(C{1,i}',1),size(C{1,i}',2))];
-        neuron_per_inside=[neuron_per_inside;temp(randsample(size(temp,1),size(temp,1)),:)'];
-        temp=cell(size(C{1,i},2),1);
-        temp(:)={s(i)};
-        context=[context;temp];
+    temp=C{1,i}./max(C{1,i},[],2);
+    temp(isnan(temp))=0;
+    neuron=[neuron;temp'];
+    neuron_shift=[neuron_shift;circshift_columns(C{1,i}')];
+    nrand=C{1,i}';
+    neuron_rand_inside=[neuron_rand_inside;reshape(datasample(nrand(:),numel(nrand),'Replace',false),size(C{1,i}',1),size(C{1,i}',2))];
+    neuron_per_inside=[neuron_per_inside;temp(randsample(size(temp,1),size(temp,1)),:)'];
+    temp=cell(size(C{1,i},2),1);
+    temp(:)={s(i)};
+    context=[context;temp];
 end
 
 
@@ -71,6 +76,21 @@ m=min(cellfun('size',in,2));
 for i=1:size(in,2)
     out{1,i}=in{i}(:,1:m);
 end
+end
+
+function C=balance_zero(C)
+
+dif=sum(C{1, 2}==0,'all')-sum(C{1, 1}==0,'all');
+
+if (dif<0)
+    n=2;
+else
+    n=1;
+end
+
+add=abs(round(dif/size(C{1, n},1)));
+C{1, n}=catpad(2,C{1, n},zeros(size(C{1, n},1),add));
+
 end
 
 

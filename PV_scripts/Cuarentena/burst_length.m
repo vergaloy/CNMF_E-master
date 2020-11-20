@@ -1,11 +1,11 @@
 function [m,p]=burst_length(A,Fs)
-% [y3]=burst_length(D{1,9},0.5);
+% [y3]=burst_length(D{1,2},0.5);
 
 len=size(A,2);
 B(1:size(A,1))=0;
 m(1:size(A,1))=0;
 
-parfor i=1:size(A,1)
+for i=1:size(A,1)
     x1=A(i,:);
     [t1,f]=Welch_PV(x1,Fs,30);
     T(i,:)=t1; %spectogram of each neuron

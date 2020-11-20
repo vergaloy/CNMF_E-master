@@ -1,4 +1,4 @@
-function out=kill_inactive_neurons(in,len,ref)
+function [out,active]=kill_inactive_neurons(in,len,ref)
 
 for i=1:size(in,1)
     temp=zeros(size(in{i,1},1),1);  
@@ -19,4 +19,5 @@ for i=1:size(in,1)
         out{i,j}=in{i,j}(a,:);
     end
 end
+active=catpad(1,active{:});
 end

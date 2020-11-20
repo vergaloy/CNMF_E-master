@@ -774,7 +774,7 @@ function rise_time_sorted_analysis_diff(destination,reference,group_comparisons)
 	string destination,reference
 	variable group_comparisons
 	string cdf=GetDataFolder(1)
-	variable s=0.0005,e=0.003, delta=0.0001
+	variable s=0.0005,e=0.003, delta=0.00005
 	variable cut,start=s
 	for (s=start;s<e;s+=delta)
 		if (s==start)
@@ -797,11 +797,8 @@ function rise_time_sorted_analysis_diff(destination,reference,group_comparisons)
 		deletepoints 0, cut+1, w22
 		deletepoints 0, cut+1, w21
 		
-		//wave boots1,boots2
-		
 		//print numpnts(boots)
-		
-		bootstrap_dif("boots1",cdf+"boots2",10000,0,(e-start)/delta*group_comparisons)
+		bootstrap_dif_norm("boots1",cdf+"boots2",10000,0,(e-start)/delta*group_comparisons)
 	endfor
 	//killwaves w11,w12,w21,w22
 end
@@ -875,7 +872,48 @@ function bootstrap_dif(wavenom1,wavenom2,sim,del0,comparisons)  //del0==1 delete
 killwaves bootstrapdist,bootstrapsample
 end
 
+function bootstrap_dif_norm(wavenom1,wavenom2,sim,del0,comparisons)  //del0==1 delete 0 from wave
+	string wavenom1,wavenom2
+	variable sim,del0,comparisons
+	
+	wave tt=$wavenom1,tt2=$wavenom2
+	WaveTransform zapNaNs tt
+	WaveTransform zapNaNs tt2
+	
+	if (Del0==1)
+		Extract/o $wavenom1, $wavenom1, tt!=0
+		Extract/o $wavenom2, $wavenom2, tt2!=0
+	endif
+	variable ms1=mean($wavenom1),ms2=mean($wavenom2)
+	variable aver=ms2-ms1
+	duplicate/o $wavenom1 bootstrapsample
+	duplicate/o $wavenom2 bootstrapsample2
 
+	variable s,n=numpnts($wavenom1),i,n2=numpnts($wavenom2),i2
+	make/o/n=(sim) bootstrapdist
+	variable randnum
+
+	for (s=0;s<sim;s+=1)
+	
+		for (i=0;i<n;i+=1)
+			randnum=ceil((enoise(0.5)+0.5)*(n))-1
+			bootstrapsample[i]=tt[randnum]
+		endfor
+		for (i2=0;i2<n2;i2+=1)
+			randnum=ceil((enoise(0.5)+0.5)*(n2))-1
+			bootstrapsample2[i2]=tt2[randnum]
+		endfor
+		
+		variable m2=	mean(bootstrapsample2)
+		variable m1=	mean(bootstrapsample)
+		
+		bootstrapdist[s]=m2/m1*100
+	endfor
+	sort bootstrapdist bootstrapdist
+	variable CI95=(0.05/2)*sim,CI_MC95=(0.05/(2*comparisons))*sim
+	print num2str(mean(bootstrapdist))+" "+num2str(sqrt(variance(bootstrapdist)))+" "+num2str(bootstrapdist(sim-CI_MC95))+" "+num2str(bootstrapdist(CI_MC95))+"  "+num2str(n)+"  "+num2str(n2)
+killwaves bootstrapdist,bootstrapsample
+end
 
 function get_parameter_rise_thr_by_cell(parameter,thr,thr2)//parameter= "amplitude","rise","frequecny",etc...
 	string parameter
@@ -950,6 +988,10 @@ end
 // THIS 2 following codes are to compare grouping by rise
 
 function get_parameter_rise_thr(parameter,thr,thr2)//parameter= "amplitude","rise","frequecny",etc...
+
+//	 get_parameter_rise_thr("Amp_rise_sorted",1.13,1.805)
+//  get_parameter_rise_thr("decay_sorted",1.13,1.805)
+
 	string parameter
 	variable thr,thr2
    thr=thr/1000
@@ -992,6 +1034,8 @@ end
 
 
 function bootstrap_dif_rise(wavenom1,wavenom2,wavenom3,wavenom4,sim,comparisons)  //del0==1 delete 0 from wave
+
+//bootstrap_dif_rise("Er_fast","late_fast","Er_slow","late_slow",1000,3)
 	string wavenom1,wavenom2,wavenom3,wavenom4
 	variable sim,comparisons
 	
@@ -1001,8 +1045,8 @@ function bootstrap_dif_rise(wavenom1,wavenom2,wavenom3,wavenom4,sim,comparisons)
 	WaveTransform zapNaNs tt3
 	WaveTransform zapNaNs tt4
 	
-	bootstrap_dif(wavenom1,wavenom2,1000,0,1)
-	bootstrap_dif(wavenom3,wavenom4,1000,0,1)
+	bootstrap_dif_norm(wavenom1,wavenom2,1000,0,1)
+	bootstrap_dif_norm(wavenom3,wavenom4,1000,0,1)
 	
 
 	variable ms1=mean($wavenom1),ms2=mean($wavenom2),ms3=mean($wavenom3),ms4=mean($wavenom4)
@@ -1012,7 +1056,7 @@ function bootstrap_dif_rise(wavenom1,wavenom2,wavenom3,wavenom4,sim,comparisons)
 	duplicate/o $wavenom3 bootstrapsample3
 	duplicate/o $wavenom4 bootstrapsample4
 
-	variable s,i,n=numpnts($wavenom1),n2=numpnts($wavenom2),n3=numpnts($wavenom3),n4=numpnts($wavenom2)
+	variable s,i,n=numpnts($wavenom1),n2=numpnts($wavenom2),n3=numpnts($wavenom3),n4=numpnts($wavenom4)
 	make/o/n=(sim) bootstrapdist
 	variable randnum
 
@@ -1044,7 +1088,7 @@ function bootstrap_dif_rise(wavenom1,wavenom2,wavenom3,wavenom4,sim,comparisons)
 		variable m3=	mean(bootstrapsample3)
 		variable m4=	mean(bootstrapsample4)
 		
-		bootstrapdist[s]=(m2-m1)-(m4-m3);
+		bootstrapdist[s]=(m2/m1*100)-(m4/m3*100);
 	endfor
 	sort bootstrapdist bootstrapdist
 	variable CI95=(0.05/2)*sim,CI_MC95=(0.05/(2*comparisons))*sim

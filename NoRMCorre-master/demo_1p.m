@@ -1,12 +1,19 @@
 % demo file for applying the NoRMCorre motion correction algorithm on 
 % 1-photon widefield imaging data
-% Example files can be obtained through the miniscope project page
+% Example file is provided from the miniscope project page
 % www.miniscope.org
 
 clear;
 gcp;
-%% read data and convert to double
-name = 'C:\Users\SSG Lab\Desktop\lab\msCam8.avi';
+%% download data and convert to single precision
+name = 'msCam13.avi';
+if ~exist(name,'file')  % download file if it doesn't exist in the directory
+    url = 'https://caiman.flatironinstitute.org/~neuro/normcorre_datasets/msCam13.avi';
+    fprintf('downloading the file...');
+    outfilename = websave(name,url);
+    fprintf('done.');
+end
+
 %addpath(genpath('../../NoRMCorre'));
 Yf = read_file(name);
 Yf = single(Yf);
@@ -23,9 +30,9 @@ if (0)
     %Ypc = Yf - Y;
     bound = size(hLarge,1);
 else
-    gSig = 7; 
-    gSiz = 17; 
-    psf = fspecial('gaussian', round(gSiz), gSig);
+    gSig = 4; 
+    gSiz = 3*gSig; 
+    psf = fspecial('gaussian', round(2*gSiz), gSig);
     ind_nonzero = (psf(:)>=max(psf(:,1)));
     psf = psf-mean(psf(ind_nonzero));
     psf(~ind_nonzero) = 0;   % only use pixels within the center disk
@@ -36,7 +43,7 @@ else
 end
 %% first try out rigid motion correction
     % exclude boundaries due to high pass filtering effects
-options_r = NoRMCorreSetParms('d1',d1-bound,'d2',d2-bound,'bin_width',50,'max_shift',20,'iter',1,'correct_bidir',false);
+options_r = NoRMCorreSetParms('d1',d1-bound,'d2',d2-bound,'bin_width',200,'max_shift',20,'iter',1,'correct_bidir',false);
 
 %% register using the high pass filtered data and apply shifts to original data
 tic; [M1,shifts1,template1] = normcorre_batch(Y(bound/2+1:end-bound/2,bound/2+1:end-bound/2,:),options_r); toc % register filtered data

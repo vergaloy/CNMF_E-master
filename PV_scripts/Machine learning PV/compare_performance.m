@@ -1,6 +1,6 @@
 function compare_performance(T,R)
-% compare_performance(out{1, 1},out{1, 4});
-% compare_performance(out{1, 1}(1:3,1:3,:),out{1, 4}(1:3,1:3,:));
+% compare_performance(SVM{1, 1},SVM{1, 4});
+% compare_performance(DBNs{1, 1},DBNs{1, 3});
 %% Groups:
 
 % 1)  test data
@@ -15,13 +15,14 @@ C=mean(C,3);
 if (C(1,2)~=C(2,1))
 C=C+C';
 end
-values = {'HC','preS','postS'};  %,'R','HT','LT','NREM','A','C'
+values={'HC','preS','postS','REM','HT','LT','N','A','C'};  %,'R','HT','LT','NREM','A','C'
 
 % [B,~]=Bhattacharyya_coefficient_matrix(T,R);
-P=get_p_val(T,R);
-plot_heatmap_PV(C,P,values,'Change in accuracy','money')
+P=get_p_val_per(T,R);
+plot_heatmap_PV(C,'P_vals',P,'x_labels',values,'y_labels',values,'tit','Change in accuracy','Colormap','money','FontSize',19)
 
 
+% dendrogram(linkage(squareform(C,'tovector'),'complete'),0,'Labels',values);
 
 end
 
@@ -36,18 +37,31 @@ DB=DB+DB';
 B=exp(-DB);
 end
 
-function out=get_p_val(T,R)
+function out=get_p_val_norm(T,R)
 C=T-R;
 out=zeros(size(C,1),size(C,2));
 b=nchoosek(1:size(C,2),2);
 for i=1:size(b,1)
     temp=squeeze(C(b(i,1),b(i,2),:));
     m=abs(0-mean(temp))./std(temp);
-    out(b(i,1),b(i,2))=normcdf(m);
+    out(b(i,1),b(i,2))=2*normcdf(-m);
 end
 out=out+out';
-out=1-out;
+out=out+diag(ones(1,size(out,1)));
+out=1-squareform(1-out,'tovector');
+[~,~,~, out]=fdr_bh(out);
+out=1-squareform(1-out);
 end
+
+function out=get_p_val_per(T,R)
+C=T-R;
+out=double((prctile(C,2.5,3)).*prctile(C,99.75,3)>0);  
+out=out+out';
+out(out==1)=0.03;
+out(out==0)=1;
+% .*prctile(C,99.75,3)
+end
+
 
 
 
