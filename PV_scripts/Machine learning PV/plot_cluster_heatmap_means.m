@@ -14,14 +14,16 @@ ax2 = nexttile([4 1]);
 if (size(HM,2)==9)
 values={'HC','preS','postS','REM','HT','LT','N','A','C'};
 else
- values={'HC','preS','postS','A','C'};   
+ values={'HC','preS','postS','Test','New'};   
 end
 values=values(perm);
-imagesc(HM(perm,perm));
-colormap('parula');
-set(ax2,'xtick',1:9,'xticklabel',values,'yticklabel',values)
+
+ax1=plot_heatmap_PV(HM(perm,perm),'colormap','parula','GridLines','-','x_labels',values,'y_labels',values);
+% imagesc(HM(perm,perm));
+% colormap('parula');
+% set(ax2,'xtick',1:size(HM,1),'ytick',1:size(HM,2),'xticklabel',values,'yticklabel',values)
 linkaxes([ax1,ax2],'x');
-cb=colorbar('eastoutside');
+% cb=colorbar('eastoutside');
 end
 
 

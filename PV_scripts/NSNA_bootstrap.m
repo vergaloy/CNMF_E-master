@@ -1,11 +1,18 @@
-function [N,G,R]=NSNA_bootstrap(data)
-% [N(:,4),G(:,4),R(:,4)]=NSNA_bootstrap(late_slow);
-sim=1000;
-N=zeros(1,sim);G=zeros(1,sim);R=zeros(1,sim);
-parfor s=1:sim
-    bsamp=datasample(data,size(data,1),1);
-    [N(s),G(s),R(s)]=NSNA(bsamp,0);
-    if (N(s)<0)
-        dummy=1
-    end
+function [N,G,R,mini,av]=NSNA_bootstrap(mini)
+
+% [N,G,R,clean]=NSNA_bootstrap(mini);
+[mini,av]=clasiffy_minis(mini);
+sims=1000;
+parfor s=1:sims
+I=datasample(1:size(mini,1),size(mini,1));
+tmini=mini(I,:);
+tav=av(I,:)
+[N(s),G(s),R(s)]=NSNA(tmini,0,0,tav);
+% NSNA(tmini,1,0,tav);
 end
+
+
+end
+
+
+

@@ -51,6 +51,7 @@ HM=get_distance(datain,Cdist,m);
 
 %% Plot stuff
 if (plotme==1)
+    figure;
 h=plot_cluster_heatmap(HM,Z,L,clus);
 end
 K=get_connectome_binary(clus,active);

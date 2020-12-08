@@ -3,14 +3,14 @@ function [Wall,Hall,Xall]=get_cluster_activtiy_by_NMF_batch(X,W,H,plotme)
 [Wall,Hall,Xall]=group_W_H(X,W,H);
 
 if (plotme)
-for i=1:size(Xall,2)
-    w=Wall{i};
-    h=Hall{i};
-    x=Xall{i};
-    wt=squeeze(mean(w,3));
-   [~,L]=sort(sum(wt./max(wt,[],1)+(wt>0).*flip(1:size(wt,2)),2),'descend');
-    figure; SimpleWHPlot(wt(L,:,:),h,x(L,:)); title('SeqNMF factors, with raw data')
-end
+    for i=1:size(Xall,2)
+        w=Wall{i};
+        h=Hall{i};
+        x=Xall{i};
+        wt=squeeze(mean(w,3));
+        [perm1,perm2]=sort_w(wt,h);
+        figure; SimpleWHPlot_PV(wt(perm1,perm2),h(perm2,:),x(perm1,:));       
+    end
 end
 end
 

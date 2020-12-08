@@ -15,7 +15,7 @@ for i=1:size(K,1)
             k=Cluster_data_PV(temp,'remove_0s',1,...
                 'Cmethod','complete','Cdist',@cross_cosine_dist,'m',1,'plotme',0);
             
-            [w,h]=get_cluster_activity_by_NMF(temp,k,1);
+            [w,h]=get_cluster_activity_by_NMF(temp,k,3);
              [~,L]=sort(sum(w./max(w,[],1)+(w>0).*flip(1:size(w,2)),2),'descend');
              figure; SimpleWHPlot(w(L,:,:),h,temp(L,:)); title('SeqNMF factors, with raw data')
              W{i,j}=w;

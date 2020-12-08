@@ -1,6 +1,6 @@
 function [CI,P,CIc]=bootstrap(obj,c,method)
 
-% CI=bootstrap(A,8,'percentiles');
+% [CI,P]=bootstrap(A,2);
 
 if ~exist('method','var')  
  method='percentiles';   

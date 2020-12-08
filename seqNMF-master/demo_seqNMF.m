@@ -18,36 +18,13 @@ SeqNoiseNeuron = 1.*ones(number_of_seqences,1); % Participation parameter = 100%
 X = generate_data(T,Nneurons,Dt,NeuronNoise,SeqNoiseTime,SeqNoiseNeuron,0,0,0,0,0);
 
 %% Fit with seqNMF
-X=full(CtoT(C));
-% X=full(C{1,3});
-% X=X./max(X,[],2);
-% X(isnan(sum(X,2)),:)=[];
- X(X>0)=1;
-%X=[zeros(size(X,1),50),X];
-K = 8;
-L = 5;
-lambda =0.6;
+K = 5;
+L = 50;
+lambda =.005;
 shg; clf
 display('Running seqNMF on simulated data (2 simulated sequences + noise)')
-[W,H] = seqNMF(X,'K',K, 'L', L,'lambda', lambda,'tolerance',1e-4,'lambdaL1W',1,'showplot',0);
+[W,H] = seqNMF(X,'K',K, 'L', L,'lambda', lambda,'showPlot', 0);
 
-display('Testing significance of factors on held-out data')
-[pvals,is_significant] = test_significance(X,W,1);
-
-W = W(:,is_significant,:); 
-H = H(is_significant,:); 
-
-% H=H./max(H,[],2);
-% 
-
-% H=correlation_temporal_patterns(X,W);
-H = circshift(H,round(L/2),2);
-
-[max_factor, L_sort, max_sort, hybrid] = helper.ClusterByFactor(W(:,:,:),1);
- indSort = hybrid(:,3);
-figure; SimpleWHPlot(W(indSort,:,:),H,X(indSort,:)); title('SeqNMF factors, with raw data')
-
-% figure; SimpleWHPlot(W(indSort,:,:),H,X(indSort,:)); title('SeqNMF factors, with raw data')
 %% Look at factors
 figure; SimpleWHPlot(W,H); title('SeqNMF reconstruction')
 figure; SimpleWHPlot(W,H,X); title('SeqNMF factors, with raw data')
@@ -56,12 +33,11 @@ figure; SimpleWHPlot(W,H,X); title('SeqNMF factors, with raw data')
 tic
 Ws = {};
 Hs = {};
-numfits = 10; %number of fits to compare
-rep=10;
-for k = 1:rep
+numfits = 3; %number of fits to compare
+for k = 1:10
     display(sprintf('running seqNMF with K = %i',k))
     for ii = 1:numfits
-        [Ws{ii,k},Hs{ii,k}] = seqNMF(X,'K',k, 'L', 1,'lambda', 0,'maxiter',100,'showplot',0,'tolerance', 1e-4,'lambdaOrthoW',1,'useWupdate',0,'shift',0,'SortFactors',0); 
+        [Ws{ii,k},Hs{ii,k}] = seqNMF(X,'K',k, 'L', L,'lambda', 0,'maxiter',30,'showplot',0); 
         % note that max iter set low (30iter) for speed in demo (not recommended in practice)
     end
     inds = nchoosek(1:numfits,2);
@@ -72,11 +48,12 @@ for k = 1:rep
 end
 %% Plot Diss and choose K with the minimum average diss.
 figure,
-plot(1:rep,Diss,'ko'), hold on
-h1 = plot(1:rep,median(Diss,1),'k-','linewidth',2);
+plot(1:10,Diss,'ko'), hold on
+h1 = plot(1:10,median(Diss,1),'k-','linewidth',2);
+h2 = plot([3,3],[0,0.5],'r--');
+legend([h1 h2], {'median Diss','true K'})
 xlabel('K')
 ylabel('Diss')
-toc
 
 %% load example HVC calcium imaging data (from 6991FirstFewDaysForBatch)
 clear all
@@ -100,7 +77,7 @@ Lsong = ceil(L*SONGfs);
 shg
 display('Running seqNMF on real neural data (from songbird HVC, recorded by Emily Mackevicius, Fee Lab)')
 [W, H, ~,loadings,power]= seqNMF(X,'K',K,'L',Lneural,...
-            'lambdaL1W', .1, 'lambda', .005, 'maxiter', 100, 'showPlot', 1,...
+            'lambdaL1W', .1, 'lambda', .005, 'maxiter', 100, 'showPlot', 0,...
             'lambdaOrthoW', 0); 
 p = .05; % desired p value for factors
 
@@ -124,23 +101,21 @@ title('SeqNMF reconstruction')
 
 %% Procedure for choosing lambda
 nLambdas = 20; % increase if you're patient
-K = 8;
-%X = trainNEURAL;
-lambdas = sort([logspace(-1,-5,nLambdas)], 'ascend');
+K = 10; 
+X = trainNEURAL;
+lambdas = sort([logspace(-1,-5,nLambdas)], 'ascend'); 
 loadings = [];
-regularization = [];
-cost = [];
-for r=1:100
-    for li = 1:length(lambdas)
-        [N,~] = size(X);
-        [W, H, ~,loadings(li,:),power]= seqNMF(X,'K',K,'L',1,...
-            'lambdaL1W', 0, 'lambda', lambdas(li), 'maxiter', 100, 'showPlot', 0,'lambdaOrthoW',1);
-        [cost(r,li),regularization(r,li),~] = helper.get_seqNMF_cost(X,W,H);
-        display(['Testing lambda ' num2str(li) '/' num2str(length(lambdas))])
-    end
+regularization = []; 
+cost = []; 
+for li = 1:length(lambdas)
+    [N,T] = size(X);
+    [W, H, ~,loadings(li,:),power]= seqNMF(X,'K',K,'L',Lneural,...
+        'lambdaL1W', .1, 'lambda', lambdas(li), 'maxiter', 100, 'showPlot', 0); 
+    [cost(li),regularization(li),~] = helper.get_seqNMF_cost(X,W,H);
+    display(['Testing lambda ' num2str(li) '/' num2str(length(lambdas))])
 end
 %% plot costs as a function of lambda
-windowSize = 2; 
+windowSize = 3; 
 b = (1/windowSize)*ones(1,windowSize);
 a = 1;
 Rs = filtfilt(b,a,regularization); 
@@ -166,7 +141,7 @@ set(gca,'color','none','tickdir','out','ticklength', [0.025, 0.025])
 loadings = [];
 pvals = []; 
 is_significant = []; 
-% X = trainNEURAL;
+X = trainNEURAL;
 nIter = 20; % increase if patient
 display('Running seqNMF multiple times for lambda=0.005')
 
@@ -231,11 +206,11 @@ WHPlot(W(indSort,:,:),H(:,:), X(indSort,:), ...
     1,trainSONG(:,:)); title('lambdaOrthoW -> parts based')
 
 %% K sweep with masked cross-validation
-nReps = 10; % increase if patient
-Ks = 1:15; % increase if patient
-L = 1;
-% X = NEURAL; 
-[N,T] = size(X);
+nReps = 5; % increase if patient
+Ks = 1:8; % increase if patient
+L = 50;
+X = NEURAL; 
+[N,T] = size(NEURAL);
 RmseTrain = zeros(length(Ks), nReps);
 RmseTest = zeros(length(Ks), nReps);
 figure
@@ -243,9 +218,10 @@ figure
 Kplot = Kplot + rand(length(Ks), nReps)*.25-.125; 
 parfor K = Ks
     for repi = 1:nReps
+        display(['Cross validation on masked test set; Testing K = ' num2str(K) ', rep ' num2str(repi)])
         rng('shuffle')
-        M = (rand(N,T)>.5); % create masking matrix (0's are test set, not used for fit)
-        [W,H] = seqNMF(X,'K',K, 'L', 1,'lambda', 0,'maxiter',30,'showplot',0,'tolerance', 1e-4,'lambdaOrthoW',1,'useWupdate',0,'M',M); 
+        M = rand(N,T)>.05; % create masking matrix (0's are test set, not used for fit)
+        [W,H] = seqNMF(X,'K', K, 'L', L,'lambda', 0,'showPlot', 0, 'M', M);
         Xhat = helper.reconstruct(W,H); 
         RmseTrain(K,repi) = sqrt(sum(M(:).*(X(:)-Xhat(:)).^2)./sum(M(:)));
         RmseTest(K,repi) = sqrt(sum((~M(:)).*(X(:)-Xhat(:)).^2)./sum(~M(:)));
@@ -258,7 +234,7 @@ scatter(Kplot(:), RmseTest(:), 'b', 'markerfacecolor', 'flat');
 plot(mean(RmseTrain,2), 'r')
 plot(mean(RmseTest,2), 'b')
 xlabel('K'); ylabel('RMSE')
-h_legend=legend('Train', 'Test');
+legend('Train', 'Test', 'location', 'northwest')
 drawnow; shg
 
 %% Calculate the sequenciness score
@@ -276,7 +252,7 @@ X = NEURAL;
 % do seqNMF 
 tmp = [];
 
-parfor iteri = 1:100
+parfor iteri = 1:nIter
     rng('shuffle')
     [~, ~, ~,~,tmp(iteri)] = seqNMF(X, 'L', L, 'K', K, 'lambda', 0, 'showPlot',0);
 end

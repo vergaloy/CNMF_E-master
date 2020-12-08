@@ -1,4 +1,4 @@
-function [CI,P]=compare_cell_ensambles_activity(a,ix,kill_0)
+function CI=compare_cell_ensambles_activity_proportion(a,ix,kill_0);
 % [CI,P]=compare_cell_ensambles_activity(mice_sleep,ix,a,7);
 ac=separate_activities(a,ix); 
 
@@ -14,11 +14,9 @@ end
 
 prop=sim2prop(sim);
 % prop=sim;
-for i=1:size(prop,2)
-   X=prop{i}; 
-   P{i}=get_P(X,9);
-   CI{i}=get_CI(X,1);
-end
+
+pro=(prop{1, 1}-prop{1, 2})./(prop{1, 1}+prop{1, 2}) ;
+CI=get_CI(pro,1);
 
 
 end

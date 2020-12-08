@@ -1,4 +1,4 @@
-function A=bin_activity(mice_sleep,session,ix,b);
+function A=bin_activity(mice_sleep,session,b);
 % bin_activity(mice_sleep,7,ix);
 
 M=mice_sleep(:,session);

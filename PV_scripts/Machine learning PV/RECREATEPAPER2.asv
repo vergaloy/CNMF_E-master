@@ -5,8 +5,8 @@ data=load_mice_data();  %load data
 [mice_sleep,hyp]=group_mice_data(data);
 [D,a,at]=bin_mice_sleep(mice_sleep,1:size(mice_sleep,2),bin);
 [active,mice_sleep]=get_inactive_cells(mice_sleep,D,[1,2,3,8,9]);
-[D,a,at]=bin_mice_sleep(mice_sleep,1:size(mice_sleep,2),bin);
-
+at=at(active,:);
+a=a(active,:);
 %% Get significant Clusters of predominantly active neurons
 % clusters neurons
 % clusters conditions
@@ -30,11 +30,6 @@ S=[size(D{1,1},2),size(D{1,2},2),size(D{1,3},2),size(D{1,8},2),size(D{1,9},2)];
 Wc(Wc<1)=0;
 f=Wc>0;
 Wc(:,sum(f,1)<3)=[];
- indempty = sum(sum(Wc>0,1),3)==0; % W is literally empty   
-indempty = indempty | (max(Wc,[],1).^2> .95*sum(Wc.^2,1)); % or one neuron has >99.9% of the power
- Wc=Wc(:,~indempty,:);
-
-
 pix=get_pattern_cell_ix(X,Wc,S);
 
 
@@ -56,5 +51,5 @@ plot_heatmap_cell_separated(at3,pix);
 pattern_distances(pix,data,active);
 a3=sum(a2(:,[1,2,3,8,9]),2);
 
-logistic_regresion_activity(a3,pix2)
+
 

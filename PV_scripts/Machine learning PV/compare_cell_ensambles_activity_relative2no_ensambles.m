@@ -1,5 +1,8 @@
-function [CI,P]=compare_cell_ensambles_activity(a,ix,kill_0)
-% [CI,P]=compare_cell_ensambles_activity(mice_sleep,ix,a,7);
+function [CI,P]=compare_cell_ensambles_activity_relative2no_ensambles(mice_sleep,ix,a,session);
+% [CI,P]=compare_cell_ensambles_activity_relative2no_ensambles(mice_sleep,ix,a,7);
+N=bin_activity(mice_sleep,session,5);
+a=[a(:,1),a(:,2),a(:,3),N,a(:,8),a(:,9)];
+
 ac=separate_activities(a,ix); 
 
 for i=1:size(ac,2)
@@ -8,16 +11,12 @@ for i=1:size(ac,2)
 end
 
 
-if (kill_0==1)
-sim=sim(2:3);
-end
 
-prop=sim2prop(sim);
-% prop=sim;
+prop=sim_norm(sim);
 for i=1:size(prop,2)
    X=prop{i}; 
    P{i}=get_P(X,9);
-   CI{i}=get_CI(X,1);
+   CI{i}=get_CI(X,9);
 end
 
 
@@ -41,17 +40,16 @@ parfor s=1:sims
         temp=obj(:,i);
         temp(isnan(temp))=[];
         temp=datasample(temp,size(temp,1));
-        sim(s,i)= mean(temp);
+        sim(s,i)= sum(temp);
     end
 end
 end
 
-function prop=sim2prop(sim);
+function prop=sim_norm(sim)
 
-X=0*sim{1,1};
-for i=1:size(sim,2)
-    X=X+sim{1,i};
-end
+X=sim{1,1};
+X=mean(X,1);
+sim=sim(2:3);
 
 for i=1:size(sim,2)
     prop{i}=sim{1,i}./X;

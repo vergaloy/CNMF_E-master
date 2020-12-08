@@ -1,5 +1,6 @@
 ﻿#pragma TextEncoding = "UTF-8"
 #pragma rtGlobals=3		// Use modern global access method and strict wave access.
+#include <Transpose Waves In Table>
 
 
 
@@ -8,29 +9,29 @@ function lazy()
 
 
 
-Transient_batch()
-setdatafolder root:'CN21 20uM':Data:SCR:Late:
-Transient_batch()
-setdatafolder root:'CN21 20uM':Data:CN21:Early:
-Transient_batch()
-setdatafolder root:'CN21 20uM':Data:CN21:Late:
-Transient_batch()
-setdatafolder root:'CN21 5uM':Data:SCR:Late:
-Transient_batch()
-setdatafolder root:'CN21 5uM':Data:SCR:Early:
-Transient_batch()
-setdatafolder root:'CN21 5uM':Data:CN21:late:
-Transient_batch()
-setdatafolder root:'CN21 5uM':Data:CN21:Early:
-Transient_batch()
+	Transient_batch()
+	setdatafolder root:'CN21 20uM':Data:SCR:Late:
+	Transient_batch()
+	setdatafolder root:'CN21 20uM':Data:CN21:Early:
+	Transient_batch()
+	setdatafolder root:'CN21 20uM':Data:CN21:Late:
+	Transient_batch()
+	setdatafolder root:'CN21 5uM':Data:SCR:Late:
+	Transient_batch()
+	setdatafolder root:'CN21 5uM':Data:SCR:Early:
+	Transient_batch()
+	setdatafolder root:'CN21 5uM':Data:CN21:late:
+	Transient_batch()
+	setdatafolder root:'CN21 5uM':Data:CN21:Early:
+	Transient_batch()
 end
 
 
 function Transient_batch()
-// PARAMETERS************
-variable sf=20000
+	// PARAMETERS************
+	variable sf=20000
 
-// *************
+	// *************
 
 
 	Variable numDataFolders = CountObjects(":", 4), i
@@ -52,7 +53,7 @@ variable sf=20000
 		delete_bad_events()
 	endfor
 	
-	end
+end
 
 
 function Get_AUC_and_Amplitude()
@@ -185,7 +186,7 @@ function get_real_threshold(raw,sf,disp)
 			thr_out=th1
 		endif
 		if (thr_out<5)
-		thr_out=5
+			thr_out=5
 		endif
 		
 		
@@ -492,25 +493,25 @@ function delete_bad_events()
 	for (i=0;i<k;i+=1)
 		variable kill=0
 		if (numtype(Amplitude[i])==2)
-				kill=1
+			kill=1
 		endif
 		if (chi2[i]>2500)
-				kill=1
+			kill=1
 		endif
 		if (decay[i]>0.03)
-				kill=1
+			kill=1
 		endif
 		if (Rise[i]>0.004)
-				kill=1
+			kill=1
 		endif	
 		if (kill==1)
-		discard[i]=1
-		killwaves/z $"fullsweep_ev"+num2str(i),$":fit:ev_"+num2str(i)	
-		discard[i]=1
-		chi2[i]=nan
-		decay[i]=nan
-		Rise[i]=nan
-		Amplitude[i]=nan
+			discard[i]=1
+			killwaves/z $"fullsweep_ev"+num2str(i),$":fit:ev_"+num2str(i)	
+			discard[i]=1
+			chi2[i]=nan
+			decay[i]=nan
+			Rise[i]=nan
+			Amplitude[i]=nan
 		endif
 	endfor
 	string	list=wavelist("fullsweep_ev*",",","")
@@ -582,7 +583,7 @@ function Loop_decay()
 	for(i=0; i<(numDataFolders); i+=1)
 		String nextPath =stringfromlist(i,dflist,";")
 		nextPath="'"+nextpath+"'"
-				setdatafolder cdf2+nextPath+":events:"
+		setdatafolder cdf2+nextPath+":events:"
 		get_Kinetics()
 		setdatafolder cdf2
 		wave temp2=$cdf2+nextPath+":events:decay"
@@ -716,9 +717,9 @@ end
 
 
 function Plot_each_transient_batch()
-// PARAMETERS************
-variable sf=20000
-// *************
+	// PARAMETERS************
+	variable sf=20000
+	// *************
 	display
 	Variable numDataFolders = CountObjects(":", 4), i
 	string cdf2
@@ -728,8 +729,8 @@ variable sf=20000
 		nextPath="'"+nextpath+"'"
 		setdatafolder $cdf2+nextPath+":events:"
 		Plot_each_transient()	
-endfor
-setdatafolder cdf2
+	endfor
+	setdatafolder cdf2
 end
 
 
@@ -739,19 +740,19 @@ function Plot_each_transient()
 	list=SortList(list,";", 16)
 	variable k=itemsinlist(list, ";"),i
 	for (i=0;i<k;i+=1)
-	String temp =stringfromlist(i,list,";")
-	duplicate/o $":fit:ev_"+num2str(i) tempw
-	differentiate tempw
-	wavestats/q tempw
-	SetScale/P x -V_maxloc,5e-5,"", $temp
-   appendtograph $temp
+		String temp =stringfromlist(i,list,";")
+		duplicate/o $":fit:ev_"+num2str(i) tempw
+		differentiate tempw
+		wavestats/q tempw
+		SetScale/P x -V_maxloc,5e-5,"", $temp
+		appendtograph $temp
 	
 	
-endfor
+	endfor
 end
 
 function rise_time_sorted_analysis(destination,reference) // detination can be "amplitude"
-// reference can be "rise time"
+	// reference can be "rise time"
 	wave destination,reference
 	duplicate/o reference w2
 	duplicate/o destination w1
@@ -770,7 +771,7 @@ function rise_time_sorted_analysis(destination,reference) // detination can be "
 end
 
 function rise_time_sorted_analysis_diff(destination,reference,group_comparisons)
-//rise_time_sorted_analysis_diff("amp_rise_sorted","rise_sorted")
+	//rise_time_sorted_analysis_diff("amp_rise_sorted","rise_sorted")
 	string destination,reference
 	variable group_comparisons
 	string cdf=GetDataFolder(1)
@@ -778,8 +779,8 @@ function rise_time_sorted_analysis_diff(destination,reference,group_comparisons)
 	variable cut,start=s
 	for (s=start;s<e;s+=delta)
 		if (s==start)
-		duplicate/o $cdf+"Early:"+reference w12
-		duplicate/o $cdf+"Early:"+destination w11
+			duplicate/o $cdf+"Early:"+reference w12
+			duplicate/o $cdf+"Early:"+destination w11
 		endif
 		findlevel/q w12, s
 		cut=floor(V_LevelX)
@@ -788,8 +789,8 @@ function rise_time_sorted_analysis_diff(destination,reference,group_comparisons)
 		deletepoints 0, cut+1, w12
 		deletepoints 0, cut+1, w11
 		if (s==start)
-		duplicate/o $cdf+"Late:"+reference w22
-		duplicate/o $cdf+"Late:"+destination w21
+			duplicate/o $cdf+"Late:"+reference w22
+			duplicate/o $cdf+"Late:"+destination w21
 		endif
 		findlevel/q w22, s
 		cut=floor(V_LevelX)
@@ -869,7 +870,7 @@ function bootstrap_dif(wavenom1,wavenom2,sim,del0,comparisons)  //del0==1 delete
 	sort bootstrapdist bootstrapdist
 	variable CI95=(0.05/2)*sim,CI_MC95=(0.05/(2*comparisons))*sim
 	print num2str(mean(bootstrapdist))+" "+num2str(sqrt(variance(bootstrapdist)))+" "+num2str(bootstrapdist(sim-CI_MC95))+" "+num2str(bootstrapdist(CI_MC95))+"  "+num2str(n)+"  "+num2str(n2)
-killwaves bootstrapdist,bootstrapsample
+	killwaves bootstrapdist,bootstrapsample
 end
 
 function bootstrap_dif_norm(wavenom1,wavenom2,sim,del0,comparisons)  //del0==1 delete 0 from wave
@@ -907,19 +908,19 @@ function bootstrap_dif_norm(wavenom1,wavenom2,sim,del0,comparisons)  //del0==1 d
 		variable m2=	mean(bootstrapsample2)
 		variable m1=	mean(bootstrapsample)
 		
-		bootstrapdist[s]=m2/m1*100
+		bootstrapdist[s]=m2/m1*100-100
 	endfor
 	sort bootstrapdist bootstrapdist
 	variable CI95=(0.05/2)*sim,CI_MC95=(0.05/(2*comparisons))*sim
-	print num2str(mean(bootstrapdist))+" "+num2str(sqrt(variance(bootstrapdist)))+" "+num2str(bootstrapdist(sim-CI_MC95))+" "+num2str(bootstrapdist(CI_MC95))+"  "+num2str(n)+"  "+num2str(n2)
-killwaves bootstrapdist,bootstrapsample
+	print num2str(mean(bootstrapdist))+" "+num2str(bootstrapdist(sim-CI_MC95))+" "+num2str(bootstrapdist(CI_MC95))
+	killwaves bootstrapdist,bootstrapsample
 end
 
 function get_parameter_rise_thr_by_cell(parameter,thr,thr2)//parameter= "amplitude","rise","frequecny",etc...
 	string parameter
 	variable thr,thr2
-   thr=thr/1000
-   thr2=thr2/1000
+	thr=thr/1000
+	thr2=thr2/1000
 	Variable numDataFolders = CountObjects(":", 4), i
 	string cdf2
 	cdf2=GetDataFolder(1)
@@ -955,8 +956,8 @@ end
 function get_parameter_interval(parameter,thr,thr2)//parameter= "amplitude","rise","frequecny",etc...
 	string parameter
 	variable thr,thr2
-   thr=thr/1000
-   thr2=thr2/1000
+	thr=thr/1000
+	thr2=thr2/1000
 	Variable numDataFolders = CountObjects(":", 4), i
 	string cdf2
 	cdf2=GetDataFolder(1)
@@ -987,47 +988,62 @@ end
 
 // THIS 2 following codes are to compare grouping by rise
 
-function get_parameter_rise_thr(parameter,thr,thr2)//parameter= "amplitude","rise","frequecny",etc...
+function get_parameter_rise_thr(parameter,thr1,thr2,thr3,thr4,thr5,thr6)//parameter= "amplitude","rise","frequecny",etc...
 
-//	 get_parameter_rise_thr("Amp_rise_sorted",1.13,1.805)
-//  get_parameter_rise_thr("decay_sorted",1.13,1.805)
+	//	 get_parameter_rise_thr("Amp_rise_sorted",0.5,1,1.4,2.5,2.5,3)
+	//  get_parameter_rise_thr("decay_sorted",1.13,1.805)
 
 	string parameter
-	variable thr,thr2
-   thr=thr/1000
-   thr2=thr2/1000
-   string cdf=GetDataFolder(1)
-	print "Thr 1   Thr 2"
-	print num2str(thr)+"<  <"+num2str(thr2)
-	print "=================="
+	variable thr1,thr2,thr3,thr4,thr5,thr6
+	thr1=thr1/1000
+	thr2=thr2/1000
+	thr3=thr3/1000
+	thr4=thr4/1000
+	thr5=thr5/1000
+	thr6=thr6/1000
+	string cdf=GetDataFolder(1)
 
-		wave temp=$cdf+"Early:"+parameter
-		wave rise_temp=$cdf+"Early:rise_sorted"
-		findlevel/q rise_temp, thr
-		variable cut=floor(V_LevelX)
-		duplicate/o/r=[0,cut] temp Er_fast
-		findlevel/q rise_temp, thr2
-		cut=floor(V_LevelX)
-		duplicate/o/r=[cut,numpnts(temp)] temp Er_slow
+
+	wave temp=$cdf+"Early:"+parameter
+	wave rise_temp=$cdf+"Early:rise_sorted"
+	findlevel/q rise_temp, thr1
+	variable cut1=floor(V_LevelX)
+	findlevel/q rise_temp, thr2
+	variable cut2=floor(V_LevelX)
+	duplicate/o/r=[cut1,cut2] temp Er_fast
+	
+	findlevel/q rise_temp, thr3
+	cut1=floor(V_LevelX)
+	findlevel/q rise_temp, thr4
+	cut2=floor(V_LevelX)
+	duplicate/o/r=[cut1,cut2] temp Er_slow
+	
+	findlevel/q rise_temp, thr5
+	cut1=floor(V_LevelX)
+	findlevel/q rise_temp, thr6
+	cut2=floor(V_LevelX)
+	duplicate/o/r=[cut1,cut2] temp Er_unc
+	
 		
-		wave temp=$cdf+"late:"+parameter
-		wave rise_temp=$cdf+"late:rise_sorted"
-		findlevel/q rise_temp, thr
-		cut=floor(V_LevelX)
-		duplicate/o/r=[0,cut] temp late_fast
-		findlevel/q rise_temp, thr2
-		cut=floor(V_LevelX)
-		duplicate/o/r=[cut,numpnts(temp)] temp late_slow
-		
-	//	temp3=temp3-mean(temp1)
-	//	temp4=temp4-mean(temp2)
-		
-	//	bootstrap_mini("temp3",1000,0.05)
-	//	bootstrap_mini("temp4",1000,0.05)
-		
-	//	bootstrap_dif("temp1","temp3",1000,0,comp)		
-	//	bootstrap_dif("temp2","temp4",1000,0,comp)		
-	//	print mean(temp1)-mean(temp3)
+	wave temp=$cdf+"late:"+parameter
+	wave rise_temp=$cdf+"late:rise_sorted"
+	findlevel/q rise_temp, thr1
+	cut1=floor(V_LevelX)
+	findlevel/q rise_temp, thr2
+	cut2=floor(V_LevelX)	
+	duplicate/o/r=[cut1,cut2] temp late_fast
+	
+	findlevel/q rise_temp, thr3
+	cut1=floor(V_LevelX)
+	findlevel/q rise_temp, thr4
+	cut2=floor(V_LevelX)
+	duplicate/o/r=[cut1,cut2] temp late_slow
+	
+	findlevel/q rise_temp, thr5
+	cut1=floor(V_LevelX)
+	findlevel/q rise_temp, thr6
+	cut2=floor(V_LevelX)
+	duplicate/o/r=[cut1,cut2] temp late_unc
 end
 
 
@@ -1035,7 +1051,7 @@ end
 
 function bootstrap_dif_rise(wavenom1,wavenom2,wavenom3,wavenom4,sim,comparisons)  //del0==1 delete 0 from wave
 
-//bootstrap_dif_rise("Er_fast","late_fast","Er_slow","late_slow",1000,3)
+	//bootstrap_dif_rise("Er_fast","late_fast","Er_slow","late_slow",1000,3)
 	string wavenom1,wavenom2,wavenom3,wavenom4
 	variable sim,comparisons
 	
@@ -1045,8 +1061,8 @@ function bootstrap_dif_rise(wavenom1,wavenom2,wavenom3,wavenom4,sim,comparisons)
 	WaveTransform zapNaNs tt3
 	WaveTransform zapNaNs tt4
 	
-	bootstrap_dif_norm(wavenom1,wavenom2,1000,0,1)
-	bootstrap_dif_norm(wavenom3,wavenom4,1000,0,1)
+	//bootstrap_dif_norm(wavenom1,wavenom2,1000,0,1)
+	//bootstrap_dif_norm(wavenom3,wavenom4,1000,0,1)
 	
 
 	variable ms1=mean($wavenom1),ms2=mean($wavenom2),ms3=mean($wavenom3),ms4=mean($wavenom4)
@@ -1092,18 +1108,18 @@ function bootstrap_dif_rise(wavenom1,wavenom2,wavenom3,wavenom4,sim,comparisons)
 	endfor
 	sort bootstrapdist bootstrapdist
 	variable CI95=(0.05/2)*sim,CI_MC95=(0.05/(2*comparisons))*sim
-	print num2str(mean(bootstrapdist))+" "+num2str(sqrt(variance(bootstrapdist)))+" "+num2str(bootstrapdist(sim-CI_MC95))+" "+num2str(bootstrapdist(CI_MC95))+"  "+num2str(n)+"  "+num2str(n2)
-killwaves bootstrapdist,bootstrapsample,bootstrapsample2,bootstrapsample3,bootstrapsample4
+	print num2str(mean(bootstrapdist))+" "+num2str(bootstrapdist(sim-CI_MC95))+" "+num2str(bootstrapdist(CI_MC95))+"  "+num2str(n)+"  "+num2str(n2)
+	killwaves bootstrapdist,bootstrapsample,bootstrapsample2,bootstrapsample3,bootstrapsample4
 end
 
 
 
 function Bhattacharyya_coefficient_matrix(m1,m2,v1,v2)
-variable m1,m2,v1,v2
-variable DB=0.25*ln(0.25*(v1/v2+v2/v1+2))+0.25*(((m1-m2)^2)/(v1+v2))
-variable Bv=exp(-DB)
+	variable m1,m2,v1,v2
+	variable DB=0.25*ln(0.25*(v1/v2+v2/v1+2))+0.25*(((m1-m2)^2)/(v1+v2))
+	variable Bv=exp(-DB)
 
-print DB
+	print DB
 end
 
 
@@ -1112,55 +1128,55 @@ end
 function get_parameter_rise_thr_interval(parameter,thr1,thr2,thr3,thr4)//parameter= "amplitude","rise","frequecny",etc...
 	string parameter
 	variable thr1,thr2,thr3,thr4
-   thr1=thr1/1000
-   thr2=thr2/1000
-   thr3=thr3/1000
-   thr4=thr4/1000
-   string cdf=GetDataFolder(1)
+	thr1=thr1/1000
+	thr2=thr2/1000
+	thr3=thr3/1000
+	thr4=thr4/1000
+	string cdf=GetDataFolder(1)
 	print "Thr 1   Thr 2"
 	print "=================="
 
-		wave temp=$cdf+"Early:"+parameter
-		wave rise_temp=$cdf+"Early:rise_sorted"
-		findlevel/q rise_temp, thr1
-		variable c1=floor(V_LevelX)
-		findlevel/q rise_temp, thr2
-		variable c2=floor(V_LevelX)
-		duplicate/o/r=[c1,c2] temp temp1
-		findlevel/q rise_temp, thr3
-		c1=floor(V_LevelX)
-		findlevel/q rise_temp, thr4
-		c2=floor(V_LevelX)
+	wave temp=$cdf+"Early:"+parameter
+	wave rise_temp=$cdf+"Early:rise_sorted"
+	findlevel/q rise_temp, thr1
+	variable c1=floor(V_LevelX)
+	findlevel/q rise_temp, thr2
+	variable c2=floor(V_LevelX)
+	duplicate/o/r=[c1,c2] temp temp1
+	findlevel/q rise_temp, thr3
+	c1=floor(V_LevelX)
+	findlevel/q rise_temp, thr4
+	c2=floor(V_LevelX)
 		
-		duplicate/o/r=[c1,c2] temp temp2
+	duplicate/o/r=[c1,c2] temp temp2
 		
-		wave temp=$cdf+"late:"+parameter
-		wave rise_temp=$cdf+"late:rise_sorted"
-		findlevel/q rise_temp, thr1
-		c1=floor(V_LevelX)
-		findlevel/q rise_temp, thr2
-		c2=floor(V_LevelX)
-		duplicate/o/r=[c1,c2] temp temp3
-		findlevel/q rise_temp, thr3
-		c1=floor(V_LevelX)
-		findlevel/q rise_temp, thr4
-		c2=floor(V_LevelX)
+	wave temp=$cdf+"late:"+parameter
+	wave rise_temp=$cdf+"late:rise_sorted"
+	findlevel/q rise_temp, thr1
+	c1=floor(V_LevelX)
+	findlevel/q rise_temp, thr2
+	c2=floor(V_LevelX)
+	duplicate/o/r=[c1,c2] temp temp3
+	findlevel/q rise_temp, thr3
+	c1=floor(V_LevelX)
+	findlevel/q rise_temp, thr4
+	c2=floor(V_LevelX)
 
-		duplicate/o/r=[c1,c2] temp temp4
+	duplicate/o/r=[c1,c2] temp temp4
 		
-		sort temp3 temp3
-		Interpolate2/T=1/N=(numpnts(temp1))/Y=temp3_L temp3
-		sort temp4 temp4
-		Interpolate2/T=1/N=(numpnts(temp2))/Y=temp4_L temp4
+	sort temp3 temp3
+	Interpolate2/T=1/N=(numpnts(temp1))/Y=temp3_L temp3
+	sort temp4 temp4
+	Interpolate2/T=1/N=(numpnts(temp2))/Y=temp4_L temp4
 
 		
-		bootstrap_mini("temp1",1000,0.05)
-		bootstrap_mini("temp2",1000,0.05)
-		bootstrap_mini("temp3_L",1000,0.05)
-		bootstrap_mini("temp4_L",1000,0.05)
+	bootstrap_mini("temp1",1000,0.05)
+	bootstrap_mini("temp2",1000,0.05)
+	bootstrap_mini("temp3_L",1000,0.05)
+	bootstrap_mini("temp4_L",1000,0.05)
 		
-		bootstrap_dif("temp1","temp3_L",1000,0,2)
-		bootstrap_dif("temp2","temp4_L",1000,0,2)
+	bootstrap_dif("temp1","temp3_L",1000,0,2)
+	bootstrap_dif("temp2","temp4_L",1000,0,2)
 		
 		
 	killwaves temp2,temp1,temp3,temp4,temp3_L,temp4_L
@@ -1180,16 +1196,16 @@ end
 
 
 function get_amp_rise_sorted()
-loop_rise()
-loop_amplitude()
-loop_decay()
-wave rise_all,amp,decay_all
-duplicate/o rise_all rise_sorted
-duplicate/o Amp Amp_rise_sorted
-duplicate/o decay_all decay_sorted
-sort rise_all Amp_rise_sorted
-sort rise_sorted rise_sorted
-sort rise_all decay_sorted 
+	loop_rise()
+	loop_amplitude()
+	loop_decay()
+	wave rise_all,amp,decay_all
+	duplicate/o rise_all rise_sorted
+	duplicate/o Amp Amp_rise_sorted
+	duplicate/o decay_all decay_sorted
+	sort rise_all Amp_rise_sorted
+	sort rise_sorted rise_sorted
+	sort rise_all decay_sorted 
 end
 
 
@@ -1269,6 +1285,7 @@ function events2table(x1,x2,s)
 	string cdf2
 	cdf2=GetDataFolder(1)
 	String dfList = SortedDataFolderList(cdf2, 16)
+	make/o/n=0 out
 	for(i=0; i<(numDataFolders); i+=1)
 		String nextPath =stringfromlist(i,dflist,";")
 		nextPath="'"+nextpath+"'"
@@ -1285,8 +1302,8 @@ function events2table(x1,x2,s)
 				mi=wavemin(temp3)
 				temp3=temp3-mi
 				if (s==1)
-				mi=wavemax(temp3)
-				temp3=temp3/mi
+					mi=wavemax(temp3)
+					temp3=temp3/mi
 				endif
 				
 				Interpolate2/T=1/N=1000/Y=temp3_L temp3;DelayUpdate
@@ -1297,21 +1314,363 @@ function events2table(x1,x2,s)
 	endfor
 end
 
+function events2table_raw(x1,x2,s)
+//events2table_raw(0.0005,0.001,0)
+//events2table_raw(0.0014,0.0025,0)
+	variable x1,x2,s
+	Variable numDataFolders = CountObjects(":", 4), i,r,ma,mi
+	string cdf2
+	cdf2=GetDataFolder(1)
+	String dfList = SortedDataFolderList(cdf2, 16)
+	make/o/n=0 out
+	make/o/n=0 out2
+	make/o/n=1 it
+	for(i=0; i<(numDataFolders); i+=1)
+		String nextPath =stringfromlist(i,dflist,";")
+		nextPath="'"+nextpath+"'"
+		wave temp=$cdf2+nextPath+":events:rise"
+		
+		for (r=0;r<numpnts(temp);r+=1)
+			variable dummy=temp[r]>x1 && temp[r]<x2
+			if (temp[r]>x1 && temp[r]<x2)
+				wave temp2=$cdf2+nextPath+":events:fit:ev_"+num2str(r)
+				wave temp_raw=$cdf2+nextPath+":events:fullsweep_ev"+num2str(r)
+				duplicate/o temp2 diff
+				differentiate diff
+				wavestats/q diff
+				duplicate/o/R=[V_maxRowLoc,V_maxRowLoc+750] temp_raw temp3
+				mi=wavemin(temp3)
+				temp3=temp3-mi
+				if (s==1)
+					mi=wavemax(temp3)
+					temp3=temp3/mi
+				endif
+				
+				Interpolate2/T=1/N=1000/Y=temp3_L temp3;DelayUpdate
+				concatenate {temp3_L},out
+				it=i;
+				concatenate {it},out2
+									
+
+			endif
+		endfor	
+	endfor
+end
 
 Function PlotMatrixColumn(matrix)
-    wave matrix
+	wave matrix
 
  
-    Variable nCols = DimSize(matrix, 1)
-    Variable i
-    for (i = 0; i < nCols; i += 1)
+	Variable nCols = DimSize(matrix, 1)
+	Variable i
+	for (i = 0; i < nCols; i += 1)
        
-        DoWindow MatrixGraph
-        if (!V_flag)
-            Display/K=1 /W=(454.5,315.5,849,524)/N=MatrixGraph  matrix[][i]
-        else
-            AppendToGraph   /W= MatrixGraph matrix[][i]
-        endif
+		DoWindow MatrixGraph
+		if (!V_flag)
+			Display/K=1 /W=(454.5,315.5,849,524)/N=MatrixGraph  matrix[][i]
+		else
+			AppendToGraph   /W= MatrixGraph matrix[][i]
+		endif
        
-    endfor  
+	endfor  
 End
+
+
+
+function plot_hist_rise()
+
+	
+	variable b_size=50;
+	variable g=(0.003-0.0005)/b_size;
+
+	wave w1=:Early:rise_all
+	wave w2=:Late:rise_all
+	Variable n1 = CountObjects(":Early:", 4)
+	Variable n2 = CountObjects(":Late:", 4)
+
+	Make/N=(b_size)/O re_h;DelayUpdate
+	Histogram/B={0.0005,g,b_size} w1,re_h;DelayUpdate
+	re_h=re_h/n1
+
+
+	Make/N=50/O rl_h;DelayUpdate
+	Histogram/B={0.0005,g,b_size} w2,rl_h;DelayUpdate
+	rl_h=rl_h/n2
+
+	variable s
+	Make/N=(b_size)/O temp1;DelayUpdate
+	Make/N=(b_size)/O temp2;DelayUpdate
+	Make/N=(1000,b_size)/O sim;DelayUpdate
+	make/N=0 /o out1
+	for (s = 0; s < 1000; s += 1)
+		wave temp=random_sample(w1)
+		Histogram/P/C/B={0,g,b_size} temp,temp1
+		wave temp=random_sample(w2)
+		Histogram/P/C/B={0,g,b_size} temp,temp2
+		temp2=temp2-temp1
+		concatenate {temp2},out1	
+	endfor
+	Histogram/P/C/B={0,g,b_size} w1,temp1
+	Histogram/P/C/B={0,g,b_size} w2,temp2
+	
+	MatrixTranspose out1
+	variable i
+	Make/N=(b_size)/O m
+	Make/N=(b_size)/O CI_up
+	Make/N=(b_size)/O CI_down
+	for (i = 0; i < dimsize(out1,1); i += 1)
+		Duplicate/O/R=[][i] out1, tempw
+		sort tempw tempw
+		m[i]=mean(tempw)
+		CI_up[i]=tempw[999]
+		CI_down[i]=tempw[0]
+	endfor
+	SetScale/I x 0.5,3,"", m
+	SetScale/I x 0.5,3,"", CI_up
+	SetScale/I x 0.5,3,"", CI_down
+	SetScale/I x 0.5,3,"", rl_h
+	SetScale/I x 0.5,3,"", re_h
+	SetScale/I x 0.5,3,"", temp1
+	SetScale/I x 0.5,3,"", temp2
+	CI_up=CI_up-m
+	CI_down=m-CI_down
+	
+	Display/W=(313.5,269.75,516,401.75)/K=1 rl_h,re_h
+	execute "hist_s1()"
+	Display/W=(313.5,269.75,516,401.75)/K=1 temp1,temp2
+	execute "hist_s2()"
+	Display/W=(313.5,269.75,516,401.75)/K=1 m
+	ErrorBars m SHADE= {0,0,(0,0,0,32768),(0,0,0,0)},wave=(CI_up,CI_down)
+	execute "hist_s3()"
+end
+
+
+function/wave random_sample(w)
+	wave w
+	variable i,n=numpnts(w)
+	make/o/n=(n) out
+	for (i = 0; i < n; i += 1)
+		out[i]=w[ceil((enoise(0.5)+0.5)*(n))-1]
+	endfor
+	wave out
+
+	return out
+
+end
+
+Proc hist_s1() : GraphStyle
+	PauseUpdate; Silent 1		// modifying window...
+	ModifyGraph/Z mode=5
+	ModifyGraph/Z rgb[0]=(0,0,0),rgb[1]=(30583,30583,30583)
+	ModifyGraph/Z hbFill=2
+	Label/Z left "Counts"
+	Label/Z bottom "Rise time (ms)"
+	SetAxis/Z left 0,80
+	SetAxis/Z bottom*,3
+EndMacro
+
+Proc hist_s2() : GraphStyle
+	PauseUpdate; Silent 1		// modifying window...
+	ModifyGraph/Z mode[0]=5,mode[1]=6
+	ModifyGraph/Z lSize[1]=1.5
+	ModifyGraph/Z rgb[0]=(30583,30583,30583),rgb[1]=(0,0,0)
+	ModifyGraph/Z hbFill=2
+	Label/Z left "Counts"
+	Label/Z bottom "Rise time (ms)"
+	SetAxis/Z left 0,1000
+	SetAxis/Z bottom*,3
+EndMacro
+
+Proc hist_s3() : GraphStyle
+	PauseUpdate; Silent 1		// modifying window...
+	ModifyGraph/Z rgb=(0,0,0)
+	ModifyGraph/Z zero(left)=2
+	ModifyGraph/Z noLabel(left)=2
+	ModifyGraph/Z axOffset(left)=-6,axOffset(bottom)=-0.133333
+	ModifyGraph/Z axThick(left)=0
+	ModifyGraph/Z zeroThick(left)=1
+EndMacro
+
+Proc hist_s4() : GraphStyle
+	PauseUpdate; Silent 1		// modifying window...
+	ModifyGraph/Z mode=5
+	ModifyGraph/Z rgb=(0,0,0)
+	ModifyGraph/Z hbFill=2
+	Label/Z left "∆ Frequency (%)"
+	Label/Z bottom "Rise time (ms)"
+	SetAxis/Z left 0,*
+	SetAxis/Z bottom*,3
+EndMacro
+
+
+
+function plot_hist_rise2(f1,f2,s1,s2,u1,u2)
+	variable f1,f2,s1,s2,u1,u2
+	//plot_hist_rise2(0.0005,0.001,0.0014,0.0025,0.0025,0.003)
+	variable fv,sv,uv
+	variable b_size=50;
+	
+	variable g=(0.003-0.0005)/b_size;
+
+	wave w1=:Early:rise_all
+	wave w2=:Late:rise_all
+	Variable n1 = CountObjects(":Early:", 4)
+	Variable n2 = CountObjects(":Late:", 4)
+
+	Make/N=(b_size)/O re_h;DelayUpdate
+	Histogram/B={0.0005,g,b_size} w1,re_h;DelayUpdate
+	re_h=re_h/n1
+
+
+	Make/N=50/O rl_h;DelayUpdate
+	Histogram/B={0.0005,g,b_size} w2,rl_h;DelayUpdate
+	rl_h=rl_h/n2
+	duplicate /o rl_h normw
+	normw=(rl_h/re_h-1)*100;
+	
+	variable s
+	make/N=3/O tsim
+	make/N=0 /o out1
+	for (s = 0; s < 1000; s += 1)
+		wave temp=random_sample(w2)
+		sort temp temp
+		tsim[0]=(binarySearch(temp,f2)-binarySearch(temp,f1))/n2
+		tsim[1]=(binarySearch(temp,s2)-binarySearch(temp,s1))/n2
+		tsim[2]=(numpnts(temp)-binarySearch(temp,u1)/n2)/n2
+		wave temp=random_sample(w1)
+		sort temp temp
+		tsim[0]=tsim[0]/((binarySearch(temp,f2)-binarySearch(temp,f1))/n1)
+		tsim[1]=tsim[1]/((binarySearch(temp,s2)-binarySearch(temp,s1))/n1)
+		tsim[2]=tsim[2]/((numpnts(temp)-binarySearch(temp,u1))/n1)
+		
+		concatenate {tsim},out1	
+	endfor
+	MatrixTranspose out1
+	
+		
+
+	SetScale/I x 0.5,3,"", rl_h
+	SetScale/I x 0.5,3,"", re_h
+	SetScale/I x 0.5,3,"", normw
+
+	
+	Display/W=(313.5,269.75,516,401.75)/K=1 rl_h,re_h
+	execute "hist_s1()"
+	Display/W=(313.5,269.75,516,401.75)/K=1 normw
+	execute "hist_s4()"
+	
+	get_CI_and_P_val(out1,0.05/2)
+
+end
+
+function get_CI_and_P_val(in,alpha)
+//get_CI_and_P_val(out1,0.05/3)
+	wave in
+	variable alpha
+	variable x1,x2,c=round(dimsize(in,0)*(alpha/2)),n=dimsize(in,0)
+	
+	Make/O/N=(dimsize(in,1)) si
+	si=p;
+	StatsSample/N=(dimsize(in,1)-1)/ACMB si
+	wave M_Combinations
+	variable i
+	print "statistical significant comparisosn"
+	print "column1  column 2 P<alpha)"
+	for (i = 0; i < numpnts(si); i += 1)
+		x1=M_Combinations[i][0]
+		x2=M_Combinations[i][1]
+		duplicate/o/R=[][x1] in, tw1
+		duplicate/o/R=[][x2] in, tw2	
+		tw1=tw1-tw2
+		sort tw1 tw1
+		print "  ",x1,"    ",x2,"   ",(tw1[c]*tw1[n-c])>0		
+	endfor
+	
+	for (i = 0; i < dimsize(in,1); i += 1)
+	duplicate/o/R=[][i] in, tw1
+	sort tw1 tw1
+	print "  ",mean(tw1)*100-100,"    ",tw1[n-c]*100-100,"   ",tw1[c]*100-100	
+	
+	endfor
+end
+
+
+
+function compare_amp_and_decay_grouped_by_rise_time()
+
+string cn21_e_f="root:'CN21 5uM':Data:CN21:Er_fast"
+string cn21_l_f="root:'CN21 5uM':Data:CN21:late_fast"
+string cn21_e_s="root:'CN21 5uM':Data:CN21:Er_slow"
+string cn21_l_s="root:'CN21 5uM':Data:CN21:late_slow"
+string cn21_e_u="root:'CN21 5uM':Data:CN21:Er_unc"
+string cn21_l_u="root:'CN21 5uM':Data:CN21:late_unc"
+
+string scr_e_f="root:'CN21 5uM':Data:SCR:Er_fast"
+string scr_l_f="root:'CN21 5uM':Data:SCR:late_fast"
+string scr_e_s="root:'CN21 5uM':Data:SCR:Er_slow"
+string scr_l_s="root:'CN21 5uM':Data:SCR:late_slow"
+string scr_e_u="root:'CN21 5uM':Data:SCR:Er_unc"
+string scr_l_u="root:'CN21 5uM':Data:SCR:late_unc"
+
+string lcra_e_f="root:LCRA:Data:Er_fast"
+string lcra_l_f="root:LCRA:Data:late_fast"
+string lcra_e_s="root:LCRA:Data:Er_slow"
+string lcra_l_s="root:LCRA:Data:late_slow"
+string lcra_e_u="root:LCRA:Data:Er_unc"
+string lcra_l_u="root:LCRA:Data:late_unc"
+
+print "results for LCRA"
+print "================================"
+print "=============CI================" 
+bootstrap_dif_norm(lcra_e_f,lcra_l_f,1000,0,1)
+bootstrap_dif_norm(lcra_e_s,lcra_l_s,1000,0,1)
+bootstrap_dif_norm(lcra_e_u,lcra_l_u,1000,0,1)
+
+
+print "=============P<alpha================" 
+print "f-s"
+bootstrap_dif_rise(lcra_e_f,lcra_l_f,lcra_e_s,lcra_l_s,1000,3)
+print "s-u"
+bootstrap_dif_rise(lcra_e_s,lcra_l_s,lcra_e_u,lcra_l_u,1000,3)
+print "f-u"
+bootstrap_dif_rise(lcra_e_u,lcra_l_u,lcra_e_f,lcra_l_f,1000,3)
+
+
+print "results for peptide"
+print "================================"
+print "=============CI SCR================" 
+bootstrap_dif_norm(scr_e_f,scr_l_f,1000,0,6)
+bootstrap_dif_norm(scr_e_s,scr_l_s,1000,0,6)
+bootstrap_dif_norm(scr_e_u,scr_l_u,1000,0,6)
+print "=============CI CN21================" 
+bootstrap_dif_norm(cn21_e_f,cn21_l_f,1000,0,6)
+bootstrap_dif_norm(cn21_e_s,cn21_l_s,1000,0,6)
+bootstrap_dif_norm(cn21_e_u,cn21_l_u,1000,0,6)
+
+
+print "=============P<alpha================" 
+bootstrap_dif_rise(cn21_e_f,cn21_l_f,scr_e_f,scr_l_f,10000,9)
+bootstrap_dif_rise(cn21_e_s,cn21_l_s,scr_e_s,scr_l_s,10000,9)
+bootstrap_dif_rise(cn21_e_u,cn21_l_u,scr_e_u,scr_l_u,10000,9)
+print "-----------------------------"
+
+end
+
+
+function binned_analysis_master()
+setdatafolder root:'CN21 5uM':Data:SCR:
+get_parameter_rise_thr("Amp_rise_sorted",0.5,1,1.4,2.5,2.5,3)
+setdatafolder root:'CN21 5uM':Data:CN21:
+get_parameter_rise_thr("Amp_rise_sorted",0.5,1,1.4,2.5,2.5,3)
+setdatafolder root:LCRA:Data:
+get_parameter_rise_thr("Amp_rise_sorted",0.5,1,1.4,2.5,2.5,3)
+compare_amp_and_decay_grouped_by_rise_time()
+
+setdatafolder root:'CN21 5uM':Data:SCR:
+get_parameter_rise_thr("decay_sorted",0.5,1,1.4,2.5,2.5,3)
+setdatafolder root:'CN21 5uM':Data:CN21:
+get_parameter_rise_thr("decay_sorted",0.5,1,1.4,2.5,2.5,3)
+setdatafolder root:LCRA:Data:
+get_parameter_rise_thr("decay_sorted",0.5,1,1.4,2.5,2.5,3)
+compare_amp_and_decay_grouped_by_rise_time()
+end

@@ -1,22 +1,18 @@
-function [CI,P]=compare_cell_ensambles_activity(a,ix,kill_0)
-% [CI,P]=compare_cell_ensambles_activity(mice_sleep,ix,a,7);
+function [CI,P]=compare_cell_ensambles_activity_NREM(mice_sleep,ix);
+
+a=bin_activity(mice_sleep,7,3);
+
+
 ac=separate_activities(a,ix); 
 
 for i=1:size(ac,2)
    X=ac{i}; 
     sim{i}=sim_data(X);
 end
-
-
-if (kill_0==1)
-sim=sim(2:3);
-end
-
-prop=sim2prop(sim);
-% prop=sim;
+prop=sim;
 for i=1:size(prop,2)
    X=prop{i}; 
-   P{i}=get_P(X,9);
+   P{i}=get_P(X,3);
    CI{i}=get_CI(X,1);
 end
 
@@ -46,17 +42,7 @@ parfor s=1:sims
 end
 end
 
-function prop=sim2prop(sim);
 
-X=0*sim{1,1};
-for i=1:size(sim,2)
-    X=X+sim{1,i};
-end
-
-for i=1:size(sim,2)
-    prop{i}=sim{1,i}./X;
-end
-end
 
 
 function P=get_P(X,c)
@@ -81,9 +67,13 @@ end
 end
 
 function CI=get_CI(X,c)
+if ~exist('c','var')
+    c=(size(X,2)^2-size(X,2))/2;
+end
+
 alpha=5/c/2;
 for i=1:size(X,2)
-    CI(i,:)=[mean(X(:,i)),prctile(X(:,i),100-alpha),prctile(X(:,i),alpha)].*100;
+    CI(i,:)=[mean(X(:,i)),prctile(X(:,i),100-alpha),prctile(X(:,i),alpha)];
 end
     
 end

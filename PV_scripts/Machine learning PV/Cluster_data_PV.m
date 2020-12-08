@@ -50,9 +50,11 @@ HM=get_distance(datain,Cdist,m);
  else
      [~,C]=get_clusters((AU>0.05),L);
      C=C>0;
-     P2=cluster_strength_agglomerative(datain,Cmethod,Cdist,m,alpha);
-     [~,P2]=get_clusters(P2,L);
-     P2=P2>0;
+%      P2=cluster_strength_agglomerative(datain,Cmethod,Cdist,m,alpha);
+%      [~,P2]=get_clusters(P2,L);
+%      P2=P2>0;     
+     P2=linkage_clustering(datain,'Cmethod',Cmethod,'Cdist',Cdist,'m',m);
+     
      S=C.*P2;
      [clus,~]=get_clusters(S,L);
  end

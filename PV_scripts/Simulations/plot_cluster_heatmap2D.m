@@ -1,10 +1,10 @@
 function plot_cluster_heatmap2D(datain,Z1,L1,clus1,Z2,L2,clus2)
 %  plot_cluster_heatmap2D(zscore(zscore(a)')',Z,L,clus,Z2,L2,clus2);
 %% set widths of subplots
-m = .1; % margin
+m = 0.1; % margin
 ww = .2; % width of W plot
 wwflat = .05; % width of Wflat plot
-hh = .25; % height of H plot
+hh = .15; % height of H plot
 hdata = 1-hh-2*m; 
 wdata = 1-ww-wwflat-2*m; 
 sep = ceil(5*.1); 
@@ -22,6 +22,12 @@ color_tree(C1,h1);
 axW = subplot('Position', [m m ww hdata]);
 perm2 = order_tree(Z2);
 C2=update_C(L2,clus2);
+a=Z2(:,3);
+a(a<prctile(a,10))=prctile(a,10);
+a=log10(a);
+a=a-min(a);
+Z2(:,3)=a;
+
 h2=dendrogram(Z2,0,'Orientation','left');
 set(axW,'XTick',[], 'YTick', [])
 color_tree(C2,h2);
@@ -31,7 +37,7 @@ axIm = subplot('Position', [m+ww m wdata hdata]);
 if (size(datain,2)==9)
 values={'HC','preS','postS','REM','HT','LT','N','A','C'};
 else
- values={'HC','preS','postS','A','C'};   
+ values={'HC','preS','postS','Test','New'};   
 end
 values=values(perm1);
 cmap = money(datain, 256);

@@ -1,4 +1,4 @@
-function [CI,P,NP]=bootstrap_proportion(obj,c,method)
+function [CI,P]=bootstrap_proportion(obj,c,method)
 
 % CI=bootstrap(A,8,'percentiles');
 
@@ -21,12 +21,11 @@ parfor s=1:sims
         temp=obj(:,i);
         temp(isnan(temp))=[];
         temp=datasample(temp,size(temp,1));
-        sim(s,i)= mean(temp);
+        sim(s,i)= sum(temp);
     end
 end
 
 sim=sim./sum(sim,2)*100;
-NP=sim(:,1);
 CI=[nanmean(sim,1)',prctile(sim,97.5,1)',prctile(sim,2.5,1)'];
 CIc=[nanmean(sim,1)',prctile(sim,100-alpha,1)',prctile(sim,alpha,1)'];
 
