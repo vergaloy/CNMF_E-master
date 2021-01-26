@@ -2811,3 +2811,5 @@ function biniomial_probability_above_chance(wave0,wave1,sim,alpha)
 	print num2str(aver)+" "+num2str(bootstrapdist(sim-CI95))+" "+num2str(bootstrapdist(CI95))
 end
 
+
+

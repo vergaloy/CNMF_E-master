@@ -6,7 +6,7 @@ function f1=get_burst_rate(X);
 X=double(X);
 X(X>0)=1;
 
-c=get_xcor(X);
+c=get_xcor(X,100);
 
 
 x=linspace(0.2,20,100)';
@@ -32,12 +32,12 @@ f1=f1/min(f1);
 % ylabel('Probability')
 end
 
-function c=get_xcor(X)
-c=zeros(size(X,1),100);
+function c=get_xcor(X,n)
+c=zeros(size(X,1),n);
 parfor i=1:size(X,1)
    a=X(i,:);
    temp=CXCORR(a,a);
-c(i,:)=temp(2:101);
+c(i,:)=temp(2:n+1);
 end
 c=nanmean(c,1)';
 end

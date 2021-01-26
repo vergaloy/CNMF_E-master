@@ -5,7 +5,9 @@ C=update_C(L,clus);
 figure
 t = tiledlayout(5,1,'TileSpacing','none','Padding','compact');
 ax1 = nexttile;
-h=dendrogram(Z,0);
+  h=dendrogram(Z,0);
+%  h=dendrogram(Z,0,'Reorder',[1,2,3,4]);
+%  perm=[1,2,3,4];
 set(h,'LineWidth',2)
 set(ax1,'XTick',[], 'YTick', [])
 color_tree(C,h);
@@ -13,10 +15,16 @@ color_tree(C,h);
 ax2 = nexttile([4 1]);
 if (size(HM,2)==9)
 values={'HC','preS','postS','REM','HT','LT','N','A','C'};
+elseif (size(HM,2)==8)
+values={'HC','preS','postS','REM','HT','LT','N','A'}; 
+elseif (size(HM,2)==15)
+   values={'HC','preS','postS','1','2','3','4','5','6','7','8','9','10','Test','New'};  
+   elseif (size(HM,2)==4)
+  values={'HC','preS','postS','Test'}; 
 else
  values={'HC','preS','postS','Test','New'};   
 end
-values=values(perm);
+  values=values(perm);
 
 ax1=plot_heatmap_PV(HM(perm,perm),'colormap','parula','GridLines','-','x_labels',values,'y_labels',values);
 % imagesc(HM(perm,perm));

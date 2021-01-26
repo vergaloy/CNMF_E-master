@@ -1,5 +1,7 @@
-function [out,a,at]=bin_mice_sleep(obj,s,bin)
-%  [D,a]=bin_mice_sleep(mice_sleep,[4],2);
+function [out,a,at]=bin_mice_sleep(obj,bin,s)
+%  out is the binned data
+%  a are the activty vectors 
+%  at are the activity vectors normalized to 95% percentil.
 sf=5;
 if ~exist('s','var')
     s=1:size(obj,2);
@@ -13,12 +15,10 @@ end
 parfor i=1:length(s)
     temp=obj(:,s(i));
     temp{size(temp,1)+1,1}=[];
-    temp=catpad(1,temp{:});
+    temp=cell2mat(temp);
     out{1,i}=bin_data(temp,sf,bin); 
     a(:,i)=nanmean(out{1,i},2);
 end
-
-
 
     k=0;
     at=[];
@@ -32,3 +32,9 @@ end
 
 end
 
+function M=bin_data(A,sf,binsize)
+k=binsize*sf;
+blockSize = [1,k];
+meanFilterFunction = @(theBlockStructure) mean2(theBlockStructure.data(:));
+M = blockproc(A, blockSize, meanFilterFunction);
+end

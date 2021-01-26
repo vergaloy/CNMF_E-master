@@ -799,7 +799,7 @@ function rise_time_sorted_analysis_diff(destination,reference,group_comparisons)
 		deletepoints 0, cut+1, w21
 		
 		//print numpnts(boots)
-		bootstrap_dif_norm("boots1",cdf+"boots2",10000,0,(e-start)/delta*group_comparisons)
+		bootstrap_dif_norm("boots1",cdf+"boots2",10000,0,group_comparisons)  //(e-start)/delta*group_comparisons
 	endfor
 	//killwaves w11,w12,w21,w22
 end

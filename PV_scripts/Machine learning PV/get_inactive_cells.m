@@ -18,11 +18,3 @@ end
 
 end
 
-function [data,active]=remove_zeros(data,len)
-active=data;
-active(active~=0)=1;
-active=1-mean(active,2);
-active=active.^len;
-active=active<0.05;
-data=data(active,:);
-end

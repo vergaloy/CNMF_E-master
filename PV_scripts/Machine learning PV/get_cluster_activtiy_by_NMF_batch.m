@@ -1,16 +1,21 @@
 function [Wall,Hall,Xall]=get_cluster_activtiy_by_NMF_batch(X,W,H,plotme)
 
 [Wall,Hall,Xall]=group_W_H(X,W,H);
+Wall=cell2mat(Wall);Hall=cell2mat(Hall);Xall=cell2mat(Xall);
+% Wall(Wall<0)=0;
+% Wall(:,sum(Wall>0,1)<4)=[];
+% Hall=get_h_main(Xall,Wall);
+
+% Wall(Wall<1e-5)=0;
+% kill_in=sum(Wall>0,1)<4;
+% Wall(:,kill_in)=[];
+% Hall(kill_in,:)=[];
+
 
 if (plotme)
-    for i=1:size(Xall,2)
-        w=Wall{i};
-        h=Hall{i};
-        x=Xall{i};
-        wt=squeeze(mean(w,3));
-        [perm1,perm2]=sort_w(wt,h);
-        figure; SimpleWHPlot_PV(wt(perm1,perm2),h(perm2,:),x(perm1,:));       
-    end
+        wt=squeeze(mean(Wall,3));
+        [perm1,perm2]=sort_w(wt,Hall,Xall);
+        figure; SimpleWHPlot_PV(wt(perm1,perm2),Hall(perm2,:),Xall(perm1,:));       
 end
 end
 
@@ -34,7 +39,7 @@ for i=1:size(W,2)
             w=zeros(size(X{j,i},1),1);
             h=zeros(1,size(X{j,i},2));
         end
-        w=catpad(2,zeros(length(w),a),w);
+        w=catpad(2,zeros(size(w,1),a),w);
         Tw=catpad(1,Tw,w);
         Tx=catpad(1,Tx,x);
         a=size(Tw,2);

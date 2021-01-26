@@ -11,13 +11,12 @@ for i=1:size(K,1)
     D=catpad(2,[],D{:});
     temp=bin_data(D,sf,bin);
     try
-        k=Cluster_data_PV(temp,'remove_0s',1,...
-            'Cmethod','complete','Cdist',@cross_cosine_dist,'m',m,'plotme',0);
-        [w,h]=get_cluster_activity_by_NMF(temp,k,1);
-        
+        k=Cluster_data_PV(temp,'remove_0s',1,'Cmethod','ward','Cdist',@cross_cosine_dist,'m',m,'plotme',0);  %@cross_cosine_dist,'m',m
+%            k=Cluster_data_PV(temp,'remove_0s',1,'Cmethod','ward','Cdist',@cross_cosine_dist,'m',m,'plotme',1);  
+         [w,h]=get_cluster_activity_by_NMF2(temp,k); 
         wt=squeeze(mean(w,3));
         [perm1,perm2]=sort_w(wt,h);
-%         figure; SimpleWHPlot_PV(wt(perm1,perm2,:),h(perm2,:),temp(perm1,:));       
+%          figure; SimpleWHPlot_PV(wt(perm1,perm2,:),h(perm2,:),temp(perm1,:));       
         Ws{i,1}=w;
         Hs{i,1}=h;
         Xs{i,1}=temp;

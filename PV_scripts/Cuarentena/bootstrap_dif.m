@@ -1,9 +1,15 @@
-function [P,CI]=bootstrap_dif(obj1,obj2,c,method)
+function [CI,P]=bootstrap_dif(obj1,obj2,c,method)
 
 
 if ~exist('method','var')  
  method='percentiles'  
 end
+
+if ~exist('c','var')  
+ n=size(obj1,2);  
+   c=(n^2-n)/2;
+end
+
 
 sims=1000;
 col=size(obj1,2);
@@ -24,7 +30,7 @@ for i=1:col
     clear surr
 end
 
-CI=[nanmean(sim,1)',prctile(sim,97.5,1)',prctile(sim,2.5,1)']
+CI=[nanmean(sim,1)',prctile(sim,97.5,1)',prctile(sim,2.5,1)'];
 
 
 switch method

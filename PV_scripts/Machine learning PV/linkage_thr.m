@@ -40,14 +40,10 @@ HM=get_distance(datain,Cdist,m);
  Z=linkage(datain,Cmethod,{Cdist,m});
  thr=get_thr(datain,Cmethod,{Cdist,m});
  S=Z(:,3)<thr;
- c = cophenet(Z,squareform(1-HM,'tovector'))
+c = cophenet(Z,squareform(1-HM,'tovector'));
+fprintf('Cophenetic correlation coefficient: %1.2f \n',c);
  L=find_leaves_in_node(Z);
 [clus,~]=get_clusters(S,L); 
- 
- 
- 
- 
-
 
 %% Plot stuff
 if (plotme==1)
@@ -85,7 +81,7 @@ end
 
 function thr=get_thr(datain,Cmethod,Cdist)
 
-for s=1:1000
+for s=1:10000
     temp=shuffle_row(datain);
     temp=linkage(temp,Cmethod,Cdist);
     S(:,s)=temp(:,3);
@@ -95,12 +91,7 @@ thr=prctile(S,5,2);
 end
 
 
-function out=shuffle_row(in)
-out=zeros(size(in,1),size(in,2));
-for i=1:size(in,1)
-    out(i,:)=in(i,randperm(size(in,2),size(in,2)));   
-end
-end
+
 
 
 

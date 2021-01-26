@@ -16,6 +16,8 @@ addParameter(inp,'GridLines','-',valid_c) % 'none' or :, -, -. or --
 addParameter(inp,'percentages',false,valid_l) 
 addParameter(inp,'y_labels',[]) 
 addParameter(inp,'x_labels',[]) 
+addParameter(inp,'ColorBar',[]) 
+
 inp.KeepUnmatched = true;
 parse(inp,datain,varargin{:});
 
@@ -35,9 +37,8 @@ end
 %% Plot stuff
 h=heatmap_PV(datain, inp.Results.y_labels', inp.Results.x_labels, Tex,...
     'Colormap',inp.Results.Colormap,...
-    'ShowAllTicks',inp.Results.ShowAllTicks,...
+    'ShowAllTicks',inp.Results.ShowAllTicks,'ColorBar',inp.Results.ColorBar,...
     'FontSize',inp.Results.FontSize,'GridLines',inp.Results.GridLines);
-c=colorbar;
 if (inp.Results.percentages)
 c.Ruler.TickLabelFormat='%g%%';
 end

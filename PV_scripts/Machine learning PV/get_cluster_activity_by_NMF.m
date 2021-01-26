@@ -1,10 +1,10 @@
 function [w,h]=get_cluster_activity_by_NMF(X,K,len)
 % [w,h]=get_cluster_activity_by_NMF(b,k,5)
-X(X>0)=1;
+ X(X>0)=1;
     [w,h]=get_W_H(X,K,len);
-    
+     w(w<1)=0;
  indempty = sum(sum(w>0,1),3)==0; % W is literally empty   
-indempty = indempty | (max(w,[],1).^2> .95*sum(w.^2,1)); % or one neuron has >99.9% of the power
+ indempty = indempty | (max(w,[],1).^2> .95*sum(w.^2,1)); % or one neuron has >99.9% of the power
 
     w=w(:,~indempty,:);
     h=h(~indempty,:);

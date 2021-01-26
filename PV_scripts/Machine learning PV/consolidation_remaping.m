@@ -1,37 +1,91 @@
-function consolidation_remaping(data,active,Wc,pix)
+function consolidation_remaping(data,active,Wc,pix,a)
 
 sf=5;
-bin=1;
+bin=2;
+div=10;
 
 [out,hypno,N]=get_concantenated_data(data,sf,bin);
 out=out(active,:);
-N=N(active,:);
-I=isolate_pattern_activity(out,Wc);
+h=get_h_main(out,Wc);
+h=conv2(1,gausswin(5),h,'same');
+h(h>0)=1;
+[perm1,perm2]=sort_w(Wc,h);
+figure; SimpleWHPlot_PV(Wc(perm1,perm2),h(perm2,:),out(perm1,:));
 
+I=out;
+I(reconstructPV(Wc,h)==0)=0;
+I2=out;
+I2(reconstructPV(Wc,h)>0)=0;
 
-get_means_by_bins(I,hypno,N,pix,4)
-A=separate_Act(I,hypno,N);
+ ic=2;
+B=means_binned_data(out,div);
+B=B./prctile(B,95,1);
+B(B>1)=1;
+[~,i]=sort(mean(gradient(B),2));
+figure;imagesc(B(i,:))
+B=gradient(B);
+% B=B(:,1)-B(:,3);
+figure;imagesc(B)
+[sA,sI,sT]=total_sleep_binned(hypno,I,I2,N,div);
+% imagesc(squeeze(sa(2,:,:))');
 
+B=B(pix==ic,:);
+b=B(:);
 
+S1=squeeze(sA(5,:,:))';
+S1=S1(pix==ic,:);
+% S=gradient(S);
+S=S1(:);
+fit_line(S,b);
+
+S2=squeeze(sI(5,:,:))';
+S2=S2(pix==ic,:);
+% S=gradient(S);
+S=S2(:);
+fit_line(S,b);
+
+S3=S2-S1;
+
+S3=S3(:);
+fit_line(S3,b);
 
 
 end
 
 
-function get_means_by_bins(in,hypno,N,pix,bsize)
+function [sA,sI,sT]=total_sleep_binned(hypno,out,I,N,div);
 
+for i=1:size(out)
+    temp=out(i,:);
+    temp2=I(i,:);
+    h=hypno(N(i),:);
+    sA(:,:,i)=get_sleep_binned(temp,h,div);
+    sI(:,:,i)=get_sleep_binned(temp2,h,div);
+    sT(:,:,i)=get_sleep_binned(ones(1,length(temp)),h,div);
+end
+end
+
+
+function S=get_sleep_binned(temp,h,div);
+R=temp;R(h~=1)=0;%R=cumsum(R);
+H=temp;H(h~=0.25)=0;%W=cumsum(W);
+W=temp;W(h~=0)=0;%W=cumsum(W);
+N=temp;N(h~=0.5)=0;%N=cumsum(N);
+S=temp;S(h<0.5)=0;%N=cumsum(N);
+V=temp;V(h>0.4)=0;%N=cumsum(N);
+
+
+S=[R;H;W;N;S;V];
+S=means_binned_data(S,div);
+end
+
+function B=means_binned_data(in,bsize)
 lin=round(linspace(1,size(in,2),bsize+1));
-
-for i=1:size(lin)-1;
-temp=in(:,lin(i):lin(i+1));
-ht=hypno(:,lin(i):lin(i+1));
-at=separate_Act(temp,ht,N);
-
-pCI2=compare_cell_ensambles_activity_proportion(at,pix,1);
-
+for i=1:size(lin,2)-1
+B(:,i)=mean(in(:,lin(i):lin(i+1)),2);   
+end    
 end
 
-end
 
 
 function A=separate_Act(in,hypno,N)
@@ -58,26 +112,15 @@ wake=mean(wake,2);
 nrem=ob;
 nrem(:,h~=0.5)=[];
 nrem=mean(nrem,2);
-out=[rem,rw,wake,nrem];
-end
 
+sleep=ob;
+sleep(:,h<0.5)=[];
+sleep=mean(sleep,2);
 
-function [out,hypno,N]=get_concantenated_data(data,sf,bin)
-out=[];
-hypno=[];
-N=[];
-for i=1:size(data,1)   
-    temp=full(data{i, 1}.neuron.S);
-    n=ones(size(temp,1),1)*i;
-    hyp=data{i, 1}.hypno;     
-    temp=temp(:,7501:52500);
-    hyp=hyp(7501:52500);   
-    temp=bin_data(temp,sf,bin); 
-    hyp=bin_data(hyp,sf,bin);        
-    out=cat(1,out,temp);
-    hypno=cat(1,hypno,hyp);
-    N=cat(1,N,n);
-end
+wake_all=ob;
+wake_all(:,h>0.25)=[];
+wake_all=mean(wake_all,2);
+out=[rem,rw,wake,nrem,wake_all,sleep];
 end
 
 

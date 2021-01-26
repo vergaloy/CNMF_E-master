@@ -1,16 +1,20 @@
-function consolidation_remaping(data,active,Wc,pix)
+function consolidation_remaping_legacy(data,active,Wc,pix)
 
 sf=5;
 bin=1;
 
 [out,hypno,N]=get_concantenated_data(data,sf,bin);
 out=out(active,:);
+out=out(pix>0,:);
+
 N=N(active,:);
 I=isolate_pattern_activity(out,Wc);
 
 
-get_means_by_bins(I,hypno,N,pix,4)
-A=separate_Act(I,hypno,N);
+CIa=get_means_by_bins(out,hypno,N,pix,4);
+
+CIi=get_means_by_bins(I,hypno,N,pix,4);
+
 
 
 
@@ -18,18 +22,21 @@ A=separate_Act(I,hypno,N);
 end
 
 
-function get_means_by_bins(in,hypno,N,pix,bsize)
+function CI=get_means_by_bins(in,hypno,N,pix,bsize)
 
 lin=round(linspace(1,size(in,2),bsize+1));
-
-for i=1:size(lin)-1;
+CI=[];
+for i=1:size(lin,2)-1;
 temp=in(:,lin(i):lin(i+1));
 ht=hypno(:,lin(i):lin(i+1));
 at=separate_Act(temp,ht,N);
-[pCI2,pP2]=compare_cell_ensambles_activity(at,pix,1);
+
+CIt=compare_cell_ensambles_activity_proportion(at,pix,1);
+CIt2=compare_cell_ensambles_activity(at,pix,1);
+CI=catpad(3,CI,CIt);
 
 end
-
+CI(:,:,1)=[];
 end
 
 
@@ -57,7 +64,15 @@ wake=mean(wake,2);
 nrem=ob;
 nrem(:,h~=0.5)=[];
 nrem=mean(nrem,2);
-out=[rem,rw,wake,nrem];
+
+sleep=ob;
+sleep(:,h<0.5)=[];
+sleep=mean(sleep,2);
+
+wake_all=ob;
+wake_all(:,h>0.25)=[];
+wake_all=mean(wake_all,2);
+out=[rem,rw,wake,nrem,wake_all,sleep];
 end
 
 

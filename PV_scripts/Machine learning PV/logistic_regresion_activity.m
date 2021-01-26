@@ -5,7 +5,7 @@ parfor s=1:1000;
    [~, A(s)] = trainClassifier(a3, test); 
 end
 [~,T]=trainClassifier(a3, pix2); 
-histfit(A);hold on,xline(T,'r--')
+histfit(A);hold on,xline(T,'r--','LineWidth',1)
 T>prctile(A,95)
 end
 

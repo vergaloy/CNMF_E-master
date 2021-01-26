@@ -4,7 +4,7 @@ for i=1:size(w,2)
     co(i)=dot(A,w(:,i))/(norm(A)*norm(w(:,i)));
 end
 co(isnan(co))=0;
-sim=max(co);
+sim=co;
 end
 
     

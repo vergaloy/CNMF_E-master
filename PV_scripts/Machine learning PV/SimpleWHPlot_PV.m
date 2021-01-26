@@ -76,7 +76,7 @@ end
 set(gca,'ydir','reverse')
 hold on; plot([0 0 length(indplot)+1], [N 0 0]+.5, 'k')
 xlim([0 length(indplot)+1]);ylim([0 N+.1]+.5)
-caxis([0 0.5]);
+caxis([0 0.1]);
 axis off
 % %% plot Wflat (collapse out L dimension of W)
 % axWflat = subplot('Position', [m+ww+wdata m wwflat hdata]);

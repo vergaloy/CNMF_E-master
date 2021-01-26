@@ -52,7 +52,7 @@ z=a.*z;
 z=add_jitter(z,jit);
 
 %% Bin data;
-b=bin_data(z,5,2); 
+b=bin_data(z,5,1); 
 A=zeros(size(b,1),1);
 A(p)=mean(b(p,:),2);
 end

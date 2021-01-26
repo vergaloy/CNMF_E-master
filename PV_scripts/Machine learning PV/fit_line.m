@@ -1,12 +1,12 @@
-function fit_line(x,y,xlab,ylab,type)
+function fit_line(x,y)
 
-
-figure;scatter(x,y)
+type='Spearman';
+scatter(x,y)
 Fit = polyfit(x,y,1);
 xFit = linspace(min(x), max(x), 50);
-hold on; plot(xFit,polyval(Fit,xFit),'r','LineWidth',2);
-xlabel(xlab)
-ylabel(ylab)
+plot(xFit,polyval(Fit,xFit),'r','LineWidth',2);
+% xlabel(xlab)
+% ylabel(ylab)
 
 
-[rho,p]=corr(x,y,'Type',type)
+[rho,p]=corrcoef(x',y')

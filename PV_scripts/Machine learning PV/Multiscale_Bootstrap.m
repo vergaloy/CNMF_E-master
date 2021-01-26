@@ -22,11 +22,11 @@ bp=zeros(size(datain,1)-1,length(x));
 AU=zeros(size(datain,1)-1,1);
 %% get BP
 sim=1000;
-upd = textprogressbar(length(x));
+% upd = textprogressbar(length(x));
 for i=1:length(lin)
     rep=round(size(datain,2)*lin(i)) ;
     [bp(:,i),~,~]=hierarchical_cluster_bootstrap(datain,rep,Cmethod,sim,Cdist,m);
-    upd(i);
+%     upd(i);
 end
 %% get AU
 bp(bp==1)=1-1/(sim+1);
@@ -36,6 +36,7 @@ end
 SI=max([SI;BP],[],1);
 SI=[SI,0];
 SIC=[SIC,0];
+
 
 
 end
@@ -70,10 +71,10 @@ try
     err=gof.rmse/iqr(psy);
     % plot(fitted_curve, x.^2, psy);
 catch
-    AU=0;
-    BP=0;
-    SI=0;
-    SIC=1;
+    AU=1-mean(bp);
+    BP=1-mean(bp);
+    SI=1-mean(bp);
+    SIC=mean(bp);
     err=999;
 end
 end

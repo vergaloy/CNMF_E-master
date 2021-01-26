@@ -4,7 +4,8 @@ function [K,HM,Z,L,clus]=Cluster_data_PV(datain,varargin)
 inp = inputParser;
 valid_v = @(x) isnumeric(x);
 valid_c = @(x) ischar(x);
-addRequired(inp,'datain',valid_v) 
+
+addRequired(inp,'datain',valid_v)
 addParameter(inp,'plotme',0,valid_v)  %plot data
 addParameter(inp,'remove_0s',1,valid_v)  %alpha
 addParameter(inp,'alpha',0.05,valid_v)  %alpha
@@ -28,38 +29,38 @@ selective=inp.Results.selective;
 
 %% remove zeros
 if (remove_0s==1)
-[datain,active]=remove_zeros(datain);
+    [datain,active]=remove_zeros(datain);
 else
     active=ones(size(datain,1),1);
 end
 
-%% Perform Multiscale boostrap
-  [AU,BP,SI,SIC]=Multiscale_Bootstrap(datain,'Cmethod',Cmethod,'Cdist',Cdist,'m',m);
+
 
 %% Get cluster strength
 HM=get_distance(datain,Cdist,m);
- Z=linkage(datain,Cmethod,{Cdist,m});
- c = cophenet(Z,squareform(1-HM,'tovector'))
- L=find_leaves_in_node(Z);
- 
- if (selective==1)
-     [~,C]=get_clusters((SI>0.95),L);
-     C=C>0;
-     S=C;
-     [clus,~]=get_clusters(S,L);
- else
-     [~,C]=get_clusters((AU>0.05),L);
-     C=C>0;
-%      P2=cluster_strength_agglomerative(datain,Cmethod,Cdist,m,alpha);
-%      [~,P2]=get_clusters(P2,L);
-%      P2=P2>0;     
-     P2=linkage_clustering(datain,'Cmethod',Cmethod,'Cdist',Cdist,'m',m);
-     
-     S=C.*P2;
-     [clus,~]=get_clusters(S,L);
- end
- 
- %  P1=get_strength(datain,C,Cdist,Cmethod,m);
+Z=linkage(datain,Cmethod,{Cdist,m});
+c = cophenet(Z,squareform(1-HM,'tovector'));
+L=find_leaves_in_node(Z);
+
+if (selective==1)
+    %% Perform Multiscale boostrap
+   [AU,BP,SI,SIC]=Multiscale_Bootstrap(datain,'Cmethod',Cmethod,'Cdist',Cdist,'m',m);
+    [~,C]=get_clusters((SI>0.95),L);
+    C=C>0;
+    S=C;
+    [clus,~]=get_clusters(S,L);
+else
+    %      [~,C]=get_clusters((BP>0.05),L);
+    %      C=C>0;
+    P2=cluster_strength_agglomerative(datain,Cmethod,Cdist,m,alpha);
+    [~,P2]=get_clusters(P2,L);
+    P2=P2>0;
+    %      S=([BP,0]>0.05).*P2;
+    S=P2;
+    [clus,~]=get_clusters(S,L);
+end
+
+%  P1=get_strength(datain,C,Cdist,Cmethod,m);
 %  [~,P1]=get_clusters(P1,L);
 %  P1=P1>0;
 %   S=P1;
@@ -68,7 +69,7 @@ HM=get_distance(datain,Cdist,m);
 
 %% Plot stuff
 if (plotme==1)
-h=plot_cluster_heatmap(HM,Z,L,clus);
+    h=plot_cluster_heatmap(HM,Z,L,clus);
 end
 K=get_connectome_binary(clus,active);
 
@@ -76,10 +77,16 @@ end
 %%
 
 function [data,active]=remove_zeros(data)
-len=size(data,2);
-active=data;
-active(active~=0)=1;
-active=1-mean(active,2);
+X=data;
+n=size(X,2)-1;
+parfor i=1:size(X,1)
+    ct=X(i,:);
+    temp=CXCORR(ct,ct);
+    C(i,:)=temp(2:n+1);
+end
+P0=mean(C(:,50:end),2);
+active=1-P0;
+len=size(X,2);
 active=active.^len;
 active=active<0.05;
 data=data(active,:);
@@ -118,7 +125,7 @@ for i=1:size(ch,2)
         C=1-get_distance(temp',Cdist,m);
         temp=C(row,col);
         Per(s)=mean(temp,'all');
-    end 
+    end
     upd(i)
     P(ch(i))=Rt(i,3)<prctile(Per,5);
 end
@@ -132,12 +139,12 @@ parfor s=1:sim
     per(:,s)=minimal_cluster_linkage(temp,Cdist,Cmethod);
 end
 Rt=linkage(datain,Cmethod,Cdist);
- L=find_leaf_length(Rt);
+L=find_leaf_length(Rt);
 Rt=Rt(:,3);
 
-for i=1:size(Rt,1)  
-    if (L(i)<5)     
-    P(i)=Rt(i)<prctile(per(L(i),:),5);
+for i=1:size(Rt,1)
+    if (L(i)<5)
+        P(i)=Rt(i)<prctile(per(L(i),:),5);
     else
         P(i)=0;
     end
@@ -153,23 +160,23 @@ parfor s=1:sim
     per(:,s)=O;
 end
 Rt=linkage(datain,Cmethod,{Cdist,m});
- L=find_leaf_length(Rt);
+L=find_leaf_length(Rt);
 Rt=Rt(:,3);
 thr=prctile(per,alpha*100,2);
-for i=1:size(Rt,1) 
+for i=1:size(Rt,1)
     P(i)=Rt(i)<thr(L(i));
 end
 % violin(1-X(:,1:12));plot(1-thr(2:13),'or','MarkerSize',6,'MarkerFaceColor','r');xlabel('cluster size');ylabel('Correlation')
 
 end
-function O=cluster_linkage(temp,Cmethod,Cdist,m)  
- Z=linkage(temp,Cmethod,{Cdist,m});
- L=find_leaf_length(Z);
- O(1:size(L,2)+1)=nan;
- u=unique(L);
- for i=1:size(u,2)
- O(u(i))=min(Z(L==u(i),3));
- end
+function O=cluster_linkage(temp,Cmethod,Cdist,m)
+Z=linkage(temp,Cmethod,{Cdist,m});
+L=find_leaf_length(Z);
+O(1:size(L,2)+1)=nan;
+u=unique(L);
+for i=1:size(u,2)
+    O(u(i))=min(Z(L==u(i),3));
+end
 end
 
 function out=find_leaf_length(Z)
@@ -196,7 +203,7 @@ for i=4:-1:2
     for j=1:size(b,1)
         temp=squareform(HM(b(j,:),b(j,:)),'tovector');
         Z=linkage(temp,Cmethod);
-        li(j)=Z(end);       
+        li(j)=Z(end);
     end
     L(i)=min(li);
 end

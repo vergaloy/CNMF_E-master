@@ -36,6 +36,8 @@ color_tree(C2,h2);
 axIm = subplot('Position', [m+ww m wdata hdata]);
 if (size(datain,2)==9)
 values={'HC','preS','postS','REM','HT','LT','N','A','C'};
+elseif (size(datain,2)==15)
+   values={'HC','preS','postS','1','2','3','4','5','6','7','8','9','10','Test','New'};  
 else
  values={'HC','preS','postS','Test','New'};   
 end
