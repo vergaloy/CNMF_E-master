@@ -15,7 +15,7 @@ end
 parfor i=1:length(s)
     temp=obj(:,s(i));
     temp{size(temp,1)+1,1}=[];
-    temp=cell2mat(temp);
+    temp=catpad(1,temp{:});
     out{1,i}=bin_data(temp,sf,bin); 
     a(:,i)=nanmean(out{1,i},2);
 end

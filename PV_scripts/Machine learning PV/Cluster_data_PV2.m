@@ -4,7 +4,7 @@ function [K,HM,Z,L,clus]=Cluster_data_PV2(datain,varargin)
 inp = inputParser;
 valid_v = @(x) isnumeric(x);
 valid_c = @(x) ischar(x);
-
+warning off
 addRequired(inp,'datain',valid_v)
 addParameter(inp,'plotme',0,valid_v)  %plot data
 addParameter(inp,'remove_0s',1,valid_v)  %alpha
@@ -16,7 +16,6 @@ addParameter(inp,'selective',0)  %alpha
 
 inp.KeepUnmatched = true;
 parse(inp,datain,varargin{:});
-warning off
 Cdist=inp.Results.Cdist;
 Cmethod=inp.Results.Cmethod;
 plotme=inp.Results.plotme;
@@ -58,7 +57,7 @@ end
 function [data,active]=remove_zeros(data)
 X=data;
 n=size(X,2)-1;
-parfor i=1:size(X,1)
+for i=1:size(X,1)
     ct=X(i,:);
     temp=CXCORR(ct,ct);
     C(i,:)=temp(2:n+1);
@@ -89,6 +88,7 @@ end
 function P=cluster_strength_agglomerative(datain,Cmethod,Cdist,m,alpha)
 sim=10000;
 parfor s=1:sim
+    warning off
     temp = circshift_columns(datain')';
     O=cluster_linkage(temp,Cmethod,Cdist,m)
     per(:,s)=O;

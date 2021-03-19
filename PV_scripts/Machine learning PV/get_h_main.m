@@ -1,5 +1,5 @@
 function [H]=get_h_main(X,W)
-% X(X>0)=1;
+ X(X>0)=1;
 for i=1:size(W,2)
     w=W(:,i,:);
     wt=squeeze(mean(w,3));

@@ -7,8 +7,8 @@ data=load_mice_data();  %load data
 values={'HC','preS','postS','Test'};   
 [mice_sleep,hyp,N]=group_mice_data2(data);
 % [mice_sleep_all]=group_mice_data(data);
-% [Da,aa,ata]=bin_mice_sleep(mice_sleep_all,1:size(mice_sleep_all,2),bin);
-[D,a,at]=bin_mice_sleep(mice_sleep,1:size(mice_sleep,2),bin);
+% [Da,aa,ata]=bin_mice_sleep(mice_sleep_all,bin);
+[D,a,at]=bin_mice_sleep(mice_sleep,bin);
 rng('default');
 Rs=randperm(size(at,1));
 
@@ -36,10 +36,10 @@ plot_cluster_heatmap_means(HM,Z,L,clus);
 
  
 %% Get patterns across sessions
-[Ws,Hs,Xs]=get_clusters_activity_shift_windows(mice_sleep,3,bin);
+[Ws,Hs,Xs]=get_clusters_activity_shift_windows(mice_sleep,3,2);
 [W,H,X]=get_cluster_activtiy_by_NMF_batch(Xs,Ws,Hs,1);
 
-[si,RS]= get_remapping_cells_PV2(a,D,N,hyp,5,1)
+[si,RS]= get_remapping_cells_PV2(a,D,N,hyp,5,1);
 
 
 CI=get_overlap_above_chance(IX(:,2)==1,si'==2)

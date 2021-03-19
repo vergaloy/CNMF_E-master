@@ -12,7 +12,7 @@ to_svm=mice_sleep(:,ref);
 
 parfor i=1:sim
 %     samplei=random_sample_GCs(to_svm,[37,14,14]); 'max_win',295
-    temp=SVM_ABNs_matrix(divide_date_for_SVM(to_svm,'random_shifts',[1,2,3,4,5,6,7,8,9],'bin',1,'max_win',295));
+    temp=SVM_ABNs_matrix(divide_date_for_SVM(to_svm,'random_shifts',[1,2,3,4,5,6,7,8,9],'sf',1,'bin',1,'max_win',295));
     out=arrange_matrix(out,temp);
     ppm.increment();
 end    

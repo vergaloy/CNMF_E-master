@@ -13,7 +13,7 @@ neuron_per_inside=[];
 context=[];
 s = char(97:122);
 %% balance data with SMOTE
-smote=true;
+smote=false;
 if (balance==1)
     if (smote)
         C=balance_data(C);

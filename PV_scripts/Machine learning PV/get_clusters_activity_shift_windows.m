@@ -1,5 +1,5 @@
 function [Wg,Hg,Xg]=get_clusters_activity_shift_windows(mice_sleep,m,bin,active)
-% [Ws,Hs,Xs]=get_clusters_activity_shift_windows(mice_sleep,3,2,active);
+% [Ws,Hs,Xs]=get_clusters_activity_shift_windows(mice_sleep,3,2);
 warning off
 sf=5;
 rng('default'); % for reproducibility
@@ -20,13 +20,14 @@ for i=1:size(mice_sleep,1)
     cprintf('*blue','Finding ensemble activity in mice #%i.\n',i)
     upd = textprogressbar(sep,'updatestep',1,'endmsg','done.');
     for j=1:sep
+        warning off
         temp=M(:,lin(j):lin(j+1));
         w=get_pattern_in_batch(temp,m);
         W=catpad(2,W,w);
         upd(j);
     end
 %     W(:,sum(W>0,1)<4)=[];
-%     H=get_h_main(M,W);
+     H=get_h_main(M,W);
     
      W=cluster_pattern(W,H);
       H=get_h_main(M,W);
@@ -61,6 +62,7 @@ end
 
 function w=get_pattern_in_batch(in,m)
 try
+    warning off
     k=Cluster_data_PV2(in,'remove_0s',1,'Cmethod','ward','Cdist',@cross_cosine_dist,'m',m,'plotme',0);
     [w,~]=get_cluster_activity_by_NMF2(in,k);
 catch

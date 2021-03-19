@@ -1,23 +1,18 @@
 % # (JM) MODIFIED FROM ORIGINAL FUNCTION 'assembly_patterns'
 
-function NumberOfAssemblies = get_patterns(SpikeCount)
-
-%zSpikeCount = zscore(SpikeCount');
-zSpikeCount = SpikeCount';
-
-zSpikeCount(:,sum(zSpikeCount,1)==0)=[];
-CorrMatrix = corr(zSpikeCount);
+function NumberOfAssemblies = get_patterns(S)
+S = S';
+S(:,sum(S,1)==0)=[];
+CorrMatrix = corr(S);
 CorrMatrix(isnan(CorrMatrix))=0;
 [~,d] = eig(CorrMatrix);
 d=real(d);
 eigenvalues=diag(d);
-q = size(zSpikeCount,1)/size(zSpikeCount,2);
-%if q<1
-%    fprintf('Error: Number of time bins must be larger than number of neurons \n')
-%    return
-%end
+
+
 %Marchenko–Pastur
-lambda_max = prctile(circular_shift(zSpikeCount',500),95);
+lambda_max = prctile(circular_shift(S',500),95);
 NumberOfAssemblies = sum(eigenvalues>lambda_max);
+end
 
 

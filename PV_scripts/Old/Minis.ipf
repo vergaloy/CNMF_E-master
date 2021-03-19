@@ -805,6 +805,42 @@ function rise_time_sorted_analysis_diff(destination,reference,group_comparisons)
 end
 
 
+function rise_time_sorted_analysis_diff_custom(fold1,fold2,destination,reference,group_comparisons)
+	//rise_time_sorted_analysis_diff_custom("SCR:Early","CN21:early","amp_rise_sorted","rise_sorted")
+	string destination,reference,fold1,fold2
+	variable group_comparisons
+	string cdf=GetDataFolder(1)
+	variable s=0.0005,e=0.003, delta=0.0001
+	variable cut,start=s
+	for (s=start;s<e;s+=delta)
+		if (s==start)
+			duplicate/o $cdf+fold1+":"+reference w12
+			duplicate/o $cdf+fold1+":"+destination w11
+		endif
+		findlevel/q w12, s
+		cut=floor(V_LevelX)
+		variable dummy=V_LevelX
+		duplicate/o/r=[0,cut] w11 boots1
+		deletepoints 0, cut+1, w12
+		deletepoints 0, cut+1, w11
+		if (s==start)
+			duplicate/o $cdf+fold2+":"+reference w22
+			duplicate/o $cdf+fold2+":"+destination w21
+		endif
+		findlevel/q w22, s
+		cut=floor(V_LevelX)
+		duplicate/o/r=[0,cut] w21 boots2
+		deletepoints 0, cut+1, w22
+		deletepoints 0, cut+1, w21
+		
+		//print numpnts(boots)
+		bootstrap_dif_norm("boots1",cdf+"boots2",10000,0,group_comparisons)  //(e-start)/delta*group_comparisons
+	endfor
+	//killwaves w11,w12,w21,w22
+end
+
+
+
 function bootstrap_mini(wavenom1,sim,alpha)
 	string wavenom1
 	variable sim,alpha
@@ -823,7 +859,8 @@ function bootstrap_mini(wavenom1,sim,alpha)
 	endfor
 	sort bootstrapdist bootstrapdist
 	variable CI95=(alpha/2)*sim
-	print num2str(aver)+" "+num2str(sqrt(variance(bootstrapdist)))+" "+num2str(bootstrapdist(sim-CI95))+" "+num2str(bootstrapdist(CI95))
+	print num2str(aver)+" "+num2str(sqrt(variance(bootstrapdist)))
+    //print num2str(aver)+" "+num2str(bootstrapdist(sim-CI95))+" "+num2str(bootstrapdist(CI95))
 	killwaves bootstrapdist,bootstrapsample
 end
 
@@ -912,7 +949,9 @@ function bootstrap_dif_norm(wavenom1,wavenom2,sim,del0,comparisons)  //del0==1 d
 	endfor
 	sort bootstrapdist bootstrapdist
 	variable CI95=(0.05/2)*sim,CI_MC95=(0.05/(2*comparisons))*sim
-	print num2str(mean(bootstrapdist))+" "+num2str(bootstrapdist(sim-CI_MC95))+" "+num2str(bootstrapdist(CI_MC95))
+	//print num2str(mean(bootstrapdist))+" "+num2str(bootstrapdist(sim-CI_MC95))+" "+num2str(bootstrapdist(CI_MC95))
+	print num2str(mean(bootstrapdist))+" "+num2str(sqrt(variance(bootstrapdist)))
+	
 	killwaves bootstrapdist,bootstrapsample
 end
 
